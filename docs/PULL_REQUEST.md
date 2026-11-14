@@ -1,0 +1,7 @@
+MicroHub previously contained only a README. This adds the first single-club MVP increment: Expo Router foundations, real Supabase school-email authentication/recovery, profile editing, membership applications/review and a member directory. All 76 source requirements are preserved in a phased matrix; homework, attendance and dashboards remain MVP follow-up work, and V1/V2 implementation has not begun.
+
+Database changes include seven RLS-protected identity/membership tables, a singleton club profile, separate technical roles and committee positions, audited privileged RPCs, verified first-admin provisioning and a private deny-by-default Storage bucket. An optional authenticated Edge review endpoint uses the caller's JWT.
+
+Validation: strict TypeScript, ESLint, formatting, 23 Jest tests, 12 PostgreSQL security scenarios, Edge typecheck, and Android/iOS/web bundle exports pass. Offline Expo package compatibility passes; online validation is blocked by the environment proxy. Dependency audit reports no high/critical findings, with low/moderate transitive findings documented.
+
+Before acceptance: configure staging Supabase, SMTP/OTP templates, migrations and public env values; bootstrap the authorized Super Admin; execute the documented hosted and physical-device flows. No hosted Supabase, Expo tunnel or physical-device testing has been performed. Codespaces/iPad setup and the full schema/implementation roadmap are included. This is not a complete MVP or production release.
