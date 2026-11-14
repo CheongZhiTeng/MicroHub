@@ -1,0 +1,6 @@
+node_modules
+.expo
+package-lock.json
+docs/SOURCE_REQUIREMENTS.zh-CN.txt
+supabase/migrations
+supabase/tests

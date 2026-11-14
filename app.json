@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "MicroHub",
+    "slug": "microhub",
+    "scheme": "microhub",
+    "version": "0.1.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": true },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "web": { "bundler": "metro" }
+  }
+}

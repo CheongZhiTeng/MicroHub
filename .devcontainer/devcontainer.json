@@ -1,0 +1,14 @@
+{
+  "name": "MicroHub · Expo",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
+  "postCreateCommand": "npm ci",
+  "forwardPorts": [8081],
+  "portsAttributes": {
+    "8081": { "label": "Expo Metro", "onAutoForward": "notify" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}
