@@ -46,7 +46,7 @@ export default function More() {
           busy={busy}
           onPress={() => void signOut()}
         />
-        {error && <Notice error text={error} />}
+        {Boolean(error) && <Notice error text={error} />}
       </Card>
       <Card>
         <Body>Foundation build · 0.1.0</Body>

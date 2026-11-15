@@ -108,7 +108,7 @@ export default function Recover() {
             )}
           </>
         )}
-        {message && <Notice text={message} />}
+        {Boolean(message) && <Notice text={message} />}
         <Button
           title={
             recovery

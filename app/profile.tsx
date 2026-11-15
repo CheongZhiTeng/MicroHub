@@ -53,7 +53,7 @@ function ProfileForm({ identity }: { identity: Identity }) {
         onChangeText={setClassName}
         maxLength={40}
       />
-      {message && <Notice text={message} />}
+      {Boolean(message) && <Notice text={message} />}
       <Button title="Save profile" busy={busy} onPress={() => void save()} />
     </Card>
   );

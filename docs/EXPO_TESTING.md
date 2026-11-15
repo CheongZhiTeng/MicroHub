@@ -31,6 +31,9 @@ Reopen the existing Codespace from GitHub's Codespaces list rather than creating
 
 ## Troubleshooting
 
+- **iPad browser Web preview:** run `npm run web -- --clear` and open port 8081 using Codespaces Ports. For a `window.ethereum.selectedAddress` global error in Brave, try the same preview URL in Safari to isolate a possible injected wallet script. MicroHub does not use cryptocurrency wallets. Keep `.env` unchanged. The Web session is memory-only, so reloading signs out.
+- **Unexpected text node inside View:** update the existing branch with `git pull --ff-only` and restart Metro; the 2026-11-15 repair omits empty-string notice/subtitle children. `npm run test:web` covers initial sign-in/signup/recovery renders with the real React Native Web renderer.
+
 - **Cannot connect / timeout:** ensure Codespace is running, tunnel says ready, and Expo Go uses the current exp URL. Disable a restrictive VPN or try another network. Restart Metro; tunnel providers can be temporarily unavailable.
 - **SDK mismatch:** match Expo Go's supported SDK or install a development build. `npx expo install --check` validates package compatibility.
 - **Stale code / variables:** stop Metro with Ctrl+C, restart with `npx expo start --tunnel --clear`. Only EXPO_PUBLIC variables reach the client; never use that prefix for secrets.

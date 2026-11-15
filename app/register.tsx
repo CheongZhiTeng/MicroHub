@@ -95,7 +95,7 @@ export default function Register() {
             autoComplete="new-password"
           />
         )}
-        {message && <Notice text={message} />}
+        {Boolean(message) && <Notice text={message} />}
         <Button
           title={sent ? 'Verify email' : 'Create account'}
           busy={busy}

@@ -50,7 +50,7 @@ export default function SignIn() {
           secureTextEntry
           autoComplete="current-password"
         />
-        {error && <Notice error text={error} />}
+        {Boolean(error) && <Notice error text={error} />}
         <Button title="Sign in" busy={busy} onPress={() => void login()} />
         <Button
           title="Create a school account"

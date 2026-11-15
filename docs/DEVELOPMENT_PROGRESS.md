@@ -1,6 +1,6 @@
 # Development progress
 
-Updated 2026-11-14 (Asia/Kuala_Lumpur). Current phase: **MVP, increment 1 — identity and membership foundation**. MVP is not accepted or complete. No V1/V2 implementation has begun. Source requirements were fully extracted and all 76 items are preserved in FEATURE_MATRIX.md, including the inapplicable multi-club requirement.
+Updated 2026-11-15 (Asia/Kuala_Lumpur). Current phase: **MVP, increment 1 — identity and membership foundation**. MVP is not accepted or complete. No V1/V2 implementation has begun. Source requirements were fully extracted and all 76 items are preserved in FEATURE_MATRIX.md, including the inapplicable multi-club requirement.
 
 ## Implemented in this increment
 
@@ -18,7 +18,7 @@ Updated 2026-11-14 (Asia/Kuala_Lumpur). Current phase: **MVP, increment 1 — id
 | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm run typecheck`                                                                 | Passed, strict TypeScript for app and Jest tests                                                                                                                                                                                                                                         |
 | `npm run lint`                                                                      | Passed; scoped effect annotations explain network-loading state synchronization                                                                                                                                                                                                          |
-| `npm test`                                                                          | 23 tests across validation, secure persistence, components, registration and recovery flows; passed                                                                                                                                                                                      |
+| `npm test`                                                                          | 23 native/component/flow tests plus 4 React Native Web regression tests; passed                                                                                                                                                                                                          |
 | `npm run test:db`                                                                   | 12 behavioral PostgreSQL scenarios passed (13 reported tests including parent); actual migrations and bootstrap run in PGlite                                                                                                                                                            |
 | `npm run format:check`                                                              | Passed after Prettier formatting                                                                                                                                                                                                                                                         |
 | `npx expo export --platform all`                                                    | Android/iOS Hermes and web bundles exported successfully; not native binary/device execution                                                                                                                                                                                             |
@@ -63,3 +63,11 @@ Implementation commit `34a0826` is published on `codex/mvp-foundation`. Git push
 “Finish and verify the MVP membership module against my configured staging Supabase: exercise school signup/verification/recovery on Expo Go, bootstrap/approve a member, add tested invitation redemption and committee/club/role administration UI, generate schema types, and update the feature matrix. Keep V1/V2 unstarted.”
 
 After that acceptance, implement private individual assignments and attachments as the next reviewable MVP increment. Do not start V1 until all essential MVP workflows have been reviewed and verified.
+
+## 2026-11-15: Web preview repair
+
+User screenshots confirmed Codespaces Web preview reaches the sign-in route, but React Native Web reports an empty text child inside View. Reproduced this exact error with the real React Native Web renderer for sign-in, signup, recovery and an empty optional subtitle. Converted string-valued JSX conditions to boolean conditions across the UI, preserving visible notices while omitting empty strings. Added four Web regression tests to the standard check command; they failed before the fix and pass afterward. No dependencies or database changes.
+
+Screenshots separately show a global `window.ethereum.selectedAddress` error in Brave. No application code references ethereum; a browser-injected wallet script is suspected, not confirmed. Use Safari to isolate it. Do not add a fake wallet object or suppress global errors. Physical-device browser verification remains pending.
+
+The user reports both initialization migrations succeeded and has configured Auth/SMTP/templates/public env values independently. These reports do not yet establish successful email delivery or complete hosted acceptance. Update Codespaces with `git pull --ff-only` on the existing branch and restart the Web preview; the ignored `.env` is preserved. Expo may independently update tsconfig.json include paths, so retain those local edits.

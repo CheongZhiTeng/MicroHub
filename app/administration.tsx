@@ -71,7 +71,7 @@ function Applications() {
         <Loading />
       ) : (
         <>
-          {error && <Notice error text={error} />}
+          {Boolean(error) && <Notice error text={error} />}
           {rows.length === 0 && !error && (
             <Card>
               <Heading>All caught up</Heading>

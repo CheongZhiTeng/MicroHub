@@ -33,7 +33,7 @@ export function Screen({
             <Text accessibilityRole="header" style={styles.title}>
               {title}
             </Text>
-            {subtitle && <Text style={styles.body}>{subtitle}</Text>}
+            {Boolean(subtitle) && <Text style={styles.body}>{subtitle}</Text>}
             {children}
           </View>
         </ScrollView>

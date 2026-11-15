@@ -120,7 +120,7 @@ export default function Home() {
           </>
         )
       )}
-      {message && <Notice error text={message} />}
+      {Boolean(message) && <Notice error text={message} />}
     </Screen>
   );
 }
