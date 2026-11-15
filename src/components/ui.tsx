@@ -1,4 +1,5 @@
-import type { PropsWithChildren } from 'react';
+import { useState, type PropsWithChildren } from 'react';
+import { PASSWORD_RULE } from '../lib/validation';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -122,6 +123,45 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
         {...props}
       />
     </View>
+  );
+}
+export function PasswordField({
+  label,
+  value,
+  onChangeText,
+  editable = true,
+  creating = false,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  editable?: boolean;
+  creating?: boolean;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <>
+      <Field
+        label={label}
+        value={value}
+        onChangeText={onChangeText}
+        editable={editable}
+        secureTextEntry={!visible}
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete={creating ? 'new-password' : 'current-password'}
+      />
+      {creating && (
+        <Body>
+          {PASSWORD_RULE} {value.length} characters entered.
+        </Body>
+      )}
+      <Button
+        title={visible ? 'Hide password' : 'Show password'}
+        secondary
+        onPress={() => setVisible(!visible)}
+      />
+    </>
   );
 }
 const styles = StyleSheet.create({

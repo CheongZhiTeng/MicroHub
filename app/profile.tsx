@@ -1,3 +1,4 @@
+import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -15,11 +16,13 @@ import { errorMessage } from '../src/lib/validation';
 function ProfileForm({ identity }: { identity: Identity }) {
   const [name, setName] = useState(identity.profile.display_name);
   const [className, setClassName] = useState(identity.profile.class_name);
-  const [busy, setBusy] = useState(false);
+  const { busy, start, finish } = useBusy();
   const [message, setMessage] = useState('');
+  const [failed, setFailed] = useState(false);
   const save = async () => {
-    setBusy(true);
+    if (!start()) return;
     setMessage('');
+    setFailed(false);
     try {
       if (!name.trim() || !className.trim())
         throw new Error('Enter your name and class.');
@@ -32,9 +35,10 @@ function ProfileForm({ identity }: { identity: Identity }) {
       if (error || !data) throw error ?? new Error('Profile was not saved.');
       setMessage('Profile saved.');
     } catch (error) {
+      setFailed(true);
       setMessage(errorMessage(error));
     } finally {
-      setBusy(false);
+      finish();
     }
   };
   return (
@@ -53,7 +57,7 @@ function ProfileForm({ identity }: { identity: Identity }) {
         onChangeText={setClassName}
         maxLength={40}
       />
-      {Boolean(message) && <Notice text={message} />}
+      {Boolean(message) && <Notice error={failed} text={message} />}
       <Button title="Save profile" busy={busy} onPress={() => void save()} />
     </Card>
   );

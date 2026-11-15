@@ -1,62 +1,84 @@
+import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Card, Field, Notice, Screen } from '../src/components/ui';
+import {
+  Button,
+  Card,
+  Field,
+  Notice,
+  Screen,
+  PasswordField,
+} from '../src/components/ui';
 import { client } from '../src/lib/supabase';
 import {
   errorMessage,
   isSchoolEmail,
   validPassword,
+  PASSWORD_RULE,
+  normalizeEmail,
+  validOtp,
 } from '../src/lib/validation';
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
   const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const { busy, start, finish } = useBusy();
   const [message, setMessage] = useState('');
+  const [failed, setFailed] = useState(false);
   const submit = async () => {
     setMessage('');
-    setBusy(true);
+    setFailed(false);
+    if (!start()) return;
     try {
-      if (!isSchoolEmail(email))
+      if (!isSchoolEmail(normalizeEmail(email)))
         throw new Error(
           'Enter your official saXXXXXX@foonyewsa.edu.my address.',
         );
       if (sent) {
-        if (!/^\d{6}$/.test(token))
+        if (!validOtp(token))
           throw new Error('Enter the six-digit verification code.');
         const { error } = await client().auth.verifyOtp({
-          email,
+          email: normalizeEmail(email),
           token,
           type: 'signup',
         });
         if (error) throw error;
         router.replace('/');
       } else {
-        if (!validPassword(password))
-          throw new Error('Use a password with 12 to 128 characters.');
-        const { error } = await client().auth.signUp({ email, password });
+        if (!validPassword(password)) throw new Error(PASSWORD_RULE);
+        const { error } = await client().auth.signUp({
+          email: normalizeEmail(email),
+          password,
+        });
         if (error) throw error;
+        setEmail(normalizeEmail(email));
         setSent(true);
         setPassword('');
       }
     } catch (error) {
+      setFailed(true);
       setMessage(errorMessage(error));
     } finally {
-      setBusy(false);
+      finish();
     }
   };
   const resend = async () => {
-    setBusy(true);
+    if (!start()) return;
     setMessage('');
+    setFailed(false);
     try {
-      const { error } = await client().auth.resend({ type: 'signup', email });
+      const { error } = await client().auth.resend({
+        type: 'signup',
+        email: normalizeEmail(email),
+      });
       if (error) throw error;
       setMessage('A new code has been requested. Check your inbox.');
     } catch (error) {
+      setFailed(true);
       setMessage(errorMessage(error));
     } finally {
-      setBusy(false);
+      finish();
     }
   };
   return (
@@ -69,16 +91,18 @@ export default function Register() {
           label="School email"
           value={email}
           onChangeText={setEmail}
-          editable={!sent}
+          editable={!sent && !busy}
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
+          autoCorrect={false}
         />
         {sent ? (
           <>
             <Notice text="Check your school inbox for a six-digit code. Codes expire after 10 minutes." />
             <Field
               label="Verification code"
+              editable={!busy}
               value={token}
               onChangeText={setToken}
               keyboardType="number-pad"
@@ -87,15 +111,15 @@ export default function Register() {
             />
           </>
         ) : (
-          <Field
-            label="Password (12–128 characters)"
+          <PasswordField
+            label="Password (8–128 characters)"
             value={password}
             onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="new-password"
+            editable={!busy}
+            creating
           />
         )}
-        {Boolean(message) && <Notice text={message} />}
+        {Boolean(message) && <Notice error={failed} text={message} />}
         <Button
           title={sent ? 'Verify email' : 'Create account'}
           busy={busy}
@@ -110,8 +134,35 @@ export default function Register() {
           />
         )}
         <Button
+          title={
+            sent
+              ? 'Use a different email'
+              : 'I already have a verification code'
+          }
+          secondary
+          busy={busy}
+          onPress={() => {
+            setMessage('');
+            setFailed(false);
+            setToken('');
+            if (sent) {
+              setSent(false);
+              return;
+            }
+            if (!isSchoolEmail(normalizeEmail(email))) {
+              setFailed(true);
+              setMessage('Enter your school email first.');
+              return;
+            }
+            setEmail(normalizeEmail(email));
+            setPassword('');
+            setSent(true);
+          }}
+        />
+        <Button
           title="Back to sign in"
           secondary
+          busy={busy}
           onPress={() => router.replace('/sign-in')}
         />
       </Card>

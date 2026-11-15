@@ -4,17 +4,17 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { createSessionStorage } from './session-storage';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-export const configured = Boolean(
-  url &&
-  /^https:\/\//.test(url) &&
-  !url.includes('YOUR_PROJECT') &&
-  key &&
-  !key.includes('YOUR_'),
+import { readPublicConfig } from './config';
+import { createTimedFetch } from './network';
+const config = readPublicConfig(
+  process.env.EXPO_PUBLIC_SUPABASE_URL,
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 );
+export const configError = config.error;
+export const configured = !config.error;
 export const supabase = configured
-  ? createClient(url!, key!, {
+  ? createClient(config.url!, config.key!, {
+      global: { fetch: createTimedFetch(fetch) },
       auth: {
         storage:
           Platform.OS === 'web'

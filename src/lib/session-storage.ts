@@ -18,8 +18,8 @@ export function createSessionStorage(store: SecretStore) {
   };
   const remove = async (key: string) => {
     const size = await count(key);
-    await store.deleteItemAsync(`${key}.count`);
     for (let i = 0; i < size; i++) await store.deleteItemAsync(`${key}.${i}`);
+    await store.deleteItemAsync(`${key}.count`);
   };
   return {
     getItem: (key: string) =>
@@ -39,8 +39,9 @@ export function createSessionStorage(store: SecretStore) {
       }),
     setItem: (key: string, value: string) =>
       run(async () => {
-        // 400 UTF-16 units stay below 2KB even for non-ASCII metadata.
-        const size = Math.ceil(value.length / 400);
+        // Chunk complete Unicode code points so native encoders never see lone surrogates.
+        const points = Array.from(value);
+        const size = Math.ceil(points.length / 400);
         if (size > 128)
           throw new Error('Session exceeds secure storage capacity.');
         await remove(key);
@@ -50,7 +51,7 @@ export function createSessionStorage(store: SecretStore) {
           for (let i = 0; i < size; i++)
             await store.setItemAsync(
               `${key}.${i}`,
-              value.slice(i * 400, (i + 1) * 400),
+              points.slice(i * 400, (i + 1) * 400).join(''),
             );
         } catch (error) {
           await remove(key);

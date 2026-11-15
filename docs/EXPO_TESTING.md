@@ -31,6 +31,11 @@ Reopen the existing Codespace from GitHub's Codespaces list rather than creating
 
 ## Troubleshooting
 
+- **Create account appears to do nothing:** an invalid password is rejected locally, before email is sent. Updated screens show a red alert plus character count and Show password. Use 8–128 characters with at least one ASCII letter and digit; save Supabase Email minimum length **8** and Password requirements **Letters and digits**. If a request fails after validation, the error identifies network/Auth failure. The app cannot guarantee delivery; inspect SMTP/Auth logs when verification mail is missing.
+- **Verification page was closed:** enter the school email and choose “I already have a verification code” to resume without signing up again. Request a fresh code if it expired. Recovery has a “Request a new recovery code” action.
+- **Incorrect project address:** `.env` needs the HTTPS project root, with no `/rest/v1/` suffix. Misconfiguration now displays an actionable setup message. Keep only public Publishable/anon keys in this file.
+- **Timeout after a write:** refresh its status before retrying. A server may have committed the operation even if the response was lost. Duplicate membership applications are idempotent; reviews report already processed decisions.
+
 - **iPad browser Web preview:** run `npm run web -- --clear` and open port 8081 using Codespaces Ports. For a `window.ethereum.selectedAddress` global error in Brave, try the same preview URL in Safari to isolate a possible injected wallet script. MicroHub does not use cryptocurrency wallets. Keep `.env` unchanged. The Web session is memory-only, so reloading signs out.
 - **Unexpected text node inside View:** update the existing branch with `git pull --ff-only` and restart Metro; the 2026-11-15 repair omits empty-string notice/subtitle children. `npm run test:web` covers initial sign-in/signup/recovery renders with the real React Native Web renderer.
 

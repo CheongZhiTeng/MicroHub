@@ -18,9 +18,18 @@ describe('school account validation', () => {
     expect(studentId('sa000012@foonyewsa.edu.my')).toBe('000012'));
   test('does not derive IDs from invalid addresses', () =>
     expect(studentId('admin@example.com')).toBeNull());
-  test('password bounds', () => {
-    expect(validPassword('x'.repeat(11))).toBe(false);
-    expect(validPassword('x'.repeat(12))).toBe(true);
-    expect(validPassword('x'.repeat(129))).toBe(false);
-  });
+  test.each(['abcdef12', 'A1234567', 'a1' + 'x'.repeat(126)])(
+    'accepts valid password boundaries %s',
+    (password) => expect(validPassword(password)).toBe(true),
+  );
+  test.each([
+    '',
+    'abc1234',
+    'abcdefgh',
+    '12345678',
+    '中文中文1234',
+    'a1' + 'x'.repeat(127),
+  ])('rejects invalid password %s', (password) =>
+    expect(validPassword(password)).toBe(false),
+  );
 });

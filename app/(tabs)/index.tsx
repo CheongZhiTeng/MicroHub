@@ -1,3 +1,4 @@
+import { useBusy } from '../../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -14,10 +15,10 @@ import { client } from '../../src/lib/supabase';
 import { errorMessage } from '../../src/lib/validation';
 export default function Home() {
   const { identity, loading, error, reload } = useIdentity();
-  const [busy, setBusy] = useState(false);
+  const { busy, start, finish } = useBusy();
   const [message, setMessage] = useState('');
   const apply = async () => {
-    setBusy(true);
+    if (!start()) return;
     setMessage('');
     try {
       const { error } = await client().rpc('apply_for_membership');
@@ -26,7 +27,7 @@ export default function Home() {
     } catch (error) {
       setMessage(errorMessage(error));
     } finally {
-      setBusy(false);
+      finish();
     }
   };
   return (

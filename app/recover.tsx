@@ -1,12 +1,23 @@
+import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Card, Field, Notice, Screen } from '../src/components/ui';
+import {
+  Button,
+  Card,
+  Field,
+  Notice,
+  Screen,
+  PasswordField,
+} from '../src/components/ui';
 import { useSession } from '../src/features/session';
 import { client } from '../src/lib/supabase';
 import {
   errorMessage,
   isSchoolEmail,
   validPassword,
+  PASSWORD_RULE,
+  normalizeEmail,
+  validOtp,
 } from '../src/lib/validation';
 export default function Recover() {
   const { recovery, setRecovery } = useSession();
@@ -14,17 +25,23 @@ export default function Recover() {
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [sent, setSent] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
+  const { busy, start, finish } = useBusy();
   const [message, setMessage] = useState('');
+  const [failed, setFailed] = useState(false);
   const submit = async () => {
-    setBusy(true);
+    if (!start()) return;
     setMessage('');
+    setFailed(false);
     try {
       if (recovery) {
-        if (!validPassword(password))
-          throw new Error('Use a password with 12 to 128 characters.');
-        const { error } = await client().auth.updateUser({ password });
-        if (error) throw error;
+        if (!passwordSaved) {
+          if (!validPassword(password)) throw new Error(PASSWORD_RULE);
+          const { error } = await client().auth.updateUser({ password });
+          if (error) throw error;
+          setPasswordSaved(true);
+          setPassword('');
+        }
         const { error: signOutError } = await client().auth.signOut({
           scope: 'global',
         });
@@ -32,30 +49,33 @@ export default function Recover() {
         setRecovery(false);
         router.replace('/sign-in');
       } else if (sent) {
-        if (!/^\d{6}$/.test(token))
+        if (!validOtp(token))
           throw new Error('Enter the six-digit recovery code.');
         const { error } = await client().auth.verifyOtp({
-          email,
+          email: normalizeEmail(email),
           token,
           type: 'recovery',
         });
         if (error) throw error;
         setRecovery(true);
       } else {
-        if (!isSchoolEmail(email))
+        if (!isSchoolEmail(normalizeEmail(email)))
           throw new Error('Enter your official school email.');
-        const { error } = await client().auth.resetPasswordForEmail(email);
+        const { error } = await client().auth.resetPasswordForEmail(
+          normalizeEmail(email),
+        );
         if (error) throw error;
         setSent(true);
       }
     } catch (error) {
+      setFailed(true);
       setMessage(errorMessage(error));
     } finally {
-      setBusy(false);
+      finish();
     }
   };
   const cancel = async () => {
-    setBusy(true);
+    if (!start()) return;
     try {
       if (recovery) {
         const { error } = await client().auth.signOut();
@@ -64,9 +84,10 @@ export default function Recover() {
       setRecovery(false);
       router.replace('/sign-in');
     } catch (error) {
+      setFailed(true);
       setMessage(errorMessage(error));
     } finally {
-      setBusy(false);
+      finish();
     }
   };
   return (
@@ -76,20 +97,24 @@ export default function Recover() {
     >
       <Card>
         {recovery ? (
-          <Field
-            label="New password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="new-password"
-          />
+          passwordSaved ? (
+            <Notice text="Password saved. Finish signing out before signing in again." />
+          ) : (
+            <PasswordField
+              label="New password"
+              value={password}
+              onChangeText={setPassword}
+              editable={!busy}
+              creating
+            />
+          )
         ) : (
           <>
             <Field
               label="School email"
               value={email}
               onChangeText={setEmail}
-              editable={!sent}
+              editable={!sent && !busy}
               autoCapitalize="none"
               keyboardType="email-address"
             />
@@ -98,6 +123,7 @@ export default function Recover() {
                 <Notice text="If this account exists, a recovery code has been sent. It expires in 10 minutes." />
                 <Field
                   label="Recovery code"
+                  editable={!busy}
                   value={token}
                   onChangeText={setToken}
                   keyboardType="number-pad"
@@ -108,11 +134,13 @@ export default function Recover() {
             )}
           </>
         )}
-        {Boolean(message) && <Notice text={message} />}
+        {Boolean(message) && <Notice error={failed} text={message} />}
         <Button
           title={
             recovery
-              ? 'Save password and sign out'
+              ? passwordSaved
+                ? 'Retry sign out'
+                : 'Save password and sign out'
               : sent
                 ? 'Verify recovery code'
                 : 'Send recovery code'
@@ -120,6 +148,19 @@ export default function Recover() {
           busy={busy}
           onPress={() => void submit()}
         />
+        {sent && !recovery && (
+          <Button
+            title="Request a new recovery code"
+            secondary
+            busy={busy}
+            onPress={() => {
+              setSent(false);
+              setToken('');
+              setMessage('');
+              setFailed(false);
+            }}
+          />
+        )}
         <Button
           title="Back to sign in"
           secondary

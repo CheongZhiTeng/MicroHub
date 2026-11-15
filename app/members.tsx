@@ -1,5 +1,6 @@
+import { memberSearchFilter } from '../src/lib/member-search';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Body,
   Button,
@@ -21,13 +22,15 @@ type Member = {
   platform_roles: { role: string } | null;
 };
 function Directory() {
+  const generation = useRef(0);
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [members, setMembers] = useState<Member[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
   const load = useCallback(async () => {
+    const requestId = ++generation.current;
     setBusy(true);
     setError('');
     try {
@@ -40,29 +43,27 @@ function Directory() {
         .eq('status', 'active')
         .order('student_id')
         .range(page * 30, page * 30 + 29);
-      // Only Unicode letters, numbers, whitespace and hyphens enter the filter grammar.
-      const term = search
-        .replace(/[^\p{L}\p{N}\s-]/gu, '')
-        .trim()
-        .slice(0, 100);
-      if (term)
-        request = request.or(
-          `display_name.ilike.%${term}%,student_id.ilike.%${term}%`,
-        );
+      const filter = memberSearchFilter(search);
+      if (filter) request = request.or(filter);
       const { data, error } = await request.returns<Member[]>();
       if (error) throw error;
-      setMembers(data ?? []);
+      if (requestId === generation.current) setMembers(data ?? []);
     } catch (error) {
+      if (requestId !== generation.current) return;
       setError(errorMessage(error));
       setMembers([]);
     } finally {
-      setBusy(false);
+      if (requestId === generation.current) setBusy(false);
     }
   }, [search, page]);
   // Remote query loading state is synchronized with its network request.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
+    const counter = generation;
+    return () => {
+      counter.current++;
+    };
   }, [load]);
   return (
     <>
@@ -77,8 +78,11 @@ function Directory() {
           title="Search members"
           busy={busy}
           onPress={() => {
-            setPage(0);
-            setSearch(query);
+            if (page === 0 && search === query) void load();
+            else {
+              setPage(0);
+              setSearch(query);
+            }
           }}
         />
       </Card>

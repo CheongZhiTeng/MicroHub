@@ -1,3 +1,4 @@
+import { useBusy } from '../../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Body, Button, Card, Notice, Screen } from '../../src/components/ui';
@@ -7,9 +8,9 @@ import { errorMessage } from '../../src/lib/validation';
 export default function More() {
   const { identity } = useIdentity();
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const { busy, start, finish } = useBusy();
   const signOut = async () => {
-    setBusy(true);
+    if (!start()) return;
     try {
       const { error } = await client().auth.signOut({ scope: 'local' });
       if (error) throw error;
@@ -17,7 +18,7 @@ export default function More() {
     } catch (error) {
       setError(errorMessage(error));
     } finally {
-      setBusy(false);
+      finish();
     }
   };
   return (

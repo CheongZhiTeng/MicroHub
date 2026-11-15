@@ -20,13 +20,14 @@ export type Identity = {
 };
 export function useIdentity() {
   const { session } = useSession();
+  const userId = session?.user.id;
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const generation = useRef(0);
   const reload = useCallback(async () => {
     const current = ++generation.current;
-    if (!session) {
+    if (!userId) {
       setIdentity(null);
       setLoading(false);
       return;
@@ -39,23 +40,19 @@ export function useIdentity() {
         db
           .from('profiles')
           .select('id,student_id,display_name,class_name,status')
-          .eq('id', session.user.id)
+          .eq('id', userId)
           .single(),
-        db
-          .from('platform_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single(),
+        db.from('platform_roles').select('role').eq('user_id', userId).single(),
         db
           .from('memberships')
           .select('status')
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .maybeSingle(),
         db.from('club_settings').select('name').maybeSingle(),
         db
           .from('membership_applications')
           .select('status')
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
@@ -78,7 +75,7 @@ export function useIdentity() {
     } finally {
       if (current === generation.current) setLoading(false);
     }
-  }, [session]);
+  }, [userId]);
   useFocusEffect(
     useCallback(() => {
       void reload();
@@ -94,5 +91,6 @@ export function useIdentity() {
     });
     return () => listener.remove();
   }, [reload]);
-  return { identity, loading, error, reload };
+  const visibleIdentity = identity?.profile.id === userId ? identity : null;
+  return { identity: visibleIdentity, loading, error, reload };
 }

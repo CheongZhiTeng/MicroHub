@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 import { useSession } from '../src/features/session';
-import { configured } from '../src/lib/supabase';
+import { configured, configError } from '../src/lib/supabase';
 import { en } from '../src/locales/en';
 import { Button, Card, Loading, Notice, Screen } from '../src/components/ui';
 export default function Index() {
@@ -9,7 +9,7 @@ export default function Index() {
     return (
       <Screen title={en.missingConfig}>
         <Card>
-          <Notice text={en.configHelp} />
+          <Notice text={configError ?? en.configHelp} />
         </Card>
       </Screen>
     );

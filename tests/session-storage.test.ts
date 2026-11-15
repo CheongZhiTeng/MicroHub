@@ -48,3 +48,25 @@ test('missing chunk never returns a partial session', async () => {
   expect(await storage.getItem('auth')).toBeNull();
   expect(values.size).toBe(0);
 });
+
+test('Unicode characters spanning a chunk boundary are not split', async () => {
+  const { storage, store } = fixture();
+  const value = 'x'.repeat(399) + '🔒';
+  await storage.setItem('auth', value);
+  for (const [, chunk] of store.setItemAsync.mock.calls)
+    expect(() => encodeURIComponent(chunk)).not.toThrow();
+  expect(await storage.getItem('auth')).toBe(value);
+});
+test('failed deletion preserves metadata so a retry removes remaining secrets', async () => {
+  const { storage, store, values } = fixture();
+  await storage.setItem('auth', 'x'.repeat(800));
+  const original = store.deleteItemAsync;
+  const fail = jest
+    .spyOn(store, 'deleteItemAsync')
+    .mockRejectedValueOnce(new Error('locked'))
+    .mockImplementation(original);
+  await expect(storage.removeItem('auth')).rejects.toThrow('locked');
+  await storage.removeItem('auth');
+  expect(values.size).toBe(0);
+  fail.mockRestore();
+});

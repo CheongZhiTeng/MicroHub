@@ -34,6 +34,7 @@ Role/configuration management currently has checked backend RPCs; its full UI, i
 - [Database design and security boundaries](docs/DATABASE.md)
 - [Setup, migrations, Auth templates and bootstrap](docs/SETUP.md)
 - [iPad / Expo Go testing and development builds](docs/EXPO_TESTING.md)
+- [Debugging audit and current fixes](docs/DEBUG_AUDIT.md)
 - [Development progress, evidence and limitations](docs/DEVELOPMENT_PROGRESS.md)
 - [Full extracted source document](docs/SOURCE_REQUIREMENTS.zh-CN.txt)
 

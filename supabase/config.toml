@@ -15,7 +15,8 @@ major_version = 17
 enabled = true
 site_url = "http://localhost:8081"
 additional_redirect_urls = ["microhub://auth/callback"]
-minimum_password_length = 12
+minimum_password_length = 8
+password_requirements = "letters_digits"
 
 [auth.email]
 enable_signup = true

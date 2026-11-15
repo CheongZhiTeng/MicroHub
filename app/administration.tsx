@@ -1,5 +1,6 @@
+import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Body,
   Button,
@@ -18,11 +19,13 @@ type Application = {
   profiles: { display_name: string; student_id: string; class_name: string };
 };
 function Applications() {
+  const generation = useRef(0);
   const [rows, setRows] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const { busy, start, finish } = useBusy();
   const [error, setError] = useState('');
   const load = useCallback(async () => {
+    const requestId = ++generation.current;
     setLoading(true);
     setError('');
     try {
@@ -36,21 +39,26 @@ function Applications() {
         .limit(30)
         .returns<Application[]>();
       if (error) throw error;
-      setRows(data ?? []);
+      if (requestId === generation.current) setRows(data ?? []);
     } catch (error) {
+      if (requestId !== generation.current) return;
       setError(errorMessage(error));
       setRows([]);
     } finally {
-      setLoading(false);
+      if (requestId === generation.current) setLoading(false);
     }
   }, []);
   // Remote query loading state is synchronized with its network request.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
+    const counter = generation;
+    return () => {
+      counter.current++;
+    };
   }, [load]);
   const review = async (id: string, approve: boolean) => {
-    setBusy(true);
+    if (!start()) return;
     setError('');
     try {
       const { error } = await client().rpc('review_membership', {
@@ -62,7 +70,7 @@ function Applications() {
     } catch (error) {
       setError(errorMessage(error));
     } finally {
-      setBusy(false);
+      finish();
     }
   };
   return (

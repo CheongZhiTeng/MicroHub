@@ -387,4 +387,95 @@ test('identity and membership authorization against PostgreSQL', async (t) => {
       );
     },
   );
+  await t.test(
+    'inactive members and suspended admins cannot access club operations',
+    async () => {
+      await db.query(
+        "update public.memberships set status='inactive' where user_id=$1",
+        [applicant],
+      );
+      assert.equal(
+        (await as(applicant, 'select public.is_member() as ok'))[0].ok,
+        false,
+      );
+      assert.equal(
+        (await as(applicant, 'select * from public.club_settings')).length,
+        0,
+      );
+      await assert.rejects(
+        as(applicant, 'select public.apply_for_membership()'),
+        /restore membership/,
+      );
+      await as(
+        superAdmin,
+        "select public.admin_set_account($1,'admin','suspended')",
+        [admin],
+      );
+      await assert.rejects(
+        as(admin, 'select public.review_membership($1,true)', [application]),
+        /Administrator required/,
+      );
+      assert.equal(
+        (await as(admin, 'select * from public.membership_applications'))
+          .length,
+        0,
+      );
+      await as(
+        superAdmin,
+        "select public.admin_set_account($1,'admin','active')",
+        [admin],
+      );
+    },
+  );
+  await t.test(
+    'singleton, profile sizes and final-admin protection reject invalid writes atomically',
+    async () => {
+      await assert.rejects(
+        db.exec(
+          "insert into public.club_settings(singleton,name) values(false,'Second')",
+        ),
+        /check constraint/,
+      );
+      await assert.rejects(
+        as(superAdmin, "select public.update_club('','invalid')"),
+        /check constraint/,
+      );
+      assert.equal(
+        (await as(superAdmin, 'select name from public.club_settings'))[0].name,
+        'School coding club',
+      );
+      await assert.rejects(
+        as(
+          outsider,
+          "update public.profiles set display_name=repeat('x',101) where id=$1",
+          [outsider],
+        ),
+        /check constraint/,
+      );
+      await as(
+        superAdmin,
+        "select public.admin_set_account($1,'super_admin','active')",
+        [admin],
+      );
+      await as(
+        superAdmin,
+        "select public.admin_set_account($1,'member','active')",
+        [superAdmin],
+      );
+      await assert.rejects(
+        as(
+          superAdmin,
+          "select public.admin_set_account($1,'super_admin','active')",
+          [superAdmin],
+        ),
+        /Super Admin required/,
+      );
+      await assert.rejects(
+        as(admin, "select public.admin_set_account($1,'member','active')", [
+          admin,
+        ]),
+        /final Super Admin/,
+      );
+    },
+  );
 });

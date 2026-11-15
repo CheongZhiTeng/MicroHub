@@ -31,8 +31,8 @@ test('invalid school email never reaches Auth', async () => {
     'student@example.com',
   );
   await fireEvent.changeText(
-    screen.getByLabelText('Password (12–128 characters)'),
-    'long-passphrase',
+    screen.getByLabelText('Password (8–128 characters)'),
+    'long-passphrase1',
   );
   await fireEvent.press(screen.getByRole('button', { name: 'Create account' }));
   expect(
@@ -54,14 +54,14 @@ test('registration requires verification before navigating to the club', async (
     'sa000001@foonyewsa.edu.my',
   );
   await fireEvent.changeText(
-    screen.getByLabelText('Password (12–128 characters)'),
-    'long-passphrase',
+    screen.getByLabelText('Password (8–128 characters)'),
+    'long-passphrase1',
   );
   await fireEvent.press(screen.getByRole('button', { name: 'Create account' }));
   await screen.findByLabelText('Verification code');
   expect(signUp).toHaveBeenCalledWith({
     email: 'sa000001@foonyewsa.edu.my',
-    password: 'long-passphrase',
+    password: 'long-passphrase1',
   });
   expect(router.replace).not.toHaveBeenCalled();
   await fireEvent.changeText(
@@ -78,4 +78,73 @@ test('registration requires verification before navigating to the club', async (
     token: '123456',
     type: 'signup',
   });
+});
+
+test.each(['abc1234', 'abcdefgh', '12345678'])(
+  'invalid password %s produces an alert and sends no signup',
+  async (password) => {
+    await render(<Register />);
+    await fireEvent.changeText(
+      screen.getByLabelText('School email'),
+      'sa000001@foonyewsa.edu.my',
+    );
+    await fireEvent.changeText(
+      screen.getByLabelText('Password (8–128 characters)'),
+      password,
+    );
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Create account' }),
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /Use 8–128 characters/,
+    );
+    expect(signUp).not.toHaveBeenCalled();
+  },
+);
+
+test('exactly eight characters with a letter and digit reach Auth; SMTP failure is an alert', async () => {
+  signUp.mockResolvedValue({
+    error: { message: 'Error sending confirmation email' },
+  });
+  await render(<Register />);
+  await fireEvent.changeText(
+    screen.getByLabelText('School email'),
+    ' SA000001@FOONYEWSA.EDU.MY ',
+  );
+  await fireEvent.changeText(
+    screen.getByLabelText('Password (8–128 characters)'),
+    'Abcdef12',
+  );
+  await fireEvent.press(screen.getByRole('button', { name: 'Show password' }));
+  expect(
+    screen.getByLabelText('Password (8–128 characters)').props.secureTextEntry,
+  ).toBe(false);
+  await fireEvent.press(screen.getByRole('button', { name: 'Create account' }));
+  expect(signUp).toHaveBeenCalledWith({
+    email: 'sa000001@foonyewsa.edu.my',
+    password: 'Abcdef12',
+  });
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Error sending confirmation email',
+  );
+  expect(screen.queryByLabelText('Verification code')).toBeNull();
+});
+
+test('existing verification code can be resumed without registering again', async () => {
+  verifyOtp.mockResolvedValue({ error: null });
+  await render(<Register />);
+  await fireEvent.changeText(
+    screen.getByLabelText('School email'),
+    'sa000001@foonyewsa.edu.my',
+  );
+  await fireEvent.press(
+    screen.getByRole('button', { name: 'I already have a verification code' }),
+  );
+  await fireEvent.changeText(
+    screen.getByLabelText('Verification code'),
+    '123456',
+  );
+  await fireEvent.press(screen.getByRole('button', { name: 'Verify email' }));
+  await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
+  expect(signUp).not.toHaveBeenCalled();
 });

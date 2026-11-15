@@ -6,7 +6,12 @@ export function studentId(email: string): string | null {
   return isSchoolEmail(email) ? email.slice(2, 8) : null;
 }
 export function validPassword(password: string): boolean {
-  return password.length >= 12 && password.length <= 128;
+  return (
+    password.length >= 8 &&
+    password.length <= 128 &&
+    /[A-Za-z]/.test(password) &&
+    /[0-9]/.test(password)
+  );
 }
 export function errorMessage(error: unknown): string {
   return typeof error === 'object' &&
@@ -15,4 +20,13 @@ export function errorMessage(error: unknown): string {
     typeof error.message === 'string'
     ? error.message
     : 'Something went wrong. Please try again.';
+}
+
+export const PASSWORD_RULE =
+  'Use 8–128 characters, including at least one letter (A–Z) and one number (0–9).';
+export function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+export function validOtp(token: string) {
+  return /^[0-9]{6}$/.test(token) && token.length === 6;
 }
