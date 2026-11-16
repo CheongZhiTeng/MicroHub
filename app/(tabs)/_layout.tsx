@@ -1,5 +1,6 @@
+import { Pressable } from 'react-native';
 import { Redirect, Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Icon } from '../../src/components/icon';
 import { Loading, Screen } from '../../src/components/ui';
 import { useSession } from '../../src/features/session';
 import { theme } from '../../src/theme/tokens';
@@ -18,18 +19,61 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarButton: ({
+          children,
+          onPress,
+          onLongPress,
+          accessibilityLabel,
+          accessibilityState,
+          testID,
+          style,
+        }) => (
+          <Pressable
+            accessibilityRole="tab"
+            accessibilityLabel={accessibilityLabel}
+            accessibilityState={accessibilityState}
+            testID={testID}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            style={[
+              style,
+              { borderRadius: 16, overflow: 'hidden', paddingHorizontal: 0 },
+            ]}
+          >
+            {children}
+          </Pressable>
+        ),
         tabBarActiveTintColor: theme.color.primary,
         tabBarInactiveTintColor: theme.color.muted,
-        tabBarStyle: { backgroundColor: theme.color.surface },
+        tabBarActiveBackgroundColor: theme.color.selected,
+        tabBarItemStyle: {
+          borderRadius: 16,
+          marginHorizontal: 1,
+          paddingVertical: 7,
+        },
+        tabBarLabelStyle: {
+          fontFamily: theme.font,
+          fontSize: 10,
+          fontWeight: '600',
+        },
+        tabBarStyle: {
+          backgroundColor: theme.color.surface,
+          borderTopColor: theme.color.border,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          paddingTop: 8,
+          paddingHorizontal: 8,
+          minHeight: 76,
+        },
       }}
     >
       {(
         [
-          ['index', en.home, '⌂'],
-          ['homework', en.homework, '▤'],
-          ['attendance', en.attendance, '✓'],
-          ['events', en.events, '▦'],
-          ['more', en.more, '•••'],
+          ['index', en.home, 'home'],
+          ['homework', en.homework, 'homework'],
+          ['attendance', en.attendance, 'attendance'],
+          ['events', en.events, 'calendar'],
+          ['more', en.more, 'more'],
         ] as const
       ).map(([name, title, icon]) => (
         <Tabs.Screen
@@ -38,7 +82,7 @@ export default function TabsLayout() {
           options={{
             title,
             tabBarIcon: ({ color }) => (
-              <Text style={{ color, fontSize: 22 }}>{icon}</Text>
+              <Icon name={icon} color={color} size={23} />
             ),
           }}
         />

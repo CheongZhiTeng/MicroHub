@@ -1,3 +1,8 @@
+import {
+  ClubHeader,
+  ClubOverview,
+  IdentityStats,
+} from '../../src/components/dashboard';
 import { useBusy } from '../../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -6,6 +11,7 @@ import {
   Button,
   Card,
   Heading,
+  NavigationRow,
   Loading,
   Notice,
   Screen,
@@ -32,8 +38,14 @@ export default function Home() {
   };
   return (
     <Screen
-      title={identity?.clubName ?? 'Your club'}
-      subtitle="A private space for your school community."
+      dashboard
+      header={<ClubHeader identity={identity} />}
+      title={
+        identity?.profile.display_name
+          ? `Welcome back, ${identity.profile.display_name.split(' ')[0]}!`
+          : 'Welcome to your club'
+      }
+      subtitle="A place to learn, collaborate, and grow together."
     >
       {loading ? (
         <Loading />
@@ -45,18 +57,9 @@ export default function Home() {
       ) : (
         identity && (
           <>
-            <Card>
-              <Heading>
-                {identity.profile.display_name
-                  ? `Hello, ${identity.profile.display_name}`
-                  : 'Make yourself at home'}
-              </Heading>
-              <Body>
-                Student {identity.profile.student_id} ·{' '}
-                {identity.profile.class_name ||
-                  'Add your class in your profile'}
-              </Body>
-            </Card>
+            {identity.profile.status === 'active' && (
+              <IdentityStats identity={identity} />
+            )}
             {identity.profile.status === 'suspended' ? (
               <Card>
                 <Notice
@@ -99,24 +102,24 @@ export default function Home() {
                 )}
               </Card>
             ) : (
-              <Card>
-                <Heading>You’re part of the club</Heading>
-                <Body>
-                  Your membership is active. Your member directory is ready;
-                  homework and attendance are the next MVP modules.
-                </Body>
-                <Button
-                  title="Meet the members"
-                  onPress={() => router.push('/members')}
-                />
-                {identity.role !== 'member' && (
-                  <Button
-                    title="Review membership applications"
-                    secondary
-                    onPress={() => router.push('/administration')}
+              <>
+                <ClubOverview />
+                <Card>
+                  <Heading>Your community</Heading>
+                  <NavigationRow
+                    icon="members"
+                    title="Meet the members"
+                    onPress={() => router.push('/members')}
                   />
-                )}
-              </Card>
+                  {identity.role !== 'member' && (
+                    <NavigationRow
+                      icon="shield"
+                      title="Review membership applications"
+                      onPress={() => router.push('/administration')}
+                    />
+                  )}
+                </Card>
+              </>
             )}
           </>
         )

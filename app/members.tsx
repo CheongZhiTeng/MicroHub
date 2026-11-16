@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { memberSearchFilter } from '../src/lib/member-search';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -10,6 +11,9 @@ import {
   Loading,
   Notice,
   Screen,
+  Avatar,
+  Badge,
+  SectionTitle,
 } from '../src/components/ui';
 import { Access } from '../src/features/access';
 import { client } from '../src/lib/supabase';
@@ -68,6 +72,7 @@ function Directory() {
   return (
     <>
       <Card>
+        <SectionTitle icon="search">Find your people</SectionTitle>
         <Field
           label="Search name or student ID"
           value={query}
@@ -98,13 +103,22 @@ function Directory() {
           {members.length === 0 && <Notice text="No matching members." />}
           {members.map((member) => (
             <Card key={member.id}>
-              <Heading>{member.display_name || member.student_id}</Heading>
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <Avatar name={member.display_name} />
+                <View style={{ flex: 1 }}>
+                  <Heading>{member.display_name || member.student_id}</Heading>
+                </View>
+              </View>
               <Body>
                 {member.student_id} · {member.class_name}
               </Body>
-              <Body>
-                {member.platform_roles?.role.replace('_', ' ') ?? 'member'}
-              </Body>
+              <Badge
+                label={
+                  member.platform_roles?.role.replace('_', ' ') ?? 'member'
+                }
+              />
             </Card>
           ))}
           {page > 0 && (

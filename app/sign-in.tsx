@@ -49,7 +49,7 @@ export default function SignIn() {
     }
   };
   return (
-    <Screen title="Welcome back" subtitle={en.tagline}>
+    <Screen auth title="Welcome back" subtitle={en.tagline}>
       <Card>
         <Field
           label="School email"

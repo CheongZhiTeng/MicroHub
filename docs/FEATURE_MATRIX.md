@@ -136,3 +136,9 @@ This file was created before application code. Phase assignment is a delivery ta
 ## 2026-11-16 debugging review
 
 The user's updated password rule supersedes the original setup recommendation: 8–128 characters, at least one ASCII letter and one digit. Registration and reset share this rule; Supabase hosted settings must be saved manually. See [DEBUG_AUDIT.md](DEBUG_AUDIT.md) for the full scope, fixes, evidence and remaining deployment/device checks. No additional feature phase is started by these repairs. Current work includes setup validation, accessible error feedback, Web interactions, request timeouts, repeat-action locking, recovery continuation, session cleanup, directory refresh and optional Edge error handling.
+
+## Modern Campus UI review — 2026-11-16
+
+The user authorized `codex/ui-redesign` to apply the supplied reference across all existing screens and future-module availability pages. `src/theme/tokens.ts`, `src/components/`, and `app/` contain the design system and page adaptations. `tests/redesign.test.tsx` checks existing membership behavior and role-gated navigation; `scripts/visual-check.cjs` covers three browser viewport sizes with HTTP fixtures. See [UI_REDESIGN.md](UI_REDESIGN.md) and the saved screenshots.
+
+This changes visual presentation, not the completion status of the 76 requirements. Announcements/resources/notifications/submissions and settings options remain roadmap functionality; their availability pages are not completed implementations. Actual signup/SMTP and native-device verification remain outstanding.

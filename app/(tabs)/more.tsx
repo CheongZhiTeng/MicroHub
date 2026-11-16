@@ -1,7 +1,17 @@
 import { useBusy } from '../../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Body, Button, Card, Notice, Screen } from '../../src/components/ui';
+import {
+  Body,
+  Button,
+  Card,
+  Notice,
+  Screen,
+  NavigationRow,
+  SectionTitle,
+  Avatar,
+  Heading,
+} from '../../src/components/ui';
 import { useIdentity } from '../../src/features/identity';
 import { client } from '../../src/lib/supabase';
 import { errorMessage } from '../../src/lib/validation';
@@ -24,24 +34,60 @@ export default function More() {
   return (
     <Screen title="Your space">
       <Card>
-        <Button title="My profile" onPress={() => router.push('/profile')} />
+        <Avatar name={identity?.profile.display_name ?? ''} size={56} />
+        <Heading>
+          {identity?.profile.display_name || 'Make yourself at home'}
+        </Heading>
+        <NavigationRow
+          icon="user"
+          title="My profile"
+          subtitle="Your name, class and school identity"
+          onPress={() => router.push('/profile')}
+        />
         {identity?.member && identity.profile.status === 'active' && (
-          <Button
+          <NavigationRow
+            icon="members"
             title="Member directory"
-            secondary
+            subtitle="Get to know your club"
             onPress={() => router.push('/members')}
           />
         )}
         {identity?.member &&
           identity.profile.status === 'active' &&
           identity.role !== 'member' && (
-            <Button
+            <NavigationRow
+              icon="shield"
               title="Administration"
-              secondary
+              subtitle="Review membership applications"
               onPress={() => router.push('/administration')}
             />
           )}
+        {identity?.member && identity.profile.status === 'active' && (
+          <>
+            <NavigationRow
+              icon="announcement"
+              title="Announcements"
+              onPress={() => router.push('/announcements')}
+            />
+            <NavigationRow
+              icon="bell"
+              title="Notifications"
+              onPress={() => router.push('/notifications')}
+            />
+            <NavigationRow
+              icon="book"
+              title="Resources"
+              onPress={() => router.push('/resources')}
+            />
+          </>
+        )}
+        <NavigationRow
+          icon="settings"
+          title="Settings"
+          onPress={() => router.push('/settings')}
+        />
         <Button
+          icon="logout"
           title="Sign out of this device"
           secondary
           busy={busy}
@@ -50,6 +96,7 @@ export default function More() {
         {Boolean(error) && <Notice error text={error} />}
       </Card>
       <Card>
+        <SectionTitle icon="code">Made for your community</SectionTitle>
         <Body>Foundation build · 0.1.0</Body>
         <Body>
           Announcements, notifications, language and theme settings arrive in

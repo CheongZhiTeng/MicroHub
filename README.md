@@ -48,3 +48,7 @@ deno check supabase/functions/review-membership/index.ts
 ```
 
 Unit/component/flow tests use Jest; database security tests run the actual migrations in PGlite PostgreSQL. Supabase-owned auth/storage fixtures exist only in the test harness. No test fixtures are served to the application. Hosted Supabase, email delivery and physical-device acceptance require separate tests before rollout. Do not disable RLS or commit secrets to get started.
+
+### Modern Campus visual redesign
+
+The isolated `codex/ui-redesign` branch implements the reference-based interface. See [design decisions, rendered screenshots and preview instructions](docs/UI_REDESIGN.md). Future-module availability pages do not imply completed backend features.

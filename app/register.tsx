@@ -83,6 +83,7 @@ export default function Register() {
   };
   return (
     <Screen
+      auth
       title={sent ? 'Verify your email' : 'Join your club'}
       subtitle="Your school email establishes your identity. Membership is approved separately."
     >

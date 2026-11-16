@@ -92,6 +92,7 @@ export default function Recover() {
   };
   return (
     <Screen
+      auth
       title="Reset your password"
       subtitle="Use the code in your school email on this device."
     >
