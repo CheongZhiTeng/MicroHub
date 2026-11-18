@@ -92,6 +92,7 @@ export default function Recover() {
   };
   return (
     <Screen
+      auth
       title="Reset your password"
       subtitle="Use the code in your school email on this device."
     >
@@ -101,6 +102,7 @@ export default function Recover() {
             <Notice text="Password saved. Finish signing out before signing in again." />
           ) : (
             <PasswordField
+              onSubmitEditing={() => void submit()}
               label="New password"
               value={password}
               onChangeText={setPassword}
@@ -117,6 +119,13 @@ export default function Recover() {
               editable={!sent && !busy}
               autoCapitalize="none"
               keyboardType="email-address"
+              autoComplete="email"
+              autoCorrect={false}
+              placeholder="sa123456@foonyewsa.edu.my"
+              returnKeyType="go"
+              onSubmitEditing={() => {
+                if (!busy && !sent) void submit();
+              }}
             />
             {sent && (
               <>
@@ -125,9 +134,14 @@ export default function Recover() {
                   label="Recovery code"
                   editable={!busy}
                   value={token}
-                  onChangeText={setToken}
+                  onChangeText={(value) =>
+                    setToken(value.replace(/\D/g, '').slice(0, 6))
+                  }
+                  returnKeyType="done"
+                  onSubmitEditing={() => {
+                    if (!busy) void submit();
+                  }}
                   keyboardType="number-pad"
-                  maxLength={6}
                   autoComplete="one-time-code"
                 />
               </>
@@ -163,7 +177,7 @@ export default function Recover() {
         )}
         <Button
           title="Back to sign in"
-          secondary
+          quiet
           busy={busy}
           onPress={() => void cancel()}
         />

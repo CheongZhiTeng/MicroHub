@@ -50,7 +50,7 @@ test('recovery verifies an OTP before changing password and revokes refresh sess
   expect(resetPasswordForEmail).toHaveBeenCalledWith(
     'sa000001@foonyewsa.edu.my',
   );
-  await fireEvent.changeText(screen.getByLabelText('Recovery code'), '123456');
+  await fireEvent.changeText(screen.getByLabelText('Recovery code'), '123 456');
   await fireEvent.press(
     screen.getByRole('button', { name: 'Verify recovery code' }),
   );

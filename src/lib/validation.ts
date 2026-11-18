@@ -5,13 +5,18 @@ export function isSchoolEmail(value: string): boolean {
 export function studentId(email: string): string | null {
   return isSchoolEmail(email) ? email.slice(2, 8) : null;
 }
+export function passwordChecks(value: string) {
+  return [
+    {
+      label: '8–128 characters',
+      met: value.length >= 8 && value.length <= 128,
+    },
+    { label: 'A letter (A–Z)', met: /[A-Za-z]/.test(value) },
+    { label: 'A number (0–9)', met: /[0-9]/.test(value) },
+  ];
+}
 export function validPassword(password: string): boolean {
-  return (
-    password.length >= 8 &&
-    password.length <= 128 &&
-    /[A-Za-z]/.test(password) &&
-    /[0-9]/.test(password)
-  );
+  return passwordChecks(password).every((rule) => rule.met);
 }
 export function errorMessage(error: unknown): string {
   return typeof error === 'object' &&

@@ -9,6 +9,8 @@ import {
   Loading,
   Notice,
   Screen,
+  Badge,
+  SectionTitle,
 } from '../src/components/ui';
 import { Access } from '../src/features/access';
 import { client } from '../src/lib/supabase';
@@ -82,12 +84,13 @@ function Applications() {
           {Boolean(error) && <Notice error text={error} />}
           {rows.length === 0 && !error && (
             <Card>
-              <Heading>All caught up</Heading>
+              <SectionTitle icon="check">All caught up</SectionTitle>
               <Body>No applications are waiting for review.</Body>
             </Card>
           )}
           {rows.map((row) => (
             <Card key={row.id}>
+              <Badge label="Awaiting review" />
               <Heading>{row.profiles.display_name}</Heading>
               <Body>
                 {row.profiles.student_id} · {row.profiles.class_name}
@@ -99,6 +102,7 @@ function Applications() {
                 })}
               </Body>
               <Button
+                icon="check"
                 title="Approve membership"
                 busy={busy}
                 onPress={() => void review(row.id, true)}

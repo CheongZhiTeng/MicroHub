@@ -8,6 +8,8 @@ import {
   Field,
   Notice,
   Screen,
+  Avatar,
+  SectionTitle,
 } from '../src/components/ui';
 import { Access } from '../src/features/access';
 import type { Identity } from '../src/features/identity';
@@ -43,6 +45,8 @@ function ProfileForm({ identity }: { identity: Identity }) {
   };
   return (
     <Card>
+      <Avatar name={name} size={64} />
+      <SectionTitle icon="user">Personal details</SectionTitle>
       <Body>Student ID: {identity.profile.student_id}</Body>
       <Field
         label="Full name"
@@ -64,7 +68,10 @@ function ProfileForm({ identity }: { identity: Identity }) {
 }
 export default function Profile() {
   return (
-    <Screen title="My profile">
+    <Screen
+      title="My profile"
+      subtitle="A familiar face in your school community."
+    >
       <Access>
         {(identity) => (
           <ProfileForm key={identity.profile.id} identity={identity} />

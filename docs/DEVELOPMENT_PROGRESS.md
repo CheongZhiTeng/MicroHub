@@ -1,6 +1,6 @@
 # Development progress
 
-Updated 2026-11-16 (Asia/Kuala_Lumpur). Current phase: **MVP, increment 1 — identity and membership foundation**. MVP is not accepted or complete. No V1/V2 implementation has begun. Source requirements were fully extracted and all 76 items are preserved in FEATURE_MATRIX.md, including the inapplicable multi-club requirement.
+Updated 2026-11-17 (Asia/Kuala_Lumpur). Current phase: **MVP, increment 1 — identity and membership foundation**. MVP is not accepted or complete. No V1/V2 business functionality has begun; the UI branch includes clearly marked availability screens for future modules. Source requirements were fully extracted and all 76 items are preserved in FEATURE_MATRIX.md, including the inapplicable multi-club requirement.
 
 ## Implemented in this increment
 
@@ -18,7 +18,7 @@ Updated 2026-11-16 (Asia/Kuala_Lumpur). Current phase: **MVP, increment 1 — id
 | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm run typecheck`                                                                 | Passed, strict TypeScript for app and Jest tests                                                                                                                                                                                                                                         |
 | `npm run lint`                                                                      | Passed; scoped effect annotations explain network-loading state synchronization                                                                                                                                                                                                          |
-| `npm test`                                                                          | 60 native/component/flow tests plus 5 React Native Web tests, including actual DOM clicks; passed                                                                                                                                                                                        |
+| `npm test`                                                                          | 70 native/component/flow tests plus 5 React Native Web tests, including actual DOM clicks; passed                                                                                                                                                                                        |
 | `npm run test:db`                                                                   | 14 behavioral PostgreSQL scenarios passed (15 reported tests including parent); actual migrations and bootstrap run in PGlite                                                                                                                                                            |
 | `npm run format:check`                                                              | Passed after Prettier formatting                                                                                                                                                                                                                                                         |
 | `npx expo export --platform all`                                                    | Android/iOS Hermes and web bundles exported successfully; not native binary/device execution                                                                                                                                                                                             |
@@ -77,3 +77,27 @@ The user reports both initialization migrations succeeded and has configured Aut
 Reviewed every application route, shared component/hook/library, migration, bootstrap script, Edge entry point and project/CI configuration. Scope, confirmed fixes and evidence are in [DEBUG_AUDIT.md](DEBUG_AUDIT.md). User screenshot showed a rejected short password, not an inert Create button; its message was incorrectly styled as success. The user changed the minimum password length to eight with at least one letter and digit. Hosted Supabase must be changed manually to match; no schema migration is needed.
 
 Repaired error/success presentation; added password visibility/count feedback, resumed OTP verification and new recovery-code request paths; guarded duplicate actions and network deadlines; retained recovery completion when sign-out fails; validated public configuration before client creation; protected account-switch display and directory queries against stale state; fixed repeated search and punctuation; preserved secure-store cleanup metadata and Unicode chunks; made Edge payload/auth failures bounded and explicit. Checks passed: strict types, lint, 60 native tests, 5 Web tests, 14 PostgreSQL scenarios, 6 Edge tests, Edge typecheck, formatting, all-platform exports. No real school registration, email delivery or physical-device success is claimed. No V1/V2 work was started.
+
+## 2026-11-16: Modern Campus UI branch
+
+`codex/ui-redesign` restyles the existing application from the supplied Modern Campus reference. Shared tokens, professional SVG icons, original campus/study illustrations, rounded cards and mint active navigation cover auth, dashboard, profile, directory, admin review and module availability screens. Actual identity fields replace the reference’s fictional statistics; unfinished modules remain explicitly unavailable. No schema, Auth/session or permission changes; no V1/V2 business feature is marked complete.
+
+Validation: 66 native/unit/component tests, 5 Web tests, 14 database scenarios, types/lint/format and Android/iOS/Web exports. Browser interaction/screenshot coverage at three viewport sizes uses isolated HTTP fixtures; hosted SMTP and physical-device acceptance remain pending. See [UI_REDESIGN.md](UI_REDESIGN.md) for comparison evidence and Codespaces branch instructions.
+
+Next: user visual review on the UI branch, then resume hosted email/identity acceptance. Preserve the original feature branch until the user approves a merge.
+
+## 2026-11-17: accessible motion and account-form refinement
+
+Continued on the isolated `codex/ui-redesign` branch. Added reusable entrance/press animations with live system reduced-motion support, brighter shared surface tokens, colored dashboard summaries and module accents, and an illustration column that keeps text unobstructed. Refined the inline password eye/focus, live password-rule feedback, signup progress, keyboard submission and pasted verification/recovery codes. Existing authentication, authorization, account records and database schema are preserved. No dependencies were added in this follow-up.
+
+Validation: 70 native/unit/flow tests and 5 Web tests, 14 PostgreSQL scenarios (15 reported tests), strict TypeScript, ESLint and formatting; all-platform Expo exports. Browser checks cover 45 screens/viewports, rendered press scaling and reduced-motion switching, inline eye placement/value preservation, keyboard signup and pasted verification codes, plus existing profile, member and admin flows. Browser responses are isolated fixtures; this is not hosted email delivery or physical-device evidence.
+
+Next: preview this branch on the user's iPad/Android, review animation and keyboard behavior with accessibility settings, then resolve hosted SMTP and complete real signup/approval acceptance. Neither the original foundation branch nor `main` is merged by this work.
+
+## UI integration review
+
+The user requested an error check and integration. Reviewed UI tip `e012fa1` against foundation tip `230ba27`, then merged `codex/ui-redesign` into `codex/mvp-foundation` with a merge commit. The branches had no conflicts or intervening remote changes. The UI branch is retained; `main` remains unchanged.
+
+Fresh validation passed: `npm run check` (70 native/unit/flow tests, 5 Web tests, 14 PostgreSQL scenarios / 15 reported tests, TypeScript, ESLint, formatting), Android/iOS/Web exports, and 45 browser screen/viewport checks with registration, inline password eye, reduced motion, profile, member navigation and admin approval. No blocking regression was identified in the reviewed scope. Database migrations and core identity/session/access modules match the pre-redesign foundation. See [INTEGRATION_REVIEW.md](INTEGRATION_REVIEW.md).
+
+Continue development and preview from `codex/mvp-foundation`. Hosted SMTP, real end-to-end school-account flows and physical-device acceptance remain outstanding; the MVP is still incomplete.

@@ -148,3 +148,32 @@ test('existing verification code can be resumed without registering again', asyn
   await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));
   expect(signUp).not.toHaveBeenCalled();
 });
+
+test('keyboard submit and pasted spaced OTP retain the verified signup flow', async () => {
+  signUp.mockResolvedValue({ error: null });
+  verifyOtp.mockResolvedValue({ error: null });
+  await render(<Register />);
+  await fireEvent.changeText(
+    screen.getByLabelText('School email'),
+    'sa000001@foonyewsa.edu.my',
+  );
+  await fireEvent.changeText(
+    screen.getByLabelText('Password (8–128 characters)'),
+    'Example123',
+  );
+  await fireEvent(
+    screen.getByLabelText('Password (8–128 characters)'),
+    'submitEditing',
+  );
+  const otp = await screen.findByLabelText('Verification code');
+  await fireEvent.changeText(otp, '123 456');
+  await fireEvent(otp, 'submitEditing');
+  await waitFor(() =>
+    expect(verifyOtp).toHaveBeenCalledWith({
+      email: 'sa000001@foonyewsa.edu.my',
+      token: '123456',
+      type: 'signup',
+    }),
+  );
+  expect(router.replace).toHaveBeenCalledWith('/');
+});
