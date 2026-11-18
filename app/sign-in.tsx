@@ -1,6 +1,7 @@
 import { useBusy } from '../src/features/busy';
 import { Redirect, router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { InputHandle } from '../src/components/ui';
 import {
   Button,
   Card,
@@ -19,6 +20,7 @@ import {
 import { en } from '../src/locales/en';
 export default function SignIn() {
   const { session, recovery } = useSession();
+  const passwordRef = useRef<InputHandle>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { busy, start, finish } = useBusy();
@@ -55,12 +57,19 @@ export default function SignIn() {
           label="School email"
           value={email}
           onChangeText={setEmail}
+          editable={!busy}
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
+          placeholder="sa123456@foonyewsa.edu.my"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => passwordRef.current?.focus()}
           autoCorrect={false}
         />
         <PasswordField
+          inputRef={passwordRef}
+          onSubmitEditing={() => void login()}
           label="Password"
           value={password}
           onChangeText={setPassword}
@@ -76,7 +85,7 @@ export default function SignIn() {
         />
         <Button
           title="Reset password"
-          secondary
+          quiet
           busy={busy}
           onPress={() => router.push('/recover')}
         />

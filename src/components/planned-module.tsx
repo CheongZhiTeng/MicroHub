@@ -89,7 +89,21 @@ export function PlannedModule({ name }: { name: ModuleName }) {
         {() => (
           <>
             <Card>
-              <View style={styles.illustration}>
+              <View
+                style={[
+                  styles.illustration,
+                  {
+                    backgroundColor:
+                      name === 'homework' || name === 'submissions'
+                        ? theme.color.lavender
+                        : name === 'events'
+                          ? theme.color.sky
+                          : name === 'resources'
+                            ? theme.color.peach
+                            : theme.color.subtle,
+                  },
+                ]}
+              >
                 <Icon name={module.icon} size={54} />
                 <View style={styles.smallIcon}>
                   <Icon name="code" size={24} />

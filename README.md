@@ -51,4 +51,4 @@ Unit/component/flow tests use Jest; database security tests run the actual migra
 
 ### Modern Campus visual redesign
 
-The isolated `codex/ui-redesign` branch implements the reference-based interface. See [design decisions, rendered screenshots and preview instructions](docs/UI_REDESIGN.md). Future-module availability pages do not imply completed backend features.
+The isolated `codex/ui-redesign` branch implements the reference-based interface with colorful surfaces, reduced-motion-aware animations and refined account forms (inline password eye, live rules and keyboard submission). See [design decisions, rendered screenshots and preview instructions](docs/UI_REDESIGN.md). Future-module availability pages do not imply completed backend features.

@@ -151,7 +151,20 @@ async function main() {
       );
       const click = (name) =>
         page.getByRole('button', { name, exact: true }).click();
+      const settle = () =>
+        page.waitForFunction(() => {
+          const surfaces = Array.from(
+            document.querySelectorAll(
+              '[data-testid="screen-content"], [data-testid="motion-card"]',
+            ),
+          ).filter((el) => el.getClientRects().length);
+          return (
+            surfaces.length > 0 &&
+            surfaces.every((el) => getComputedStyle(el).opacity === '1')
+          );
+        });
       const snapshot = async (name) => {
+        await settle();
         await page.screenshot({
           path: path.join(output, `${size.name}-${name}.png`),
           fullPage: true,
@@ -181,6 +194,91 @@ async function main() {
       await page
         .getByRole('button', { name: 'Sign in', exact: true })
         .waitFor();
+      await settle();
+      const emailInput = page
+        .getByLabel('School email', { exact: true })
+        .filter({ visible: true });
+      const passwordInput = page
+        .getByLabel('Password', { exact: true })
+        .filter({ visible: true });
+      await emailInput.press('Enter');
+      assert(
+        await passwordInput.evaluate((el) => el === document.activeElement),
+        'email Next focuses password',
+      );
+      await passwordInput.fill('Example123');
+      const eye = page.getByRole('button', {
+        name: 'Show password',
+        exact: true,
+      });
+      const eyeBox = await eye.boundingBox();
+      const fieldBox = await passwordInput.boundingBox();
+      assert(
+        eyeBox.x >= fieldBox.x &&
+          eyeBox.x + eyeBox.width <= fieldBox.x + fieldBox.width + 1 &&
+          eyeBox.y >= fieldBox.y &&
+          eyeBox.y + eyeBox.height <= fieldBox.y + fieldBox.height + 1,
+        'eye target fits inside password field',
+      );
+      assert(
+        eyeBox.width >= 44 && eyeBox.height >= 44,
+        'accessible eye target',
+      );
+      const holdEye = async (reduced) => {
+        await page.emulateMedia({
+          reducedMotion: reduced ? 'reduce' : 'no-preference',
+        });
+        await settle();
+        await eye.scrollIntoViewIfNeeded();
+        const eyeBox = await eye.boundingBox();
+        await page.mouse.move(
+          eyeBox.x + eyeBox.width / 2,
+          eyeBox.y + eyeBox.height / 2,
+        );
+        await page.mouse.down();
+        if (reduced) {
+          // Sample the whole press interval; a single first-frame check could miss motion.
+          const stable = await eye.evaluate(async (el) => {
+            const start = performance.now();
+            while (performance.now() - start < 180) {
+              await new Promise(requestAnimationFrame);
+              if (
+                Math.abs(
+                  new DOMMatrixReadOnly(getComputedStyle(el).transform).a - 1,
+                ) > 0.001
+              )
+                return false;
+            }
+            return true;
+          });
+          assert(stable, 'reduced motion disables press scaling');
+        } else {
+          await page.waitForFunction(
+            (el) =>
+              new DOMMatrixReadOnly(getComputedStyle(el).transform).a < 0.98,
+            await eye.elementHandle(),
+          );
+        }
+        await page.mouse.up();
+        await page.waitForFunction(
+          (el) => el.type === 'text',
+          await passwordInput.elementHandle(),
+        );
+        assert.equal(await passwordInput.evaluate((el) => el.type), 'text');
+        assert.equal(await passwordInput.inputValue(), 'Example123');
+        await click('Hide password');
+        await page.waitForFunction(
+          (el) => el.type === 'password',
+          await passwordInput.elementHandle(),
+        );
+        assert.equal(await passwordInput.evaluate((el) => el.type), 'password');
+      };
+      await holdEye(false);
+      await holdEye(true);
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await passwordInput.fill('');
+      await passwordInput.blur();
+      await page.mouse.move(0, 0);
       await snapshot('sign-in');
       await click('Create a school account');
       await page.getByText('Join your club', { exact: true }).waitFor();
@@ -200,12 +298,26 @@ async function main() {
         .getByLabel('Password (8–128 characters)', { exact: true })
         .filter({ visible: true })
         .fill('Example123');
-      await click('Create account');
+      await page
+        .getByLabel('Password (8–128 characters)', { exact: true })
+        .filter({ visible: true })
+        .press('Enter');
       await page
         .getByLabel('Verification code', { exact: true })
         .filter({ visible: true })
         .waitFor();
       assert.equal(signups, 1);
+      const code = page
+        .getByLabel('Verification code', { exact: true })
+        .filter({ visible: true });
+      await code.fill('123 456');
+      assert.equal(
+        await code.inputValue(),
+        '123456',
+        'pasted verification code normalized',
+      );
+      await code.fill('');
+      await code.blur();
       await snapshot('verification');
       await click('Back to sign in');
       await page
@@ -299,7 +411,7 @@ async function main() {
     }
     assert.deepEqual(errors, [], 'browser runtime errors');
     console.log(
-      `Passed: ${checks} viewport/screen checks, registration validation + verification transition, profile save, member-only navigation, admin approval; no browser errors. HTTP responses are fixtures.`,
+      `Passed: ${checks} viewport/screen checks, animated press + live reduced motion, inline password eye, keyboard signup + code paste, registration validation + verification transition, profile save, member-only navigation, admin approval; no browser errors. HTTP responses are fixtures.`,
     );
   } finally {
     await browser.close();

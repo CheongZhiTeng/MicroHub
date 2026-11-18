@@ -1,6 +1,7 @@
 import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { InputHandle } from '../src/components/ui';
 import {
   Button,
   Card,
@@ -8,6 +9,8 @@ import {
   Notice,
   Screen,
   PasswordField,
+  AuthSteps,
+  Body,
 } from '../src/components/ui';
 import { client } from '../src/lib/supabase';
 import {
@@ -19,6 +22,7 @@ import {
   validOtp,
 } from '../src/lib/validation';
 export default function Register() {
+  const passwordRef = useRef<InputHandle>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
@@ -88,6 +92,7 @@ export default function Register() {
       subtitle="Your school email establishes your identity. Membership is approved separately."
     >
       <Card>
+        <AuthSteps step={sent ? 2 : 1} />
         <Field
           label="School email"
           value={email}
@@ -96,6 +101,10 @@ export default function Register() {
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
+          placeholder="sa123456@foonyewsa.edu.my"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => passwordRef.current?.focus()}
           autoCorrect={false}
         />
         {sent ? (
@@ -105,14 +114,21 @@ export default function Register() {
               label="Verification code"
               editable={!busy}
               value={token}
-              onChangeText={setToken}
+              onChangeText={(value) =>
+                setToken(value.replace(/\D/g, '').slice(0, 6))
+              }
+              returnKeyType="done"
+              onSubmitEditing={() => {
+                if (!busy) void submit();
+              }}
               keyboardType="number-pad"
-              maxLength={6}
               autoComplete="one-time-code"
             />
           </>
         ) : (
           <PasswordField
+            inputRef={passwordRef}
+            onSubmitEditing={() => void submit()}
             label="Password (8–128 characters)"
             value={password}
             onChangeText={setPassword}
@@ -121,6 +137,13 @@ export default function Register() {
           />
         )}
         {Boolean(message) && <Notice error={failed} text={message} />}
+        {failed &&
+          message.toLowerCase().includes('sending confirmation email') && (
+            <Body>
+              We couldn’t deliver your code. Contact your club administrator for
+              help with verification emails.
+            </Body>
+          )}
         <Button
           title={sent ? 'Verify email' : 'Create account'}
           busy={busy}
@@ -140,7 +163,7 @@ export default function Register() {
               ? 'Use a different email'
               : 'I already have a verification code'
           }
-          secondary
+          quiet
           busy={busy}
           onPress={() => {
             setMessage('');
@@ -162,7 +185,7 @@ export default function Register() {
         />
         <Button
           title="Back to sign in"
-          secondary
+          quiet
           busy={busy}
           onPress={() => router.replace('/sign-in')}
         />

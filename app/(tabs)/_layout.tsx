@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native';
+import { MotionPressable } from '../../src/components/motion';
 import { Redirect, Tabs } from 'expo-router';
 import { Icon } from '../../src/components/icon';
 import { Loading, Screen } from '../../src/components/ui';
@@ -28,7 +28,7 @@ export default function TabsLayout() {
           testID,
           style,
         }) => (
-          <Pressable
+          <MotionPressable
             accessibilityRole="tab"
             accessibilityLabel={accessibilityLabel}
             accessibilityState={accessibilityState}
@@ -41,7 +41,7 @@ export default function TabsLayout() {
             ]}
           >
             {children}
-          </Pressable>
+          </MotionPressable>
         ),
         tabBarActiveTintColor: theme.color.primary,
         tabBarInactiveTintColor: theme.color.muted,

@@ -1,10 +1,9 @@
-import { useState, type PropsWithChildren } from 'react';
-import { PASSWORD_RULE } from '../lib/validation';
+import { passwordChecks } from '../lib/validation';
+import { useRef, useState, type PropsWithChildren, type Ref } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,7 +16,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme/tokens';
 import { Icon, type IconName } from './icon';
+import { MotionPressable, Reveal } from './motion';
 import { Campus } from './illustrations/campus';
+
+export type InputHandle = React.ComponentRef<typeof TextInput>;
 
 export function Brand({
   subtitle = 'Your school club, connected.',
@@ -60,7 +62,10 @@ export function Screen({
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scroll}
         >
-          <View style={[styles.content, auth && styles.authContent]}>
+          <Reveal
+            testID="screen-content"
+            style={[styles.content, auth && styles.authContent]}
+          >
             {header ?? <Brand />}
             <View
               style={[
@@ -69,15 +74,10 @@ export function Screen({
                 dashboard && styles.dashboardHero,
               ]}
             >
-              {(auth || dashboard) && (
-                <View pointerEvents="none" style={styles.campus}>
-                  <Campus
-                    width={dashboard ? 170 : 200}
-                    height={dashboard ? 102 : 120}
-                  />
-                </View>
-              )}
               <View style={(auth || dashboard) && styles.heroCopy}>
+                {(auth || dashboard) && (
+                  <Text style={styles.eyebrow}>LEARN. CONNECT. BELONG.</Text>
+                )}
                 <Text accessibilityRole="header" style={styles.title}>
                   {title}
                 </Text>
@@ -85,6 +85,11 @@ export function Screen({
                   <Text style={styles.body}>{subtitle}</Text>
                 )}
               </View>
+              {(auth || dashboard) && (
+                <View pointerEvents="none" style={styles.campus}>
+                  <Campus width={112} height={100} />
+                </View>
+              )}
             </View>
             {children}
             {auth && (
@@ -95,7 +100,7 @@ export function Screen({
                 </Text>
               </View>
             )}
-          </View>
+          </Reveal>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -104,8 +109,13 @@ export function Screen({
 export function Card({
   children,
   style,
-}: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
-  return <View style={[styles.card, style]}>{children}</View>;
+  delay = 0,
+}: PropsWithChildren<{ style?: StyleProp<ViewStyle>; delay?: number }>) {
+  return (
+    <Reveal testID="motion-card" delay={delay} style={[styles.card, style]}>
+      {children}
+    </Reveal>
+  );
 }
 export function Body({ children }: PropsWithChildren) {
   return <Text style={styles.body}>{children}</Text>;
@@ -167,14 +177,14 @@ export function IconButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
       style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
     >
       <Icon name={icon} color={theme.color.muted} />
-    </Pressable>
+    </MotionPressable>
   );
 }
 export function Notice({
@@ -210,45 +220,55 @@ export function Button({
   onPress,
   busy = false,
   secondary = false,
+  quiet = false,
   icon,
 }: {
   title: string;
   onPress: () => void;
   busy?: boolean;
   secondary?: boolean;
+  quiet?: boolean;
   icon?: IconName;
 }) {
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityState={{ disabled: busy, busy }}
       disabled={busy}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={({ pressed, hovered }) => [
         styles.button,
+        hovered &&
+          !busy &&
+          !secondary &&
+          !quiet && { backgroundColor: theme.color.primaryDark },
         secondary && styles.secondary,
+        quiet && styles.quiet,
         (pressed || busy) && styles.pressed,
       ]}
     >
       {busy ? (
         <ActivityIndicator
-          color={secondary ? theme.color.primary : '#FFFFFF'}
+          color={secondary || quiet ? theme.color.primary : '#FFFFFF'}
           size="small"
         />
       ) : icon ? (
         <Icon
           name={icon}
           size={20}
-          color={secondary ? theme.color.primary : '#FFFFFF'}
+          color={secondary || quiet ? theme.color.primary : '#FFFFFF'}
         />
       ) : null}
       <Text
-        style={[styles.buttonText, secondary && { color: theme.color.primary }]}
+        style={[
+          styles.buttonText,
+          (secondary || quiet) && { color: theme.color.primary },
+        ]}
       >
         {busy ? 'Please wait…' : title}
       </Text>
-    </Pressable>
+    </MotionPressable>
   );
 }
 export function NavigationRow({
@@ -263,7 +283,7 @@ export function NavigationRow({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="button"
       accessibilityLabel={title}
       onPress={onPress}
@@ -277,24 +297,38 @@ export function NavigationRow({
         {Boolean(subtitle) && <Text style={styles.caption}>{subtitle}</Text>}
       </View>
       <Icon name="chevron" size={18} color={theme.color.muted} />
-    </Pressable>
+    </MotionPressable>
   );
 }
 export function Field({
   label,
   style,
+  inputRef,
+  onFocus,
+  onBlur,
   ...props
-}: TextInputProps & { label: string }) {
+}: TextInputProps & { label: string; inputRef?: Ref<InputHandle> }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
         {...props}
+        ref={inputRef}
         accessibilityLabel={label}
         placeholderTextColor={theme.color.muted}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         style={[
           styles.input,
           props.editable === false && styles.readOnly,
+          focused && styles.focused,
           style,
         ]}
       />
@@ -307,19 +341,28 @@ export function PasswordField({
   onChangeText,
   editable = true,
   creating = false,
+  inputRef,
+  onSubmitEditing,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
   editable?: boolean;
   creating?: boolean;
+  inputRef?: React.RefObject<InputHandle | null>;
+  onSubmitEditing?: () => void;
 }) {
   const [visible, setVisible] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const ownRef = useRef<InputHandle>(null);
+  const ref = inputRef ?? ownRef;
+  const rules = passwordChecks(value);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.passwordWrap}>
         <TextInput
+          ref={ref}
           accessibilityLabel={label}
           value={value}
           onChangeText={onChangeText}
@@ -328,30 +371,101 @@ export function PasswordField({
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete={creating ? 'new-password' : 'current-password'}
+          returnKeyType="go"
+          onSubmitEditing={editable ? onSubmitEditing : undefined}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           style={[
             styles.input,
             styles.passwordInput,
             !editable && styles.readOnly,
+            focused && styles.focused,
           ]}
         />
-        <Pressable
+        <MotionPressable
           accessibilityRole="button"
           accessibilityLabel={visible ? 'Hide password' : 'Show password'}
-          onPress={() => setVisible(!visible)}
-          style={styles.passwordToggle}
+          accessibilityState={{ disabled: !editable }}
+          disabled={!editable}
+          onPress={() => {
+            setVisible(!visible);
+            ref.current?.focus();
+          }}
+          style={[styles.passwordToggle, visible && styles.eyeActive]}
         >
           <Icon
             name={visible ? 'eyeOff' : 'eye'}
             size={21}
-            color={theme.color.muted}
+            color={visible ? theme.color.primary : theme.color.muted}
           />
-        </Pressable>
+        </MotionPressable>
       </View>
       {creating && (
-        <Text style={styles.caption}>
-          {PASSWORD_RULE} {value.length} characters entered.
-        </Text>
+        <View style={styles.rules}>
+          {rules.map((rule) => (
+            <View
+              key={rule.label}
+              style={[styles.rule, rule.met && styles.ruleMet]}
+              accessibilityLabel={`${rule.label}: ${rule.met ? 'met' : 'not met'}`}
+            >
+              <Icon
+                name={rule.met ? 'check' : 'info'}
+                size={12}
+                color={rule.met ? theme.color.primaryDark : theme.color.muted}
+              />
+              <Text
+                style={[
+                  styles.ruleText,
+                  rule.met && { color: theme.color.primaryDark },
+                ]}
+              >
+                {rule.label}
+              </Text>
+            </View>
+          ))}
+        </View>
       )}
+    </View>
+  );
+}
+export function AuthSteps({ step }: { step: 1 | 2 }) {
+  return (
+    <View
+      style={styles.steps}
+      accessibilityLabel={`Step ${step} of 2: ${step === 1 ? 'Create account' : 'Verify email'}`}
+    >
+      {['Account', 'Verify email'].map((label, index) => (
+        <View key={label} style={styles.step}>
+          <View
+            style={[styles.stepNumber, step >= index + 1 && styles.stepActive]}
+          >
+            {step > index + 1 ? (
+              <Icon name="check" size={14} color="#FFFFFF" />
+            ) : (
+              <Text
+                style={[
+                  styles.stepDigit,
+                  step >= index + 1 && { color: '#FFFFFF' },
+                ]}
+              >
+                {index + 1}
+              </Text>
+            )}
+          </View>
+          <Text
+            style={[
+              styles.stepText,
+              step === index + 1 && {
+                color: theme.color.text,
+                fontWeight: '700',
+              },
+            ]}
+          >
+            {label}
+          </Text>
+          {index === 0 && <View style={styles.stepLine} />}
+        </View>
+      ))}
     </View>
   );
 }
@@ -364,7 +478,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   content: { width: '100%', maxWidth: 820, alignSelf: 'center', gap: 16 },
-  authContent: { maxWidth: 480 },
+  authContent: { maxWidth: 520 },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -396,14 +510,24 @@ const styles = StyleSheet.create({
   flex: { flex: 1, minWidth: 0 },
   intro: { gap: 8, paddingTop: 12 },
   hero: {
-    minHeight: 158,
-    paddingTop: 14,
-    paddingBottom: 32,
-    justifyContent: 'flex-start',
+    backgroundColor: theme.color.subtle,
+    borderRadius: 24,
+    padding: 18,
+    gap: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
-  dashboardHero: { minHeight: 112, paddingBottom: 12 },
-  heroCopy: { width: '77%', zIndex: 1, gap: 8 },
-  campus: { position: 'absolute', right: -18, bottom: -7, opacity: 0.78 },
+  dashboardHero: { backgroundColor: theme.color.subtle },
+  heroCopy: { flex: 1, minWidth: 0, gap: 8 },
+  campus: { width: 96, alignItems: 'center', justifyContent: 'center' },
+  eyebrow: {
+    fontFamily: theme.font,
+    fontSize: 9,
+    letterSpacing: 1,
+    fontWeight: '800',
+    color: theme.color.primaryDark,
+  },
   title: {
     fontFamily: theme.font,
     fontSize: theme.type.title,
@@ -499,6 +623,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondary: { backgroundColor: theme.color.subtle },
+  quiet: { backgroundColor: 'transparent', minHeight: 44, paddingVertical: 8 },
   pressed: { opacity: 0.65 },
   buttonText: {
     fontFamily: theme.font,
@@ -528,6 +653,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: theme.color.surface,
   },
+  focused: { borderColor: theme.color.focus, backgroundColor: '#F7FFFC' },
   readOnly: { backgroundColor: theme.color.background },
   passwordWrap: { position: 'relative' },
   passwordInput: { paddingRight: 52 },
@@ -536,16 +662,63 @@ const styles = StyleSheet.create({
     right: 3,
     top: 3,
     bottom: 3,
+    borderRadius: 9,
     width: 44,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  eyeActive: { backgroundColor: theme.color.subtle },
+  rules: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
+  rule: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+    backgroundColor: theme.color.background,
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+  },
+  ruleMet: { backgroundColor: theme.color.subtle },
+  ruleText: { fontFamily: theme.font, fontSize: 11, color: theme.color.muted },
+  steps: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.color.border,
+    marginBottom: 4,
+  },
+  step: { flexDirection: 'row', gap: 7, alignItems: 'center', flex: 1 },
+  stepNumber: {
+    width: 25,
+    height: 25,
+    borderRadius: 9,
+    backgroundColor: theme.color.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepActive: { backgroundColor: theme.color.primary },
+  stepDigit: {
+    fontFamily: theme.font,
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.color.muted,
+  },
+  stepText: {
+    fontFamily: theme.font,
+    fontSize: 12,
+    color: theme.color.muted,
+    flexShrink: 1,
+  },
+  stepLine: { height: 1, backgroundColor: theme.color.border, flex: 1 },
   privacy: {
     flexDirection: 'row',
     gap: 6,
     justifyContent: 'center',
     alignItems: 'center',
+    flexWrap: 'wrap',
     paddingVertical: 8,
   },
   navRow: {

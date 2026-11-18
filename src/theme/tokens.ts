@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 // Modern Campus: values follow the supplied dashboard reference.
 export const theme = {
   color: {
-    background: '#F6F8F8',
+    background: '#F2F8F7',
     surface: '#FFFFFF',
     text: '#10132E',
     muted: '#535B66',
@@ -12,9 +12,16 @@ export const theme = {
     border: '#DFE6E8',
     error: '#B12A3E',
     errorSurface: '#FFF0F2',
-    subtle: '#E1F3F1',
-    selected: '#C2ECE9',
+    subtle: '#DEF5EE',
+    selected: '#BCEDE1',
     onPrimary: '#FFFFFF',
+    lavender: '#EEE9FF',
+    violet: '#66509A',
+    peach: '#FFF0DE',
+    amber: '#8A5518',
+    sky: '#E4F1FF',
+    blue: '#346CA1',
+    focus: '#087F7A',
   },
   font: Platform.select({
     ios: 'System',

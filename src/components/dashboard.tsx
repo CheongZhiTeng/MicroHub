@@ -1,5 +1,6 @@
+import { MotionPressable } from './motion';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { Identity } from '../features/identity';
 import { theme } from '../theme/tokens';
 import { Icon } from './icon';
@@ -17,14 +18,14 @@ export function ClubHeader({ identity }: { identity: Identity | null }) {
           onPress={() => router.push('/notifications')}
         />
       )}
-      <Pressable
+      <MotionPressable
         accessibilityRole="button"
         accessibilityLabel="My profile"
         onPress={() => router.push('/profile')}
         style={styles.profile}
       >
         <Avatar name={identity?.profile.display_name ?? ''} size={40} />
-      </Pressable>
+      </MotionPressable>
     </View>
   );
 }
@@ -32,13 +33,21 @@ export function IdentityStats({ identity }: { identity: Identity }) {
   const items = [
     {
       icon: 'shield' as const,
-      value: identity.member ? 'Active' : 'Pending',
+      value: identity.member
+        ? 'Active'
+        : identity.application === 'pending'
+          ? 'In review'
+          : 'Not joined',
       label: 'Membership',
+      tint: theme.color.subtle,
+      ink: theme.color.primary,
     },
     {
       icon: 'user' as const,
       value: identity.profile.class_name || 'Not set',
       label: 'Your class',
+      tint: theme.color.lavender,
+      ink: theme.color.violet,
     },
     {
       icon: 'members' as const,
@@ -49,13 +58,22 @@ export function IdentityStats({ identity }: { identity: Identity }) {
             ? 'Admin'
             : 'Member',
       label: 'Your role',
+      tint: theme.color.peach,
+      ink: theme.color.amber,
     },
   ];
   return (
     <View style={styles.stats}>
-      {items.map((item) => (
-        <Card key={item.label} style={styles.stat}>
-          <Icon name={item.icon} size={20} />
+      {items.map((item, index) => (
+        <Card
+          key={item.label}
+          delay={index * 45}
+          style={[
+            styles.stat,
+            { backgroundColor: item.tint, borderColor: item.tint },
+          ]}
+        >
+          <Icon name={item.icon} size={20} color={item.ink} />
           <Text style={styles.statValue}>{item.value}</Text>
           <Text style={styles.statLabel}>{item.label}</Text>
         </Card>
@@ -76,13 +94,29 @@ function OverviewLink({
   onPress: () => void;
 }>) {
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
       style={({ pressed }) => pressed && { opacity: 0.7 }}
     >
-      <Card style={styles.overviewCard}>
+      <Card
+        style={[
+          styles.overviewCard,
+          {
+            borderTopWidth: 3,
+            borderTopColor:
+              icon === 'homework'
+                ? theme.color.violet
+                : icon === 'calendar'
+                  ? theme.color.blue
+                  : icon === 'announcement'
+                    ? theme.color.amber
+                    : theme.color.primary,
+          },
+        ]}
+        delay={icon === 'homework' ? 60 : 100}
+      >
         <View style={styles.cardHeading}>
           <View style={styles.copy}>
             <SectionTitle icon={icon}>{title}</SectionTitle>
@@ -91,7 +125,7 @@ function OverviewLink({
         </View>
         {children}
       </Card>
-    </Pressable>
+    </MotionPressable>
   );
 }
 export function ClubOverview() {
