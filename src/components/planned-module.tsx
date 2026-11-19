@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Access } from '../features/access';
-import { theme } from '../theme/tokens';
+import type { Theme } from '../theme/tokens';
+import { useTheme } from '../theme/provider';
 import { Icon, type IconName } from './icon';
 import { Badge, Body, Button, Card, Heading, Screen } from './ui';
 
@@ -83,6 +84,8 @@ export const modules = {
 export type ModuleName = keyof typeof modules;
 export function PlannedModule({ name }: { name: ModuleName }) {
   const module = modules[name];
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <Screen title={module.title} subtitle={module.subtitle}>
       <Access member>
@@ -115,7 +118,7 @@ export function PlannedModule({ name }: { name: ModuleName }) {
               {name === 'homework' && (
                 <Button
                   title="My submissions"
-                  secondary
+                  variant="secondary"
                   onPress={() => router.push('/submissions')}
                 />
               )}
@@ -125,32 +128,33 @@ export function PlannedModule({ name }: { name: ModuleName }) {
       </Access>
       <Button
         title="Back to home"
-        secondary
+        variant="secondary"
         onPress={() => router.replace('/(tabs)')}
       />
     </Screen>
   );
 }
-const styles = StyleSheet.create({
-  illustration: {
-    width: 128,
-    height: 128,
-    borderRadius: 40,
-    backgroundColor: theme.color.subtle,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginVertical: 22,
-  },
-  smallIcon: {
-    position: 'absolute',
-    right: -8,
-    bottom: 2,
-    backgroundColor: theme.color.surface,
-    padding: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.color.border,
-    transform: [{ rotate: '-10deg' }],
-  },
-});
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    illustration: {
+      width: 128,
+      height: 128,
+      borderRadius: 40,
+      backgroundColor: theme.color.subtle,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'center',
+      marginVertical: 22,
+    },
+    smallIcon: {
+      position: 'absolute',
+      right: -8,
+      bottom: 2,
+      backgroundColor: theme.color.surface,
+      padding: 10,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.color.border,
+      transform: [{ rotate: '-10deg' }],
+    },
+  });

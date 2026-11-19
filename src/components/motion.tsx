@@ -1,3 +1,4 @@
+import { useTheme } from '../theme/provider';
 import {
   createContext,
   useContext,
@@ -77,7 +78,7 @@ export function Reveal({
     progress.setValue(0);
     const animation = Animated.timing(progress, {
       toValue: 1,
-      duration: 280,
+      duration: 220,
       delay,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: Platform.OS !== 'web',
@@ -100,7 +101,7 @@ export function Reveal({
             {
               translateY: progress.interpolate({
                 inputRange: [0, 1],
-                outputRange: [10, 0],
+                outputRange: [8, 0],
               }),
             },
           ],
@@ -118,10 +119,14 @@ export function MotionPressable({
   onPressOut,
   onHoverIn,
   onHoverOut,
+  onFocus,
+  onBlur,
   ...props
 }: PressableProps) {
   const reduced = useReducedMotion();
   const [scale] = useState(() => new Animated.Value(1));
+  const { theme } = useTheme();
+  const [focused, setFocused] = useState(false);
   const [pressed, setPressed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const animation = useRef<Animated.CompositeAnimation | null>(null);
@@ -147,6 +152,14 @@ export function MotionPressable({
   return (
     <AnimatedPressable
       {...props}
+      onFocus={(event) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        setFocused(false);
+        onBlur?.(event);
+      }}
       onHoverIn={(event) => {
         setHovered(true);
         onHoverIn?.(event);
@@ -169,6 +182,13 @@ export function MotionPressable({
         typeof style === 'function'
           ? style({ pressed: pressed && !props.disabled, hovered })
           : style,
+        focused &&
+          Platform.OS === 'web' && {
+            outlineStyle: 'solid',
+            outlineWidth: 2,
+            outlineColor: theme.color.focus,
+            outlineOffset: 3,
+          },
         { transform: [{ scale }] },
       ]}
     />

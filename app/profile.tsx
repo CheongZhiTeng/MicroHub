@@ -79,7 +79,7 @@ export default function Profile() {
       </Access>
       <Button
         title="Back to home"
-        secondary
+        variant="secondary"
         onPress={() => router.replace('/(tabs)')}
       />
     </Screen>

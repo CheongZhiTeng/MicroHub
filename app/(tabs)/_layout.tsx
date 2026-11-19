@@ -3,9 +3,12 @@ import { Redirect, Tabs } from 'expo-router';
 import { Icon } from '../../src/components/icon';
 import { Loading, Screen } from '../../src/components/ui';
 import { useSession } from '../../src/features/session';
-import { theme } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/provider';
+import { useWindowDimensions } from 'react-native';
 import { en } from '../../src/locales/en';
 export default function TabsLayout() {
+  const { theme } = useTheme();
+  const { width } = useWindowDimensions();
   const { session, loading, recovery } = useSession();
   if (loading)
     return (
@@ -57,6 +60,7 @@ export default function TabsLayout() {
           fontWeight: '600',
         },
         tabBarStyle: {
+          display: width >= 1024 ? 'none' : 'flex',
           backgroundColor: theme.color.surface,
           borderTopColor: theme.color.border,
           borderTopLeftRadius: 24,

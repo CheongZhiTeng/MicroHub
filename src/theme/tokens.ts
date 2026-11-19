@@ -28,9 +28,9 @@ export const theme = {
     android: 'sans-serif',
     default: 'system-ui',
   }),
-  type: { brand: 28, title: 26, heading: 18, body: 15, label: 13, caption: 12 },
+  type: { brand: 28, title: 30, heading: 19, body: 16, label: 13, caption: 12 },
   space: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
-  radii: { sm: 10, control: 12, card: 18, pill: 999 },
+  radii: { sm: 10, control: 12, card: 20, pill: 999 },
   radius: 18,
   shadow: {
     shadowColor: '#163A40',
@@ -39,4 +39,32 @@ export const theme = {
     shadowRadius: 5,
     elevation: 2,
   },
+};
+
+export type Theme = typeof theme;
+export const darkTheme: Theme = {
+  ...theme,
+  color: {
+    ...theme.color,
+    background: '#0C1423',
+    surface: '#172235',
+    text: '#F2F6FF',
+    muted: '#BAC6D8',
+    primary: '#5EE2CB',
+    primaryDark: '#A2F0DF',
+    border: '#304159',
+    subtle: '#153E3D',
+    selected: '#205650',
+    onPrimary: '#092D29',
+    error: '#FF9BA9',
+    errorSurface: '#44232F',
+    lavender: '#30294C',
+    violet: '#C5AEFF',
+    peach: '#442F25',
+    amber: '#FFC38A',
+    sky: '#203650',
+    blue: '#9BC8FF',
+    focus: '#5EE2CB',
+  },
+  shadow: { ...theme.shadow, shadowOpacity: 0.16 },
 };

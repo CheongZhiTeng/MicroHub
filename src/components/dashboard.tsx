@@ -1,13 +1,17 @@
+import { ContentGrid } from './layout';
 import { MotionPressable } from './motion';
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Identity } from '../features/identity';
-import { theme } from '../theme/tokens';
+import type { Theme } from '../theme/tokens';
+import { useTheme } from '../theme/provider';
 import { Icon } from './icon';
 import { StudyArt } from './illustrations/campus';
 import { Avatar, Body, Brand, Card, IconButton, SectionTitle } from './ui';
 
 export function ClubHeader({ identity }: { identity: Identity | null }) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <View style={styles.header}>
       <Brand subtitle={identity?.clubName ?? 'Your school club'} />
@@ -30,6 +34,7 @@ export function ClubHeader({ identity }: { identity: Identity | null }) {
   );
 }
 export function IdentityStats({ identity }: { identity: Identity }) {
+  const { theme } = useTheme();
   const items = [
     {
       icon: 'shield' as const,
@@ -62,6 +67,7 @@ export function IdentityStats({ identity }: { identity: Identity }) {
       ink: theme.color.amber,
     },
   ];
+  const styles = makeStyles(theme);
   return (
     <View style={styles.stats}>
       {items.map((item, index) => (
@@ -93,6 +99,8 @@ function OverviewLink({
   icon: import('./icon').IconName;
   onPress: () => void;
 }>) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <MotionPressable
       accessibilityRole="button"
@@ -129,8 +137,10 @@ function OverviewLink({
   );
 }
 export function ClubOverview() {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
-    <>
+    <ContentGrid>
       <OverviewLink
         label="Assignment workspace"
         title="Your assignments"
@@ -189,69 +199,70 @@ export function ClubOverview() {
           </View>
         </View>
       </OverviewLink>
-    </>
+    </ContentGrid>
   );
 }
-const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  profile: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stats: { flexDirection: 'row', gap: 8 },
-  stat: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 12,
-    gap: 6,
-  },
-  statValue: {
-    fontFamily: theme.font,
-    fontSize: 15,
-    fontWeight: '800',
-    textAlign: 'center',
-    color: theme.color.text,
-  },
-  statLabel: {
-    fontFamily: theme.font,
-    fontSize: 11,
-    color: theme.color.muted,
-    textAlign: 'center',
-  },
-  assignment: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  copy: { flex: 1, gap: 10 },
-  overviewCard: { padding: 14, gap: 8 },
-  cardHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardSubtitle: {
-    fontFamily: theme.font,
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: '700',
-    color: theme.color.text,
-  },
-  detail: {
-    fontFamily: theme.font,
-    fontSize: 12,
-    lineHeight: 19,
-    color: theme.color.muted,
-  },
-  eventRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  eventIcon: {
-    padding: 10,
-    backgroundColor: theme.color.subtle,
-    borderRadius: 12,
-  },
-  highlight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    backgroundColor: theme.color.subtle,
-    borderRadius: theme.radii.control,
-    paddingHorizontal: 10,
-  },
-});
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    header: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    profile: {
+      minWidth: 44,
+      minHeight: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    stats: { flexDirection: 'row', gap: 8 },
+    stat: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: 'center',
+      paddingHorizontal: 6,
+      paddingVertical: 12,
+      gap: 6,
+    },
+    statValue: {
+      fontFamily: theme.font,
+      fontSize: 15,
+      fontWeight: '800',
+      textAlign: 'center',
+      color: theme.color.text,
+    },
+    statLabel: {
+      fontFamily: theme.font,
+      fontSize: 12,
+      color: theme.color.muted,
+      textAlign: 'center',
+    },
+    assignment: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    copy: { flex: 1, gap: 10 },
+    overviewCard: { padding: 14, gap: 8 },
+    cardHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    cardSubtitle: {
+      fontFamily: theme.font,
+      fontSize: 14,
+      lineHeight: 21,
+      fontWeight: '700',
+      color: theme.color.text,
+    },
+    detail: {
+      fontFamily: theme.font,
+      fontSize: 12,
+      lineHeight: 19,
+      color: theme.color.muted,
+    },
+    eventRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    eventIcon: {
+      padding: 10,
+      backgroundColor: theme.color.subtle,
+      borderRadius: 12,
+    },
+    highlight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 10,
+      backgroundColor: theme.color.subtle,
+      borderRadius: theme.radii.control,
+      paddingHorizontal: 10,
+    },
+  });

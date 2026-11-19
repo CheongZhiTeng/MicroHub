@@ -76,7 +76,7 @@ export default function Home() {
                 </Body>
                 <Button
                   title="Edit profile"
-                  secondary
+                  variant="secondary"
                   onPress={() => router.push('/profile')}
                 />
                 {identity.application === 'pending' ? (
@@ -84,7 +84,7 @@ export default function Home() {
                     <Notice text="Your application is waiting for review." />
                     <Button
                       title="Check application status"
-                      secondary
+                      variant="secondary"
                       onPress={() => void reload()}
                     />
                   </>

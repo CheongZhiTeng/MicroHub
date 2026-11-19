@@ -1,13 +1,7 @@
+import { ThemePicker } from '../src/components/theme-picker';
 import { router } from 'expo-router';
 import { Access } from '../src/features/access';
-import {
-  Badge,
-  Body,
-  Button,
-  Card,
-  Screen,
-  SectionTitle,
-} from '../src/components/ui';
+import { Body, Button, Card, Screen, SectionTitle } from '../src/components/ui';
 export default function Settings() {
   return (
     <Screen title="Settings" subtitle="Your MicroHub experience.">
@@ -16,12 +10,9 @@ export default function Settings() {
           <>
             <Card>
               <SectionTitle icon="settings">Appearance & language</SectionTitle>
-              <Body>Modern Campus · Light appearance · English</Body>
-              <Badge label="More options in V1" />
-              <Body>
-                Dark mode, system theme and Simplified Chinese are planned for
-                V1.
-              </Body>
+              <Body>Choose your look. System follows your device.</Body>
+              <ThemePicker />
+              <Body>English · Simplified Chinese is planned for V1.</Body>
             </Card>
             <Card>
               <SectionTitle icon="shield">Account & privacy</SectionTitle>
@@ -31,7 +22,7 @@ export default function Settings() {
               </Body>
               <Button
                 title="Edit profile"
-                secondary
+                variant="secondary"
                 onPress={() => router.push('/profile')}
               />
               <Body>
@@ -44,7 +35,7 @@ export default function Settings() {
       </Access>
       <Button
         title="Back to More"
-        secondary
+        variant="secondary"
         onPress={() => router.replace('/(tabs)/more')}
       />
     </Screen>

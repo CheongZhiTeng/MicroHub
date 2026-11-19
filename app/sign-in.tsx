@@ -76,16 +76,23 @@ export default function SignIn() {
           editable={!busy}
         />
         {Boolean(error) && <Notice error text={error} />}
-        <Button title="Sign in" busy={busy} onPress={() => void login()} />
         <Button
+          fullWidth
+          title="Sign in"
+          busy={busy}
+          onPress={() => void login()}
+        />
+        <Button
+          fullWidth
           title="Create a school account"
-          secondary
+          variant="ghost"
           busy={busy}
           onPress={() => router.push('/register')}
         />
         <Button
+          fullWidth
           title="Reset password"
-          quiet
+          variant="ghost"
           busy={busy}
           onPress={() => router.push('/recover')}
         />

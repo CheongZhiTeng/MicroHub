@@ -150,6 +150,7 @@ export default function Recover() {
         )}
         {Boolean(message) && <Notice error={failed} text={message} />}
         <Button
+          fullWidth
           title={
             recovery
               ? passwordSaved
@@ -164,8 +165,9 @@ export default function Recover() {
         />
         {sent && !recovery && (
           <Button
+            fullWidth
             title="Request a new recovery code"
-            secondary
+            variant="ghost"
             busy={busy}
             onPress={() => {
               setSent(false);
@@ -176,8 +178,9 @@ export default function Recover() {
           />
         )}
         <Button
+          fullWidth
           title="Back to sign in"
-          quiet
+          variant="ghost"
           busy={busy}
           onPress={() => void cancel()}
         />

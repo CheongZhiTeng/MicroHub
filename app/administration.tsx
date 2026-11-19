@@ -1,3 +1,5 @@
+import { useWindowDimensions } from 'react-native';
+import { ConfirmDialog } from '../src/components/confirm-dialog';
 import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -21,6 +23,8 @@ type Application = {
   profiles: { display_name: string; student_id: string; class_name: string };
 };
 function Applications() {
+  const { width } = useWindowDimensions();
+  const [decline, setDecline] = useState<string | null>(null);
   const generation = useRef(0);
   const [rows, setRows] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +81,16 @@ function Applications() {
   };
   return (
     <>
+      <ConfirmDialog
+        visible={decline !== null}
+        title="Decline application?"
+        message="The student can apply again after the waiting period."
+        busy={busy}
+        onCancel={() => setDecline(null)}
+        onConfirm={() => {
+          if (decline) void review(decline, false).then(() => setDecline(null));
+        }}
+      />
       {loading ? (
         <Loading />
       ) : (
@@ -89,7 +103,19 @@ function Applications() {
             </Card>
           )}
           {rows.map((row) => (
-            <Card key={row.id}>
+            <Card
+              key={row.id}
+              style={
+                width >= 1024
+                  ? {
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: 24,
+                    }
+                  : undefined
+              }
+            >
               <Badge label="Awaiting review" />
               <Heading>{row.profiles.display_name}</Heading>
               <Body>
@@ -109,15 +135,15 @@ function Applications() {
               />
               <Button
                 title="Decline application"
-                secondary
+                variant="secondary"
                 busy={busy}
-                onPress={() => void review(row.id, false)}
+                onPress={() => setDecline(row.id)}
               />
             </Card>
           ))}
           <Button
             title="Refresh applications"
-            secondary
+            variant="secondary"
             busy={busy}
             onPress={() => void load()}
           />
@@ -136,7 +162,7 @@ export default function Administration() {
       <Access admin>{() => <Applications />}</Access>
       <Button
         title="Back to home"
-        secondary
+        variant="secondary"
         onPress={() => router.replace('/(tabs)')}
       />
     </Screen>

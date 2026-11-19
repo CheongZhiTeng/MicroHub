@@ -145,25 +145,28 @@ export default function Register() {
             </Body>
           )}
         <Button
+          fullWidth
           title={sent ? 'Verify email' : 'Create account'}
           busy={busy}
           onPress={() => void submit()}
         />
         {sent && (
           <Button
+            fullWidth
             title="Resend code"
-            secondary
+            variant="ghost"
             busy={busy}
             onPress={() => void resend()}
           />
         )}
         <Button
+          fullWidth
           title={
             sent
               ? 'Use a different email'
               : 'I already have a verification code'
           }
-          quiet
+          variant="ghost"
           busy={busy}
           onPress={() => {
             setMessage('');
@@ -184,8 +187,9 @@ export default function Register() {
           }}
         />
         <Button
+          fullWidth
           title="Back to sign in"
-          quiet
+          variant="ghost"
           busy={busy}
           onPress={() => router.replace('/sign-in')}
         />

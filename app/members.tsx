@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { memberSearchFilter } from '../src/lib/member-search';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -26,6 +26,7 @@ type Member = {
   platform_roles: { role: string } | null;
 };
 function Directory() {
+  const { width } = useWindowDimensions();
   const generation = useRef(0);
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
@@ -102,7 +103,18 @@ function Directory() {
         <>
           {members.length === 0 && <Notice text="No matching members." />}
           {members.map((member) => (
-            <Card key={member.id}>
+            <Card
+              key={member.id}
+              style={
+                width >= 1024
+                  ? {
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }
+                  : undefined
+              }
+            >
               <View
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
               >
@@ -124,14 +136,14 @@ function Directory() {
           {page > 0 && (
             <Button
               title="Previous page"
-              secondary
+              variant="secondary"
               onPress={() => setPage(page - 1)}
             />
           )}
           {members.length === 30 && (
             <Button
               title="Next page"
-              secondary
+              variant="secondary"
               onPress={() => setPage(page + 1)}
             />
           )}
@@ -146,7 +158,7 @@ export default function Members() {
       <Access member>{() => <Directory />}</Access>
       <Button
         title="Back to home"
-        secondary
+        variant="secondary"
         onPress={() => router.replace('/(tabs)')}
       />
     </Screen>

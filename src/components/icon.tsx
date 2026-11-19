@@ -1,6 +1,6 @@
 import type { ColorValue } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { theme } from '../theme/tokens';
+import { useTheme } from '../theme/provider';
 
 const paths = {
   code: 'm8 5-7 7 7 7m8-14 7 7-7 7m-3-17-2 20',
@@ -33,12 +33,13 @@ export type IconName = keyof typeof paths;
 export function Icon({
   name,
   size = 24,
-  color = theme.color.primary,
+  color,
 }: {
   name: IconName;
   size?: number;
   color?: ColorValue;
 }) {
+  const { theme } = useTheme();
   return (
     <Svg
       width={size}

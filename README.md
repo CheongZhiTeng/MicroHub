@@ -52,3 +52,7 @@ Unit/component/flow tests use Jest; database security tests run the actual migra
 ### Modern Campus visual redesign
 
 The reference-based interface from `codex/ui-redesign` is now integrated into `codex/mvp-foundation` with colorful surfaces, reduced-motion-aware animations and refined account forms (inline password eye, live rules and keyboard submission). See [design decisions, rendered screenshots and preview instructions](docs/UI_REDESIGN.md). Future-module availability pages do not imply completed backend features.
+
+### Modern Campus v2 preview
+
+`codex/modern-campus-v2` adds light/dark/system appearance, compact shared controls and a desktop workspace for the same school-club accounts. See [design system, verification and Codespaces instructions](docs/MODERN_CAMPUS_V2.md). This branch is awaiting visual acceptance before merging.

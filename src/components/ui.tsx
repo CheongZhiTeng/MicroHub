@@ -2,6 +2,7 @@ import { passwordChecks } from '../lib/validation';
 import { useRef, useState, type PropsWithChildren, type Ref } from 'react';
 import {
   ActivityIndicator,
+  useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,9 +15,11 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../theme/tokens';
+import type { Theme } from '../theme/tokens';
+import { useTheme } from '../theme/provider';
 import { Icon, type IconName } from './icon';
 import { MotionPressable, Reveal } from './motion';
+import { ThemePicker } from './theme-picker';
 import { Campus } from './illustrations/campus';
 
 export type InputHandle = React.ComponentRef<typeof TextInput>;
@@ -26,6 +29,8 @@ export function Brand({
 }: {
   subtitle?: string;
 }) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <View style={styles.brandRow}>
       <View style={styles.logo}>
@@ -52,6 +57,10 @@ export function Screen({
   header?: React.ReactNode;
   dashboard?: boolean;
 }>) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
+  const { width } = useWindowDimensions();
+  const desktop = width >= 1024;
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView
@@ -60,46 +69,90 @@ export function Screen({
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingHorizontal: width < 640 ? 20 : 32 },
+          ]}
         >
           <Reveal
             testID="screen-content"
-            style={[styles.content, auth && styles.authContent]}
+            style={{
+              width: '100%',
+              maxWidth: 1440,
+              alignSelf: 'center',
+              gap: 28,
+            }}
           >
-            {header ?? <Brand />}
             <View
-              style={[
-                styles.intro,
-                (auth || dashboard) && styles.hero,
-                dashboard && styles.dashboardHero,
-              ]}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 16,
+              }}
             >
-              <View style={(auth || dashboard) && styles.heroCopy}>
-                {(auth || dashboard) && (
-                  <Text style={styles.eyebrow}>LEARN. CONNECT. BELONG.</Text>
-                )}
-                <Text accessibilityRole="header" style={styles.title}>
-                  {title}
-                </Text>
-                {Boolean(subtitle) && (
-                  <Text style={styles.body}>{subtitle}</Text>
-                )}
-              </View>
-              {(auth || dashboard) && (
-                <View pointerEvents="none" style={styles.campus}>
-                  <Campus width={112} height={100} />
-                </View>
-              )}
+              <View style={{ flex: 1 }}>{header ?? <Brand />}</View>
+              {auth && desktop && <ThemePicker />}
             </View>
-            {children}
-            {auth && (
-              <View style={styles.privacy}>
-                <Icon name="shield" size={16} />
-                <Text style={styles.caption}>
-                  Private club · Verified school accounts
-                </Text>
+            <View
+              style={{
+                flexDirection: auth && desktop ? 'row' : 'column',
+                gap: desktop ? 48 : 24,
+                alignItems: auth && desktop ? 'center' : undefined,
+                paddingVertical: auth && desktop ? 60 : 0,
+              }}
+            >
+              <View
+                style={[
+                  styles.intro,
+                  (auth || dashboard) && styles.hero,
+                  auth && desktop && { flex: 1, minHeight: 360, padding: 36 },
+                ]}
+              >
+                <View style={styles.heroCopy}>
+                  <Text style={styles.eyebrow}>
+                    {auth
+                      ? 'YOUR NEXT CHAPTER STARTS HERE'
+                      : 'LEARN. CONNECT. BELONG.'}
+                  </Text>
+                  <Text
+                    accessibilityRole="header"
+                    style={[
+                      styles.title,
+                      desktop && { fontSize: 38, lineHeight: 46 },
+                    ]}
+                  >
+                    {title}
+                  </Text>
+                  {Boolean(subtitle) && (
+                    <Text style={styles.body}>{subtitle}</Text>
+                  )}
+                </View>
+                {(auth || dashboard) && (
+                  <View pointerEvents="none" style={styles.campus}>
+                    <Campus width={112} height={100} />
+                  </View>
+                )}
               </View>
-            )}
+              <View
+                style={[
+                  { gap: 20, minWidth: 0 },
+                  auth && { width: '100%', maxWidth: 440, alignSelf: 'center' },
+                  auth && desktop && { flex: 1 },
+                ]}
+              >
+                {children}
+                {auth && (
+                  <View style={styles.privacy}>
+                    <Icon name="shield" size={16} />
+                    <Text style={styles.caption}>
+                      Private club · Verified school accounts
+                    </Text>
+                  </View>
+                )}
+                {auth && !desktop && <ThemePicker />}
+              </View>
+            </View>
           </Reveal>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -111,6 +164,8 @@ export function Card({
   style,
   delay = 0,
 }: PropsWithChildren<{ style?: StyleProp<ViewStyle>; delay?: number }>) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <Reveal testID="motion-card" delay={delay} style={[styles.card, style]}>
       {children}
@@ -118,9 +173,13 @@ export function Card({
   );
 }
 export function Body({ children }: PropsWithChildren) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return <Text style={styles.body}>{children}</Text>;
 }
 export function Heading({ children }: PropsWithChildren) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <Text accessibilityRole="header" style={styles.heading}>
       {children}
@@ -131,6 +190,8 @@ export function SectionTitle({
   children,
   icon,
 }: PropsWithChildren<{ icon: IconName }>) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <View style={styles.sectionTitle}>
       <Icon name={icon} />
@@ -141,6 +202,8 @@ export function SectionTitle({
   );
 }
 export function Badge({ label }: { label: string }) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <View style={styles.badge}>
       <Text style={styles.badgeText}>{label}</Text>
@@ -156,6 +219,8 @@ export function Avatar({ name, size = 44 }: { name: string; size?: number }) {
     .map((part) => Array.from(part)[0])
     .join('')
     .toUpperCase();
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <View
       style={[
@@ -176,6 +241,8 @@ export function IconButton({
   label: string;
   onPress: () => void;
 }) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <MotionPressable
       accessibilityRole="button"
@@ -194,6 +261,8 @@ export function Notice({
   text: string;
   error?: boolean;
 }) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <Text
       accessibilityRole={error ? 'alert' : 'text'}
@@ -205,13 +274,27 @@ export function Notice({
   );
 }
 export function Loading() {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
-    <View style={styles.loading}>
+    <View style={[styles.loading, { gap: 12 }]}>
       <ActivityIndicator
         accessibilityLabel="Loading"
         color={theme.color.primary}
         size="large"
       />
+      {[100, 80, 60].map((width) => (
+        <View
+          key={width}
+          accessible={false}
+          style={{
+            height: 12,
+            width: `${width}%`,
+            borderRadius: 6,
+            backgroundColor: theme.color.border,
+          }}
+        />
+      ))}
     </View>
   );
 }
@@ -219,50 +302,70 @@ export function Button({
   title,
   onPress,
   busy = false,
-  secondary = false,
-  quiet = false,
+  variant = 'primary',
+  disabled = false,
+  fullWidth = false,
   icon,
 }: {
   title: string;
   onPress: () => void;
   busy?: boolean;
-  secondary?: boolean;
-  quiet?: boolean;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  disabled?: boolean;
+  fullWidth?: boolean;
   icon?: IconName;
 }) {
+  const secondary = variant === 'secondary';
+  const quiet = variant === 'ghost';
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <MotionPressable
       accessibilityRole="button"
       accessibilityLabel={title}
-      accessibilityState={{ disabled: busy, busy }}
-      disabled={busy}
+      accessibilityState={{ disabled: busy || disabled, busy }}
+      disabled={busy || disabled}
       onPress={onPress}
       style={({ pressed, hovered }) => [
         styles.button,
+        { alignSelf: fullWidth && !quiet ? 'stretch' : 'flex-start' },
+        variant === 'danger' && { backgroundColor: theme.color.errorSurface },
         hovered &&
           !busy &&
-          !secondary &&
-          !quiet && { backgroundColor: theme.color.primaryDark },
+          variant === 'primary' && { backgroundColor: theme.color.primaryDark },
         secondary && styles.secondary,
         quiet && styles.quiet,
-        (pressed || busy) && styles.pressed,
+        (pressed || busy || disabled) && styles.pressed,
       ]}
     >
       {busy ? (
         <ActivityIndicator
-          color={secondary || quiet ? theme.color.primary : '#FFFFFF'}
+          color={
+            variant === 'danger'
+              ? theme.color.error
+              : secondary || quiet
+                ? theme.color.primary
+                : theme.color.onPrimary
+          }
           size="small"
         />
       ) : icon ? (
         <Icon
           name={icon}
           size={20}
-          color={secondary || quiet ? theme.color.primary : '#FFFFFF'}
+          color={
+            variant === 'danger'
+              ? theme.color.error
+              : secondary || quiet
+                ? theme.color.primary
+                : theme.color.onPrimary
+          }
         />
       ) : null}
       <Text
         style={[
           styles.buttonText,
+          variant === 'danger' && { color: theme.color.error },
           (secondary || quiet) && { color: theme.color.primary },
         ]}
       >
@@ -282,6 +385,8 @@ export function NavigationRow({
   icon: IconName;
   onPress: () => void;
 }) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <MotionPressable
       accessibilityRole="button"
@@ -306,9 +411,18 @@ export function Field({
   inputRef,
   onFocus,
   onBlur,
+  hint,
+  error,
   ...props
-}: TextInputProps & { label: string; inputRef?: Ref<InputHandle> }) {
+}: TextInputProps & {
+  label: string;
+  inputRef?: Ref<InputHandle>;
+  hint?: string;
+  error?: string;
+}) {
   const [focused, setFocused] = useState(false);
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -329,9 +443,12 @@ export function Field({
           styles.input,
           props.editable === false && styles.readOnly,
           focused && styles.focused,
+          Boolean(error) && { borderColor: theme.color.error },
           style,
         ]}
       />
+      {Boolean(error) && <Notice text={error!} error />}
+      {Boolean(hint) && <Text style={styles.caption}>{hint}</Text>}
     </View>
   );
 }
@@ -357,6 +474,8 @@ export function PasswordField({
   const ownRef = useRef<InputHandle>(null);
   const ref = inputRef ?? ownRef;
   const rules = passwordChecks(value);
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -429,6 +548,8 @@ export function PasswordField({
   );
 }
 export function AuthSteps({ step }: { step: 1 | 2 }) {
+  const { theme } = useTheme();
+  const styles = makeStyles(theme);
   return (
     <View
       style={styles.steps}
@@ -440,12 +561,12 @@ export function AuthSteps({ step }: { step: 1 | 2 }) {
             style={[styles.stepNumber, step >= index + 1 && styles.stepActive]}
           >
             {step > index + 1 ? (
-              <Icon name="check" size={14} color="#FFFFFF" />
+              <Icon name="check" size={14} color={theme.color.onPrimary} />
             ) : (
               <Text
                 style={[
                   styles.stepDigit,
-                  step >= index + 1 && { color: '#FFFFFF' },
+                  step >= index + 1 && { color: theme.color.onPrimary },
                 ]}
               >
                 {index + 1}
@@ -469,278 +590,290 @@ export function AuthSteps({ step }: { step: 1 | 2 }) {
     </View>
   );
 }
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: theme.color.background },
-  scroll: {
-    paddingHorizontal: 18,
-    paddingTop: 24,
-    paddingBottom: 40,
-    flexGrow: 1,
-  },
-  content: { width: '100%', maxWidth: 820, alignSelf: 'center', gap: 16 },
-  authContent: { maxWidth: 520 },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-    minWidth: 0,
-  },
-  logo: {
-    width: 48,
-    height: 48,
-    borderRadius: 15,
-    backgroundColor: theme.color.primaryDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brand: {
-    fontFamily: theme.font,
-    fontSize: theme.type.brand,
-    fontWeight: '800',
-    letterSpacing: -0.8,
-    color: theme.color.text,
-  },
-  brandSubtitle: {
-    fontFamily: theme.font,
-    fontSize: 12,
-    lineHeight: 17,
-    color: theme.color.muted,
-  },
-  flex: { flex: 1, minWidth: 0 },
-  intro: { gap: 8, paddingTop: 12 },
-  hero: {
-    backgroundColor: theme.color.subtle,
-    borderRadius: 24,
-    padding: 18,
-    gap: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  dashboardHero: { backgroundColor: theme.color.subtle },
-  heroCopy: { flex: 1, minWidth: 0, gap: 8 },
-  campus: { width: 96, alignItems: 'center', justifyContent: 'center' },
-  eyebrow: {
-    fontFamily: theme.font,
-    fontSize: 9,
-    letterSpacing: 1,
-    fontWeight: '800',
-    color: theme.color.primaryDark,
-  },
-  title: {
-    fontFamily: theme.font,
-    fontSize: theme.type.title,
-    lineHeight: 33,
-    fontWeight: '800',
-    letterSpacing: -0.7,
-    color: theme.color.text,
-  },
-  heading: {
-    fontFamily: theme.font,
-    fontSize: theme.type.heading,
-    lineHeight: 25,
-    fontWeight: '700',
-    letterSpacing: -0.35,
-    color: theme.color.text,
-  },
-  body: {
-    fontFamily: theme.font,
-    fontSize: theme.type.body,
-    lineHeight: 23,
-    color: theme.color.muted,
-  },
-  caption: {
-    fontFamily: theme.font,
-    color: theme.color.muted,
-    fontSize: 12,
-    lineHeight: 19,
-  },
-  card: {
-    backgroundColor: theme.color.surface,
-    padding: 18,
-    borderRadius: theme.radii.card,
-    gap: 14,
-    borderWidth: 1,
-    borderColor: theme.color.border,
-    ...theme.shadow,
-  },
-  sectionTitle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: theme.color.subtle,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: theme.radii.pill,
-  },
-  badgeText: {
-    fontFamily: theme.font,
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.color.primaryDark,
-  },
-  avatar: {
-    backgroundColor: theme.color.selected,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  initials: {
-    fontFamily: theme.font,
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.color.primaryDark,
-  },
-  iconButton: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: theme.radii.pill,
-  },
-  notice: {
-    fontFamily: theme.font,
-    padding: 12,
-    borderRadius: theme.radii.sm,
-    backgroundColor: theme.color.subtle,
-    color: theme.color.primaryDark,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  error: {
-    color: theme.color.error,
-    backgroundColor: theme.color.errorSurface,
-  },
-  loading: { padding: 24 },
-  button: {
-    minHeight: 48,
-    flexDirection: 'row',
-    gap: 8,
-    borderRadius: theme.radii.control,
-    paddingVertical: 13,
-    paddingHorizontal: 16,
-    backgroundColor: theme.color.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondary: { backgroundColor: theme.color.subtle },
-  quiet: { backgroundColor: 'transparent', minHeight: 44, paddingVertical: 8 },
-  pressed: { opacity: 0.65 },
-  buttonText: {
-    fontFamily: theme.font,
-    flexShrink: 1,
-    textAlign: 'center',
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '600',
-    color: theme.color.onPrimary,
-  },
-  field: { gap: 8 },
-  label: {
-    fontFamily: theme.font,
-    color: theme.color.text,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  input: {
-    fontFamily: theme.font,
-    borderWidth: 1,
-    borderColor: theme.color.border,
-    borderRadius: theme.radii.control,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    minHeight: 50,
-    color: theme.color.text,
-    fontSize: 16,
-    backgroundColor: theme.color.surface,
-  },
-  focused: { borderColor: theme.color.focus, backgroundColor: '#F7FFFC' },
-  readOnly: { backgroundColor: theme.color.background },
-  passwordWrap: { position: 'relative' },
-  passwordInput: { paddingRight: 52 },
-  passwordToggle: {
-    position: 'absolute',
-    right: 3,
-    top: 3,
-    bottom: 3,
-    borderRadius: 9,
-    width: 44,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  eyeActive: { backgroundColor: theme.color.subtle },
-  rules: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
-  rule: {
-    flexDirection: 'row',
-    gap: 4,
-    alignItems: 'center',
-    backgroundColor: theme.color.background,
-    borderRadius: 8,
-    paddingHorizontal: 7,
-    paddingVertical: 5,
-  },
-  ruleMet: { backgroundColor: theme.color.subtle },
-  ruleText: { fontFamily: theme.font, fontSize: 11, color: theme.color.muted },
-  steps: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.color.border,
-    marginBottom: 4,
-  },
-  step: { flexDirection: 'row', gap: 7, alignItems: 'center', flex: 1 },
-  stepNumber: {
-    width: 25,
-    height: 25,
-    borderRadius: 9,
-    backgroundColor: theme.color.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepActive: { backgroundColor: theme.color.primary },
-  stepDigit: {
-    fontFamily: theme.font,
-    fontSize: 12,
-    fontWeight: '700',
-    color: theme.color.muted,
-  },
-  stepText: {
-    fontFamily: theme.font,
-    fontSize: 12,
-    color: theme.color.muted,
-    flexShrink: 1,
-  },
-  stepLine: { height: 1, backgroundColor: theme.color.border, flex: 1 },
-  privacy: {
-    flexDirection: 'row',
-    gap: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    paddingVertical: 8,
-  },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    minHeight: 60,
-    paddingVertical: 8,
-  },
-  navTitle: {
-    fontFamily: theme.font,
-    fontSize: 15,
-    lineHeight: 23,
-    fontWeight: '600',
-    color: theme.color.text,
-  },
-  iconTile: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: theme.color.subtle,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const makeStyles = (theme: Theme) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: theme.color.background },
+    scroll: {
+      paddingHorizontal: 18,
+      paddingTop: 24,
+      paddingBottom: 40,
+      flexGrow: 1,
+    },
+    content: { width: '100%', maxWidth: 820, alignSelf: 'center', gap: 16 },
+    authContent: { maxWidth: 520 },
+    brandRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      flex: 1,
+      minWidth: 0,
+    },
+    logo: {
+      width: 48,
+      height: 48,
+      borderRadius: 15,
+      backgroundColor: '#104E55',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    brand: {
+      fontFamily: theme.font,
+      fontSize: theme.type.brand,
+      fontWeight: '800',
+      letterSpacing: -0.8,
+      color: theme.color.text,
+    },
+    brandSubtitle: {
+      fontFamily: theme.font,
+      fontSize: 12,
+      lineHeight: 17,
+      color: theme.color.muted,
+    },
+    flex: { flex: 1, minWidth: 0 },
+    intro: { gap: 8, paddingTop: 12 },
+    hero: {
+      backgroundColor: theme.color.subtle,
+      borderRadius: 24,
+      padding: 18,
+      gap: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    dashboardHero: { backgroundColor: theme.color.subtle },
+    heroCopy: { flex: 1, minWidth: 0, gap: 8 },
+    campus: { width: 96, alignItems: 'center', justifyContent: 'center' },
+    eyebrow: {
+      fontFamily: theme.font,
+      fontSize: 12,
+      letterSpacing: 0.7,
+      fontWeight: '800',
+      color: theme.color.primaryDark,
+    },
+    title: {
+      fontFamily: theme.font,
+      fontSize: theme.type.title,
+      lineHeight: 33,
+      fontWeight: '800',
+      letterSpacing: -0.7,
+      color: theme.color.text,
+    },
+    heading: {
+      fontFamily: theme.font,
+      fontSize: theme.type.heading,
+      lineHeight: 25,
+      fontWeight: '700',
+      letterSpacing: -0.35,
+      color: theme.color.text,
+    },
+    body: {
+      fontFamily: theme.font,
+      fontSize: theme.type.body,
+      lineHeight: 23,
+      color: theme.color.muted,
+    },
+    caption: {
+      fontFamily: theme.font,
+      color: theme.color.muted,
+      fontSize: 12,
+      lineHeight: 19,
+    },
+    card: {
+      backgroundColor: theme.color.surface,
+      padding: 18,
+      borderRadius: theme.radii.card,
+      gap: 14,
+      borderWidth: 1,
+      borderColor: theme.color.border,
+      ...theme.shadow,
+    },
+    sectionTitle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    badge: {
+      alignSelf: 'flex-start',
+      backgroundColor: theme.color.subtle,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: theme.radii.pill,
+    },
+    badgeText: {
+      fontFamily: theme.font,
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.color.primaryDark,
+    },
+    avatar: {
+      backgroundColor: theme.color.selected,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    initials: {
+      fontFamily: theme.font,
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme.color.primaryDark,
+    },
+    iconButton: {
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: theme.radii.pill,
+    },
+    notice: {
+      fontFamily: theme.font,
+      padding: 12,
+      borderRadius: theme.radii.sm,
+      backgroundColor: theme.color.subtle,
+      color: theme.color.primaryDark,
+      fontSize: 14,
+      lineHeight: 22,
+    },
+    error: {
+      color: theme.color.error,
+      backgroundColor: theme.color.errorSurface,
+    },
+    loading: { padding: 24 },
+    button: {
+      minHeight: 44,
+      flexDirection: 'row',
+      gap: 8,
+      borderRadius: theme.radii.control,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      backgroundColor: theme.color.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    secondary: { backgroundColor: theme.color.subtle },
+    quiet: {
+      backgroundColor: 'transparent',
+      minHeight: 44,
+      paddingVertical: 8,
+    },
+    pressed: { opacity: 0.65 },
+    buttonText: {
+      fontFamily: theme.font,
+      flexShrink: 1,
+      textAlign: 'center',
+      fontSize: 15,
+      lineHeight: 22,
+      fontWeight: '600',
+      color: theme.color.onPrimary,
+    },
+    field: { gap: 8 },
+    label: {
+      fontFamily: theme.font,
+      color: theme.color.text,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    input: {
+      fontFamily: theme.font,
+      borderWidth: 1,
+      borderColor: theme.color.border,
+      borderRadius: theme.radii.control,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      minHeight: 50,
+      color: theme.color.text,
+      fontSize: 16,
+      backgroundColor: theme.color.surface,
+    },
+    focused: {
+      borderColor: theme.color.focus,
+      backgroundColor: theme.color.subtle,
+    },
+    readOnly: { backgroundColor: theme.color.background },
+    passwordWrap: { position: 'relative' },
+    passwordInput: { paddingRight: 52 },
+    passwordToggle: {
+      position: 'absolute',
+      right: 3,
+      top: 3,
+      bottom: 3,
+      borderRadius: 9,
+      width: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    eyeActive: { backgroundColor: theme.color.subtle },
+    rules: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
+    rule: {
+      flexDirection: 'row',
+      gap: 4,
+      alignItems: 'center',
+      backgroundColor: theme.color.background,
+      borderRadius: 8,
+      paddingHorizontal: 7,
+      paddingVertical: 5,
+    },
+    ruleMet: { backgroundColor: theme.color.subtle },
+    ruleText: {
+      fontFamily: theme.font,
+      fontSize: 12,
+      color: theme.color.muted,
+    },
+    steps: {
+      flexDirection: 'row',
+      gap: 10,
+      alignItems: 'center',
+      paddingBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.color.border,
+      marginBottom: 4,
+    },
+    step: { flexDirection: 'row', gap: 7, alignItems: 'center', flex: 1 },
+    stepNumber: {
+      width: 25,
+      height: 25,
+      borderRadius: 9,
+      backgroundColor: theme.color.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    stepActive: { backgroundColor: theme.color.primary },
+    stepDigit: {
+      fontFamily: theme.font,
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.color.muted,
+    },
+    stepText: {
+      fontFamily: theme.font,
+      fontSize: 12,
+      color: theme.color.muted,
+      flexShrink: 1,
+    },
+    stepLine: { height: 1, backgroundColor: theme.color.border, flex: 1 },
+    privacy: {
+      flexDirection: 'row',
+      gap: 6,
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      paddingVertical: 8,
+    },
+    navRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      minHeight: 60,
+      paddingVertical: 8,
+    },
+    navTitle: {
+      fontFamily: theme.font,
+      fontSize: 15,
+      lineHeight: 23,
+      fontWeight: '600',
+      color: theme.color.text,
+    },
+    iconTile: {
+      width: 42,
+      height: 42,
+      borderRadius: 12,
+      backgroundColor: theme.color.subtle,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });

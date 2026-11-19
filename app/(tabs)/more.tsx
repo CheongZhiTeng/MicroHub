@@ -89,7 +89,7 @@ export default function More() {
         <Button
           icon="logout"
           title="Sign out of this device"
-          secondary
+          variant="secondary"
           busy={busy}
           onPress={() => void signOut()}
         />
@@ -99,8 +99,8 @@ export default function More() {
         <SectionTitle icon="code">Made for your community</SectionTitle>
         <Body>Foundation build · 0.1.0</Body>
         <Body>
-          Announcements, notifications, language and theme settings arrive in
-          V1. Learning resources arrive in V2.
+          Announcements, notifications and language options arrive in V1.
+          Learning resources arrive in V2.
         </Body>
         <Body>
           For privacy or account concerns, contact your school club

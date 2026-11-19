@@ -101,3 +101,11 @@ The user requested an error check and integration. Reviewed UI tip `e012fa1` aga
 Fresh validation passed: `npm run check` (70 native/unit/flow tests, 5 Web tests, 14 PostgreSQL scenarios / 15 reported tests, TypeScript, ESLint, formatting), Android/iOS/Web exports, and 45 browser screen/viewport checks with registration, inline password eye, reduced motion, profile, member navigation and admin approval. No blocking regression was identified in the reviewed scope. Database migrations and core identity/session/access modules match the pre-redesign foundation. See [INTEGRATION_REVIEW.md](INTEGRATION_REVIEW.md).
 
 Continue development and preview from `codex/mvp-foundation`. Hosted SMTP, real end-to-end school-account flows and physical-device acceptance remain outstanding; the MVP is still incomplete.
+
+## Modern Campus v2: responsive design system
+
+Implemented on `codex/modern-campus-v2` from `536cb51`, pending user visual acceptance and merge. Added light/dark/system appearance with local preference persistence, theme-aware shared controls, compact action variants, desktop sidebar, authentication split layout, dashboard grid, responsive member/application rows, confirmation dialog, keyboard focus treatment, loading skeletons and a development-only component studio. No schema or core Auth/RLS change. The user explicitly brought appearance switching forward from V1; translations and other V1/V2 business features remain deferred. See [MODERN_CAMPUS_V2.md](MODERN_CAMPUS_V2.md).
+
+The user has reported successful hosted verification-email delivery, login and first Super Admin bootstrap. Those are user-reported checks; this environment's browser tests still use fixtures. Ordinary-member real-device acceptance and full hosted end-to-end testing remain pending.
+
+Validation for this branch: TypeScript/ESLint/formatting, 77 application tests, 14 PostgreSQL authorization scenarios, all three platform exports, and 150 browser screen checks across five widths and light/dark appearance passed. Browser flows use isolated fixtures. Live theme switching, unsaved form retention across breakpoints, and keyboard confirmation behavior are included. Rendered screenshots and reproduction steps are linked in the v2 design document.
