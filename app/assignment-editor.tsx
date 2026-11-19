@@ -1,3 +1,4 @@
+import { useLanguage } from '../src/locales/provider';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Button, Notice, Screen } from '../src/components/ui';
 import { Access } from '../src/features/access';
@@ -5,20 +6,26 @@ import { AssignmentEditor } from '../src/features/homework/editor';
 import { useHomework } from '../src/features/homework/api';
 import { FetchState } from '../src/features/homework/controls';
 function Existing({ id, copy }: { id: string; copy: boolean }) {
+  const { t } = useLanguage();
   const result = useHomework('hw_detail', { p_id: id });
   if (result.data === undefined)
     return <FetchState error={result.error} retry={result.refresh} />;
   if (!result.data || (!copy && result.data.assignment.lifecycle !== 'draft'))
-    return <Notice text="This draft is unavailable for editing." />;
+    return <Notice text={t('This draft is unavailable for editing.')} />;
   return <AssignmentEditor key={id} initial={result.data} copy={copy} />;
 }
 export default function Editor() {
+  const { t } = useLanguage();
   const { id, copy } = useLocalSearchParams<{ id?: string; copy?: string }>();
   const source = id || copy;
   return (
     <Screen
       title={
-        copy ? 'Copy assignment' : id ? 'Edit assignment' : 'Create assignment'
+        copy
+          ? t('Copy assignment')
+          : id
+            ? t('Edit assignment')
+            : t('Create assignment')
       }
     >
       <Access admin signInParams={{ next: 'assignment-editor', id, copy }}>
@@ -35,7 +42,7 @@ export default function Editor() {
         }
       </Access>
       <Button
-        title="Back to assignments"
+        title={t('Back to assignments')}
         variant="ghost"
         onPress={() =>
           router.canGoBack() ? router.back() : router.replace('/homework')

@@ -11,6 +11,36 @@ import {
 test('homework lifecycle, privacy and concurrency contracts', async (t) => {
   const { db, as } = await homeworkBackend();
   t.after(() => db.close());
+  await t.test(
+    'keeps the legacy name and restricts bilingual names to the profile owner',
+    async () => {
+      const query =
+        'select display_name, name_en, name_zh from profiles where id=$1';
+      assert.deepEqual(await as(alice, query, [alice]), [
+        { display_name: 'Alice', name_en: null, name_zh: null },
+      ]);
+      assert.deepEqual(
+        await as(
+          bob,
+          "update profiles set name_zh='其他人' where id=$1 returning id",
+          [alice],
+        ),
+        [],
+      );
+      await as(
+        alice,
+        'update profiles set name_en=$1, name_zh=$2 where id=$3',
+        ['Alice Tan', '陈爱丽', alice],
+      );
+      assert.deepEqual(await as(alice, query, [alice]), [
+        { display_name: 'Alice', name_en: 'Alice Tan', name_zh: '陈爱丽' },
+      ]);
+      await assert.rejects(
+        as(alice, "update profiles set name_en='   ' where id=$1", [alice]),
+        /check constraint/,
+      );
+    },
+  );
   const id = randomUUID();
   const scalar = async (user, expr, args = []) =>
     (await as(user, 'select ' + expr + ' as value', args))[0].value;

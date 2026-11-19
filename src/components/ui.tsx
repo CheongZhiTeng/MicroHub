@@ -1,3 +1,4 @@
+import { useLanguage } from '../locales/provider';
 import { passwordChecks } from '../lib/validation';
 import { useRef, useState, type PropsWithChildren, type Ref } from 'react';
 import {
@@ -24,13 +25,10 @@ import { Campus } from './illustrations/campus';
 
 export type InputHandle = React.ComponentRef<typeof TextInput>;
 
-export function Brand({
-  subtitle = 'Your school club, connected.',
-}: {
-  subtitle?: string;
-}) {
+export function Brand({ subtitle }: { subtitle?: string }) {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
+  const { t } = useLanguage();
   return (
     <View style={styles.brandRow}>
       <View style={styles.logo}>
@@ -38,7 +36,9 @@ export function Brand({
       </View>
       <View style={styles.flex}>
         <Text style={styles.brand}>MicroHub</Text>
-        <Text style={styles.brandSubtitle}>{subtitle}</Text>
+        <Text style={styles.brandSubtitle}>
+          {subtitle ?? t('Your school club, connected.')}
+        </Text>
       </View>
     </View>
   );
@@ -57,6 +57,7 @@ export function Screen({
   header?: React.ReactNode;
   dashboard?: boolean;
 }>) {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   const { width } = useWindowDimensions();
@@ -92,6 +93,7 @@ export function Screen({
               }}
             >
               <View style={{ flex: 1 }}>{header ?? <Brand />}</View>
+              <LanguageToggle />
               {auth && desktop && <ThemePicker />}
             </View>
             <View
@@ -112,8 +114,8 @@ export function Screen({
                 <View style={styles.heroCopy}>
                   <Text style={styles.eyebrow}>
                     {auth
-                      ? 'YOUR NEXT CHAPTER STARTS HERE'
-                      : 'LEARN. CONNECT. BELONG.'}
+                      ? t('YOUR NEXT CHAPTER STARTS HERE')
+                      : t('LEARN. CONNECT. BELONG.')}
                   </Text>
                   <Text
                     accessibilityRole="header"
@@ -146,7 +148,9 @@ export function Screen({
                   <View style={styles.privacy}>
                     <Icon name="shield" size={16} />
                     <Text style={styles.caption}>
-                      Private club · Verified school accounts
+                      {t(
+                        'Private club · Verified school accounts                    ',
+                      )}
                     </Text>
                   </View>
                 )}
@@ -157,6 +161,19 @@ export function Screen({
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+export function LanguageToggle() {
+  const { language, setLanguage } = useLanguage();
+  return (
+    <Button
+      title={language === 'en' ? '中文' : 'English'}
+      accessibilityLabel={
+        language === 'en' ? '切换至简体中文' : 'Switch to English'
+      }
+      variant="secondary"
+      onPress={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+    />
   );
 }
 export function Card({
@@ -261,6 +278,7 @@ export function Notice({
   text: string;
   error?: boolean;
 }) {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
@@ -269,17 +287,18 @@ export function Notice({
       accessibilityLiveRegion="polite"
       style={[styles.notice, error && styles.error]}
     >
-      {text}
+      {t(text)}
     </Text>
   );
 }
 export function Loading() {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
     <View style={[styles.loading, { gap: 12 }]}>
       <ActivityIndicator
-        accessibilityLabel="Loading"
+        accessibilityLabel={t('Loading')}
         color={theme.color.primary}
         size="large"
       />
@@ -300,6 +319,7 @@ export function Loading() {
 }
 export function Button({
   title,
+  accessibilityLabel = title,
   onPress,
   busy = false,
   variant = 'primary',
@@ -308,6 +328,7 @@ export function Button({
   icon,
 }: {
   title: string;
+  accessibilityLabel?: string;
   onPress: () => void;
   busy?: boolean;
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -315,6 +336,7 @@ export function Button({
   fullWidth?: boolean;
   icon?: IconName;
 }) {
+  const { t } = useLanguage();
   const secondary = variant === 'secondary';
   const quiet = variant === 'ghost';
   const { theme } = useTheme();
@@ -322,7 +344,7 @@ export function Button({
   return (
     <MotionPressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: busy || disabled, busy }}
       disabled={busy || disabled}
       onPress={onPress}
@@ -369,7 +391,7 @@ export function Button({
           (secondary || quiet) && { color: theme.color.primary },
         ]}
       >
-        {busy ? 'Please wait…' : title}
+        {busy ? t('Please wait…') : title}
       </Text>
     </MotionPressable>
   );
@@ -469,6 +491,7 @@ export function PasswordField({
   inputRef?: React.RefObject<InputHandle | null>;
   onSubmitEditing?: () => void;
 }) {
+  const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
   const ownRef = useRef<InputHandle>(null);
@@ -503,7 +526,7 @@ export function PasswordField({
         />
         <MotionPressable
           accessibilityRole="button"
-          accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+          accessibilityLabel={visible ? t('Hide password') : t('Show password')}
           accessibilityState={{ disabled: !editable }}
           disabled={!editable}
           onPress={() => {
@@ -525,7 +548,7 @@ export function PasswordField({
             <View
               key={rule.label}
               style={[styles.rule, rule.met && styles.ruleMet]}
-              accessibilityLabel={`${rule.label}: ${rule.met ? 'met' : 'not met'}`}
+              accessibilityLabel={`${t(rule.label)}: ${rule.met ? t('met') : t('not met')}`}
             >
               <Icon
                 name={rule.met ? 'check' : 'info'}
@@ -538,7 +561,7 @@ export function PasswordField({
                   rule.met && { color: theme.color.primaryDark },
                 ]}
               >
-                {rule.label}
+                {t(rule.label)}
               </Text>
             </View>
           ))}
@@ -548,12 +571,13 @@ export function PasswordField({
   );
 }
 export function AuthSteps({ step }: { step: 1 | 2 }) {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
     <View
       style={styles.steps}
-      accessibilityLabel={`Step ${step} of 2: ${step === 1 ? 'Create account' : 'Verify email'}`}
+      accessibilityLabel={`Step ${step} of 2: ${step === 1 ? t('Create account') : t('Verify email')}`}
     >
       {['Account', 'Verify email'].map((label, index) => (
         <View key={label} style={styles.step}>

@@ -1,3 +1,4 @@
+import { useLanguage } from '../src/locales/provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   Button,
@@ -18,6 +19,7 @@ import { StudentWork } from '../src/features/homework/student';
 import { Grading } from '../src/features/homework/grading';
 import { AssignmentActions } from '../src/features/homework/maintenance';
 function Workspace({ id, manage }: { id: string; manage: boolean }) {
+  const { t } = useLanguage();
   const result = useHomework('hw_detail', { p_id: id });
   const action = useHomeworkAction();
   if (result.data === undefined)
@@ -26,8 +28,8 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
   if (!data)
     return (
       <>
-        <Notice text="This assignment is unavailable to your account." />
-        <Button title="Refresh assignment" onPress={result.refresh} />
+        <Notice text={t('This assignment is unavailable to your account.')} />
+        <Button title={t('Refresh assignment')} onPress={result.refresh} />
       </>
     );
   const a = data.assignment;
@@ -39,23 +41,25 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
       />
       {a.lifecycle === 'draft' ? (
         <Card>
-          <Heading>Student preview</Heading>
+          <Heading>{t('Student preview')}</Heading>
           <Body>
-            Only administrators can see this draft. Publishing assigns it to{' '}
+            {t(
+              'Only administrators can see this draft. Publishing assigns it to',
+            )}{' '}
             {a.audience === 'all'
-              ? 'all active members'
-              : data.targets.length + ' selected members'}
+              ? t('all active members')
+              : data.targets.length + t(' selected members')}
             .
           </Body>
           <Button
-            title="Edit draft"
+            title={t('Edit draft')}
             variant="secondary"
             onPress={() =>
               router.push({ pathname: '/assignment-editor', params: { id } })
             }
           />
           <Button
-            title="Publish assignment"
+            title={t('Publish assignment')}
             busy={action.busy}
             onPress={() =>
               action.run(async () => {
@@ -64,7 +68,7 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
                   p_revision: a.revision,
                 });
                 await result.refresh();
-                return 'Published to ' + count + ' members.';
+                return t('Published to ') + count + t(' members.');
               })
             }
           />
@@ -77,7 +81,7 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
       {manage && <AssignmentActions assignment={a} refresh={result.refresh} />}
       <Messages action={action} />
       <Button
-        title="Refresh assignment"
+        title={t('Refresh assignment')}
         variant="ghost"
         onPress={result.refresh}
       />
@@ -85,10 +89,13 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
   );
 }
 export default function AssignmentRoute() {
+  const { t } = useLanguage();
   const { id, mode } = useLocalSearchParams<{ id?: string; mode?: string }>();
   return (
     <Screen
-      title={mode === 'manage' ? 'Assignment workspace' : 'Assignment details'}
+      title={
+        mode === 'manage' ? t('Assignment workspace') : t('Assignment details')
+      }
     >
       <Access member signInParams={{ next: 'assignment', id, mode }}>
         {(identity) =>
@@ -99,12 +106,12 @@ export default function AssignmentRoute() {
               manage={mode === 'manage' && identity.role !== 'member'}
             />
           ) : (
-            <Notice text="Choose an assignment from your list." />
+            <Notice text={t('Choose an assignment from your list.')} />
           )
         }
       </Access>
       <Button
-        title="Back to assignments"
+        title={t('Back to assignments')}
         variant="secondary"
         onPress={() =>
           router.canGoBack() ? router.back() : router.replace('/homework')

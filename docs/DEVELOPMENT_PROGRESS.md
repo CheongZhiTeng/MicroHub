@@ -1,5 +1,13 @@
 # Development progress
 
+## Chinese and English interface and profile names · 2026-11-20 (Malaysia)
+
+The header switches between English and handwritten Simplified Chinese across the shared Expo app. The choice is saved on that device. Profile editing asks for Chinese name, English name and class. The dashboard and member directory prefer the name matching the interface language, and directory search accepts either name. Existing display names remain available as a fallback until members update their profiles.
+
+Migration `202611190005_profile_names.sql` adds two nullable profile fields and grants updates under the existing profile row policy. The PostgreSQL suite verified preservation of legacy names and rejection of changes to another member's fields. `npm run check` passed. The Pages export and browser checks passed on desktop and a small phone viewport with HTTP fixtures, including the language preference after reload and preserving an unsaved profile edit across language changes.
+
+The new migration has been verified locally. Apply it to the intended Supabase project through the existing migration process before previewing or deploying this build with hosted accounts. Hosted acceptance remains pending.
+
 ## Hosted staging acceptance · awaiting project connection · 2026-11-20 (Malaysia)
 
 The working tree was clean on `codex/homework-mvp-a` at `4c623f8`. The staging preflight found no linked Supabase project, staging URL or Supabase credential in the Cloud environment. The CLI returned `AccessTokenRequiredError` for project discovery. The environment's outbound proxy rejected the HTTPS connection to `api.supabase.com` with CONNECT 403.

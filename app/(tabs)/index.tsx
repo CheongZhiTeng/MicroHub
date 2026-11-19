@@ -1,3 +1,5 @@
+import { profileName } from '../../src/lib/profile-name';
+import { useLanguage } from '../../src/locales/provider';
 import {
   ClubHeader,
   ClubOverview,
@@ -20,7 +22,9 @@ import { useIdentity } from '../../src/features/identity';
 import { client } from '../../src/lib/supabase';
 import { errorMessage } from '../../src/lib/validation';
 export default function Home() {
+  const { t, language } = useLanguage();
   const { identity, loading, error, reload } = useIdentity();
+  const name = identity ? profileName(identity.profile, language) : '';
   const { busy, start, finish } = useBusy();
   const [message, setMessage] = useState('');
   const apply = async () => {
@@ -41,18 +45,21 @@ export default function Home() {
       dashboard
       header={<ClubHeader identity={identity} />}
       title={
-        identity?.profile.display_name
-          ? `Welcome back, ${identity.profile.display_name.split(' ')[0]}!`
-          : 'Welcome to your club'
+        name
+          ? t('Welcome back, {name}!').replace(
+              '{name}',
+              language === 'zh' ? name : name.split(' ')[0]!,
+            )
+          : t('Welcome to your club')
       }
-      subtitle="A place to learn, collaborate, and grow together."
+      subtitle={t('A place to learn, collaborate, and grow together.')}
     >
       {loading ? (
         <Loading />
       ) : error ? (
         <>
           <Notice error text={error} />
-          <Button title="Retry" onPress={() => void reload()} />
+          <Button title={t('Retry')} onPress={() => void reload()} />
         </>
       ) : (
         identity && (
@@ -64,26 +71,31 @@ export default function Home() {
               <Card>
                 <Notice
                   error
-                  text="Your account is suspended. Contact your school club administrator."
+                  text={t(
+                    'Your account is suspended. Contact your school club administrator.',
+                  )}
                 />
               </Card>
             ) : !identity.member ? (
               <Card>
-                <Heading>Become a member</Heading>
+                <Heading>{t('Become a member')}</Heading>
                 <Body>
-                  Complete your profile, then request approval from a club
-                  administrator.
+                  {t(
+                    'Complete your profile, then request approval from a club administrator.                ',
+                  )}
                 </Body>
                 <Button
-                  title="Edit profile"
+                  title={t('Edit profile')}
                   variant="secondary"
                   onPress={() => router.push('/profile')}
                 />
                 {identity.application === 'pending' ? (
                   <>
-                    <Notice text="Your application is waiting for review." />
+                    <Notice
+                      text={t('Your application is waiting for review.')}
+                    />
                     <Button
-                      title="Check application status"
+                      title={t('Check application status')}
                       variant="secondary"
                       onPress={() => void reload()}
                     />
@@ -91,10 +103,14 @@ export default function Home() {
                 ) : (
                   <>
                     {identity.application === 'rejected' && (
-                      <Notice text="Your previous application was declined. Contact your administrator or apply again after 24 hours." />
+                      <Notice
+                        text={t(
+                          'Your previous application was declined. Contact your administrator or apply again after 24 hours.',
+                        )}
+                      />
                     )}
                     <Button
-                      title="Apply for membership"
+                      title={t('Apply for membership')}
                       busy={busy}
                       onPress={() => void apply()}
                     />
@@ -105,16 +121,16 @@ export default function Home() {
               <>
                 <ClubOverview />
                 <Card>
-                  <Heading>Your community</Heading>
+                  <Heading>{t('Your community')}</Heading>
                   <NavigationRow
                     icon="members"
-                    title="Meet the members"
+                    title={t('Meet the members')}
                     onPress={() => router.push('/members')}
                   />
                   {identity.role !== 'member' && (
                     <NavigationRow
                       icon="shield"
-                      title="Review membership applications"
+                      title={t('Review membership applications')}
                       onPress={() => router.push('/administration')}
                     />
                   )}

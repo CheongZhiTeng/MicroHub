@@ -8,6 +8,8 @@ export type Profile = {
   id: string;
   student_id: string;
   display_name: string;
+  name_zh?: string | null;
+  name_en?: string | null;
   class_name: string;
   status: 'active' | 'suspended';
 };
@@ -39,7 +41,9 @@ export function useIdentity() {
       const results = await Promise.all([
         db
           .from('profiles')
-          .select('id,student_id,display_name,class_name,status')
+          .select(
+            'id,student_id,display_name,name_zh,name_en,class_name,status',
+          )
           .eq('id', userId)
           .single(),
         db.from('platform_roles').select('role').eq('user_id', userId).single(),

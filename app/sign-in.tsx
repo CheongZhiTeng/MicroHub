@@ -1,3 +1,4 @@
+import { useLanguage } from '../src/locales/provider';
 import { useBusy } from '../src/features/busy';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -19,6 +20,7 @@ import {
 } from '../src/lib/validation';
 import { en } from '../src/locales/en';
 export default function SignIn() {
+  const { t } = useLanguage();
   const { next, id, mode, copy } = useLocalSearchParams<{
     next?: string;
     id?: string;
@@ -88,10 +90,10 @@ export default function SignIn() {
     }
   };
   return (
-    <Screen auth title="Welcome back" subtitle={en.tagline}>
+    <Screen auth title={t('Welcome back')} subtitle={t(en.tagline)}>
       <Card>
         <Field
-          label="School email"
+          label={t('School email')}
           value={email}
           onChangeText={setEmail}
           editable={!busy}
@@ -107,7 +109,7 @@ export default function SignIn() {
         <PasswordField
           inputRef={passwordRef}
           onSubmitEditing={() => void login()}
-          label="Password"
+          label={t('Password')}
           value={password}
           onChangeText={setPassword}
           editable={!busy}
@@ -115,20 +117,20 @@ export default function SignIn() {
         {Boolean(error) && <Notice error text={error} />}
         <Button
           fullWidth
-          title="Sign in"
+          title={t('Sign in')}
           busy={busy}
           onPress={() => void login()}
         />
         <Button
           fullWidth
-          title="Create a school account"
+          title={t('Create a school account')}
           variant="ghost"
           busy={busy}
           onPress={() => router.push('/register')}
         />
         <Button
           fullWidth
-          title="Reset password"
+          title={t('Reset password')}
           variant="ghost"
           busy={busy}
           onPress={() => router.push('/recover')}

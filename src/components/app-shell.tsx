@@ -1,3 +1,4 @@
+import { useLanguage } from '../locales/provider';
 import { View, Text, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, usePathname, type Href } from 'expo-router';
@@ -10,28 +11,29 @@ import { ThemePicker } from './theme-picker';
 import { MotionPressable } from './motion';
 import type { PropsWithChildren } from 'react';
 function DesktopNavigation() {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const { identity } = useIdentity();
   const path = usePathname();
   const member = identity?.member && identity.profile.status === 'active';
   const links: [string, Href, IconName][] = [
-    ['Home', '/', 'home'],
-    ['Homework', '/homework', 'homework'],
-    ['Attendance', '/attendance', 'attendance'],
-    ['Events', '/events', 'calendar'],
-    ['More', '/more', 'more'],
-    ['Profile', '/profile', 'user'],
-    ['Settings', '/settings', 'settings'],
+    [t('Home'), '/', 'home'],
+    [t('Homework'), '/homework', 'homework'],
+    [t('Attendance'), '/attendance', 'attendance'],
+    [t('Events'), '/events', 'calendar'],
+    [t('More'), '/more', 'more'],
+    [t('Profile'), '/profile', 'user'],
+    [t('Settings'), '/settings', 'settings'],
   ];
   if (member)
     links.push(
-      ['Members', '/members', 'members'],
-      ['Announcements', '/announcements', 'announcement'],
-      ['Resources', '/resources', 'book'],
-      ['Notifications', '/notifications', 'bell'],
+      [t('Members'), '/members', 'members'],
+      [t('Announcements'), '/announcements', 'announcement'],
+      [t('Resources'), '/resources', 'book'],
+      [t('Notifications'), '/notifications', 'bell'],
     );
   if (member && identity.role !== 'member')
-    links.push(['Administration', '/administration', 'shield']);
+    links.push([t('Administration'), '/administration', 'shield']);
   return (
     <SafeAreaView
       edges={['top', 'bottom', 'left']}
@@ -46,7 +48,7 @@ function DesktopNavigation() {
       }}
     >
       <View style={{ height: 60 }}>
-        <Brand subtitle="Your campus. Your people." />
+        <Brand subtitle={t('Your campus. Your people.')} />
       </View>
       <ScrollView contentContainerStyle={{ gap: 4 }}>
         {links.map(([label, href, icon]) => (

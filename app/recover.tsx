@@ -1,3 +1,4 @@
+import { useLanguage } from '../src/locales/provider';
 import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -20,6 +21,7 @@ import {
   validOtp,
 } from '../src/lib/validation';
 export default function Recover() {
+  const { t } = useLanguage();
   const { recovery, setRecovery } = useSession();
   const [email, setEmail] = useState('');
   const [token, setToken] = useState('');
@@ -93,17 +95,21 @@ export default function Recover() {
   return (
     <Screen
       auth
-      title="Reset your password"
-      subtitle="Use the code in your school email on this device."
+      title={t('Reset your password')}
+      subtitle={t('Use the code in your school email on this device.')}
     >
       <Card>
         {recovery ? (
           passwordSaved ? (
-            <Notice text="Password saved. Finish signing out before signing in again." />
+            <Notice
+              text={t(
+                'Password saved. Finish signing out before signing in again.',
+              )}
+            />
           ) : (
             <PasswordField
               onSubmitEditing={() => void submit()}
-              label="New password"
+              label={t('New password')}
               value={password}
               onChangeText={setPassword}
               editable={!busy}
@@ -113,7 +119,7 @@ export default function Recover() {
         ) : (
           <>
             <Field
-              label="School email"
+              label={t('School email')}
               value={email}
               onChangeText={setEmail}
               editable={!sent && !busy}
@@ -129,9 +135,13 @@ export default function Recover() {
             />
             {sent && (
               <>
-                <Notice text="If this account exists, a recovery code has been sent. It expires in 10 minutes." />
+                <Notice
+                  text={t(
+                    'If this account exists, a recovery code has been sent. It expires in 10 minutes.',
+                  )}
+                />
                 <Field
-                  label="Recovery code"
+                  label={t('Recovery code')}
                   editable={!busy}
                   value={token}
                   onChangeText={(value) =>
@@ -154,11 +164,11 @@ export default function Recover() {
           title={
             recovery
               ? passwordSaved
-                ? 'Retry sign out'
-                : 'Save password and sign out'
+                ? t('Retry sign out')
+                : t('Save password and sign out')
               : sent
-                ? 'Verify recovery code'
-                : 'Send recovery code'
+                ? t('Verify recovery code')
+                : t('Send recovery code')
           }
           busy={busy}
           onPress={() => void submit()}
@@ -166,7 +176,7 @@ export default function Recover() {
         {sent && !recovery && (
           <Button
             fullWidth
-            title="Request a new recovery code"
+            title={t('Request a new recovery code')}
             variant="ghost"
             busy={busy}
             onPress={() => {
@@ -179,7 +189,7 @@ export default function Recover() {
         )}
         <Button
           fullWidth
-          title="Back to sign in"
+          title={t('Back to sign in')}
           variant="ghost"
           busy={busy}
           onPress={() => void cancel()}

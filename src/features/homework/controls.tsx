@@ -1,3 +1,4 @@
+import { useLanguage } from '../../locales/provider';
 import { useState } from 'react';
 import { Linking, View } from 'react-native';
 import {
@@ -44,6 +45,7 @@ export function Paging({
   count: number;
   onChange: (p: number) => void;
 }) {
+  const { t } = useLanguage();
   if (!page && count <= pageSize) return null;
   return (
     <View
@@ -55,14 +57,17 @@ export function Paging({
       }}
     >
       <Button
-        title="Previous"
+        title={t('Previous')}
         variant="secondary"
         disabled={page === 0}
         onPress={() => onChange(page - 1)}
       />
-      <Body>Page {page + 1}</Body>
+      <Body>
+        {t('Page ')}
+        {page + 1}
+      </Body>
       <Button
-        title="Next"
+        title={t('Next')}
         variant="secondary"
         disabled={count <= pageSize}
         onPress={() => onChange(page + 1)}
@@ -77,10 +82,11 @@ export function FetchState({
   error?: string;
   retry: () => void;
 }) {
+  const { t } = useLanguage();
   return error ? (
     <Card>
       <Notice error text={error} />
-      <Button title="Try again" onPress={retry} />
+      <Button title={t('Try again')} onPress={retry} />
     </Card>
   ) : (
     <Loading />
@@ -105,25 +111,30 @@ export function Brief({
   assignment: Assignment;
   due?: string;
 }) {
+  const { t } = useLanguage();
   return (
     <Card>
       <Heading>{a.title}</Heading>
       {Boolean(a.instructions) && <Body>{a.instructions}</Body>}
-      <Body>Due {dueLabel(due ?? a.due_at)}</Body>
       <Body>
-        {a.max_points === null ? 'Ungraded' : a.max_points + ' points'} ·{' '}
+        {t('Due ')}
+        {dueLabel(due ?? a.due_at)}
+      </Body>
+      <Body>
+        {a.max_points === null ? t('Ungraded') : a.max_points + t(' points')} ·{' '}
         {[a.allow_text && 'Text', a.allow_link && 'Link']
           .filter(Boolean)
           .join(' + ')}{' '}
         ·{' '}
         {a.allow_late
-          ? 'Late submissions accepted'
-          : 'On-time submissions only'}
+          ? t('Late submissions accepted')
+          : t('On-time submissions only')}
       </Body>
     </Card>
   );
 }
 function SubmissionLink({ url }: { url: string }) {
+  const { t } = useLanguage();
   const [error, setError] = useState('');
   const open = async () => {
     try {
@@ -137,33 +148,49 @@ function SubmissionLink({ url }: { url: string }) {
   return (
     <View>
       <Body>{url}</Body>
-      <Button title="Open submitted link" variant="ghost" onPress={open} />
+      <Button title={t('Open submitted link')} variant="ghost" onPress={open} />
       {Boolean(error) && <Notice error text={error} />}
     </View>
   );
 }
 export function Receipt({ version: v }: { version: Version }) {
+  const { t } = useLanguage();
   return (
     <Card>
       <Heading>
-        Version {v.version} · {v.late ? 'Late' : 'On time'}
+        {t('Version ')}
+        {v.version} · {v.late ? t('Late') : t('On time')}
       </Heading>
-      <Body>Submitted {dueLabel(v.submitted_at)}</Body>
-      <Body>Deadline used · {dueLabel(v.effective_due_at)}</Body>
+      <Body>
+        {t('Submitted ')}
+        {dueLabel(v.submitted_at)}
+      </Body>
+      <Body>
+        {t('Deadline used · ')}
+        {dueLabel(v.effective_due_at)}
+      </Body>
       {Boolean(v.body) && <Body>{v.body}</Body>}
       {Boolean(v.link) && <SubmissionLink url={v.link} />}
       {v.events.map((e) => (
         <View key={e.id} style={{ gap: 6 }}>
           <Heading>
-            {e.kind === 'revision' ? 'Revision requested' : 'Feedback returned'}
+            {e.kind === 'revision'
+              ? t('Revision requested')
+              : t('Feedback returned')}
           </Heading>
           <Body>{dueLabel(e.created_at)}</Body>
           {e.includes_grade && e.score !== null && (
-            <Body>Score · {e.score}</Body>
+            <Body>
+              {t('Score · ')}
+              {e.score}
+            </Body>
           )}
           {Boolean(e.feedback) && <Body>{e.feedback}</Body>}
           {e.revision_due_at && (
-            <Body>Revise by {dueLabel(e.revision_due_at)}</Body>
+            <Body>
+              {t('Revise by ')}
+              {dueLabel(e.revision_due_at)}
+            </Body>
           )}
         </View>
       ))}

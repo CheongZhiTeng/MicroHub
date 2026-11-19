@@ -1,3 +1,4 @@
+import { useLanguage } from '../src/locales/provider';
 import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -16,7 +17,9 @@ import type { Identity } from '../src/features/identity';
 import { client } from '../src/lib/supabase';
 import { errorMessage } from '../src/lib/validation';
 function ProfileForm({ identity }: { identity: Identity }) {
-  const [name, setName] = useState(identity.profile.display_name);
+  const { t, language } = useLanguage();
+  const [nameZh, setNameZh] = useState(identity.profile.name_zh ?? '');
+  const [nameEn, setNameEn] = useState(identity.profile.name_en ?? '');
   const [className, setClassName] = useState(identity.profile.class_name);
   const { busy, start, finish } = useBusy();
   const [message, setMessage] = useState('');
@@ -26,11 +29,16 @@ function ProfileForm({ identity }: { identity: Identity }) {
     setMessage('');
     setFailed(false);
     try {
-      if (!name.trim() || !className.trim())
-        throw new Error('Enter your name and class.');
+      if (!nameZh.trim() || !nameEn.trim() || !className.trim())
+        throw new Error('Enter your Chinese name, English name, and class.');
       const { data, error } = await client()
         .from('profiles')
-        .update({ display_name: name.trim(), class_name: className.trim() })
+        .update({
+          display_name: nameEn.trim(),
+          name_en: nameEn.trim(),
+          name_zh: nameZh.trim(),
+          class_name: className.trim(),
+        })
         .eq('id', identity.profile.id)
         .select('id')
         .single();
@@ -45,32 +53,59 @@ function ProfileForm({ identity }: { identity: Identity }) {
   };
   return (
     <Card>
-      <Avatar name={name} size={64} />
-      <SectionTitle icon="user">Personal details</SectionTitle>
-      <Body>Student ID: {identity.profile.student_id}</Body>
+      <Avatar
+        name={
+          (language === 'zh' ? nameZh || nameEn : nameEn || nameZh) ||
+          identity.profile.display_name
+        }
+        size={64}
+      />
+      <SectionTitle icon="user">{t('Personal details')}</SectionTitle>
+      <Body>
+        {t('Student ID: ')}
+        {identity.profile.student_id}
+      </Body>
       <Field
-        label="Full name"
-        value={name}
-        onChangeText={setName}
+        label={t('Chinese name')}
+        value={nameZh}
+        onChangeText={setNameZh}
+        maxLength={100}
+      />
+      {!identity.profile.name_en &&
+        !identity.profile.name_zh &&
+        Boolean(identity.profile.display_name) && (
+          <Body>
+            {t('Previous display name')} · {identity.profile.display_name}
+          </Body>
+        )}
+      <Field
+        label={t('English name')}
+        value={nameEn}
+        onChangeText={setNameEn}
         maxLength={100}
         autoComplete="name"
       />
       <Field
-        label="Class"
+        label={t('Class')}
         value={className}
         onChangeText={setClassName}
         maxLength={40}
       />
-      {Boolean(message) && <Notice error={failed} text={message} />}
-      <Button title="Save profile" busy={busy} onPress={() => void save()} />
+      {Boolean(message) && <Notice error={failed} text={t(message)} />}
+      <Button
+        title={t('Save profile')}
+        busy={busy}
+        onPress={() => void save()}
+      />
     </Card>
   );
 }
 export default function Profile() {
+  const { t } = useLanguage();
   return (
     <Screen
-      title="My profile"
-      subtitle="A familiar face in your school community."
+      title={t('My profile')}
+      subtitle={t('A familiar face in your school community.')}
     >
       <Access>
         {(identity) => (
@@ -78,7 +113,7 @@ export default function Profile() {
         )}
       </Access>
       <Button
-        title="Back to home"
+        title={t('Back to home')}
         variant="secondary"
         onPress={() => router.replace('/(tabs)')}
       />

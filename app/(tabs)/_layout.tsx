@@ -1,3 +1,4 @@
+import { useLanguage } from '../../src/locales/provider';
 import { MotionPressable } from '../../src/components/motion';
 import { Redirect, Tabs, usePathname } from 'expo-router';
 import { Icon } from '../../src/components/icon';
@@ -7,6 +8,7 @@ import { useTheme } from '../../src/theme/provider';
 import { useWindowDimensions } from 'react-native';
 import { en } from '../../src/locales/en';
 export default function TabsLayout() {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
@@ -94,7 +96,7 @@ export default function TabsLayout() {
           key={name}
           name={name}
           options={{
-            title,
+            title: t(title),
             tabBarIcon: ({ color }) => (
               <Icon name={icon} color={color} size={23} />
             ),

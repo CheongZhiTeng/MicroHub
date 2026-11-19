@@ -1,3 +1,4 @@
+import { useLanguage } from '../../locales/provider';
 import { uuid } from 'expo';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ export function Audience({
   targets: string[];
   setTargets: (v: string[]) => void;
 }) {
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const rows = useHomework('hw_candidates', {
@@ -30,19 +32,22 @@ export function Audience({
   return (
     <>
       <Field
-        label="Find recipients by name or student ID"
+        label={t('Find recipients by name or student ID')}
         value={search}
         onChangeText={(s) => {
           setSearch(s);
           setPage(0);
         }}
       />
-      <Body>{targets.length} selected</Body>
+      <Body>
+        {targets.length}
+        {t(' selected')}
+      </Body>
       {!rows.data ? (
         <FetchState error={rows.error} retry={rows.refresh} />
       ) : (
         <>
-          {rows.data.length === 0 && <Body>No matching members.</Body>}
+          {rows.data.length === 0 && <Body>{t('No matching members.')}</Body>}
           {rows.data.slice(0, pageSize).map((p) => (
             <Button
               key={p.id}
@@ -71,11 +76,12 @@ export function AssignmentEditor({
   initial?: Detail;
   copy?: boolean;
 }) {
+  const { t } = useLanguage();
   const a = initial?.assignment;
   const [id] = useState(() => (!copy && a?.id) || uuid.v4());
   const [baseRevision] = useState(copy ? 0 : (a?.revision ?? 0));
   const [title, setTitle] = useState(
-    copy && a ? ('Copy of ' + a.title).slice(0, 160) : (a?.title ?? ''),
+    copy && a ? (t('Copy of ') + a.title).slice(0, 160) : (a?.title ?? ''),
   );
   const [instructions, setInstructions] = useState(a?.instructions ?? '');
   const [due, setDue] = useState(() =>
@@ -125,59 +131,59 @@ export function AssignmentEditor({
   return (
     <>
       <Card>
-        <SectionTitle icon="homework">Assignment details</SectionTitle>
+        <SectionTitle icon="homework">{t('Assignment details')}</SectionTitle>
         <Field
-          label="Title"
+          label={t('Title')}
           value={title}
           maxLength={160}
           onChangeText={setTitle}
         />
         <Field
-          label="Instructions"
+          label={t('Instructions')}
           multiline
           value={instructions}
           maxLength={20000}
           onChangeText={setInstructions}
         />
         <Field
-          label="Deadline (Malaysia time)"
+          label={t('Deadline (Malaysia time)')}
           value={due}
           onChangeText={setDue}
           hint="YYYY-MM-DD HH:mm"
           autoCapitalize="none"
         />
         <Field
-          label="Maximum points"
+          label={t('Maximum points')}
           value={max}
           onChangeText={setMax}
           keyboardType="decimal-pad"
-          hint="Leave blank for ungraded work."
+          hint={t('Leave blank for ungraded work.')}
         />
-        <Body>Accepted submissions</Body>
+        <Body>{t('Accepted submissions')}</Body>
         <Choices
           items={[
-            ['both', 'Text and link'],
-            ['text', 'Text only'],
-            ['link', 'Link only'],
+            ['both', t('Text and link')],
+            ['text', t('Text only')],
+            ['link', t('Link only')],
           ]}
           value={type}
           onChange={setType}
         />
         <Choices
           items={[
-            ['yes', 'Accept late work'],
-            ['no', 'On time only'],
+            ['yes', t('Accept late work')],
+            ['no', t('On time only')],
           ]}
           value={late ? 'yes' : 'no'}
           onChange={(v) => setLate(v === 'yes')}
         />
       </Card>
       <Card>
-        <SectionTitle icon="members">Recipients</SectionTitle>
+        <SectionTitle icon="members">{t('Recipients')}</SectionTitle>
         <Choices
           items={[
-            ['all', 'All active members'],
-            ['selected', 'Select members'],
+            ['all', t('All active members')],
+            ['selected', t('Select members')],
           ]}
           value={audience}
           onChange={setAudience}
@@ -187,13 +193,13 @@ export function AssignmentEditor({
         )}
         <Messages action={action} />
         <Button
-          title="Save draft and preview"
+          title={t('Save draft and preview')}
           busy={action.busy}
           onPress={save}
         />
         {Boolean(action.error) && (
           <Button
-            title="Check saved assignment"
+            title={t('Check saved assignment')}
             variant="secondary"
             onPress={() =>
               router.push({

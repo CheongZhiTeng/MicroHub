@@ -1,11 +1,13 @@
+import { useLanguage } from '../locales/provider';
 import { View, Text } from 'react-native';
-import { useTheme, type ThemeMode } from '../theme/provider';
+import { useTheme } from '../theme/provider';
 import { MotionPressable } from './motion';
 export function ThemePicker() {
+  const { t, language } = useLanguage();
   const { theme, mode, setMode } = useTheme();
   return (
     <View
-      accessibilityLabel="Appearance"
+      accessibilityLabel={t('Appearance')}
       style={{
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -15,11 +17,19 @@ export function ThemePicker() {
         backgroundColor: theme.color.background,
       }}
     >
-      {(['system', 'light', 'dark'] as ThemeMode[]).map((value) => (
+      {(
+        [
+          ['system', 'System'],
+          ['light', 'Light'],
+          ['dark', 'Dark'],
+        ] as const
+      ).map(([value, label]) => (
         <MotionPressable
           key={value}
           accessibilityRole="radio"
-          accessibilityLabel={`${value} appearance`}
+          accessibilityLabel={
+            language === 'zh' ? t(label) : `${value} appearance`
+          }
           accessibilityState={{ checked: mode === value }}
           aria-checked={mode === value}
           onPress={() => setMode(value)}
@@ -40,7 +50,7 @@ export function ThemePicker() {
               fontSize: 13,
             }}
           >
-            {value.charAt(0).toUpperCase() + value.slice(1)}
+            {t(label)}
           </Text>
         </MotionPressable>
       ))}

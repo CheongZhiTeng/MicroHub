@@ -1,3 +1,5 @@
+import { profileName } from '../lib/profile-name';
+import { useLanguage } from '../locales/provider';
 import { useHomework, dueLabel } from '../features/homework/api';
 import { ContentGrid } from './layout';
 import { MotionPressable } from './motion';
@@ -11,6 +13,7 @@ import { StudyArt } from './illustrations/campus';
 import { Avatar, Body, Brand, Card, IconButton, SectionTitle } from './ui';
 
 export function ClubHeader({ identity }: { identity: Identity | null }) {
+  const { t, language } = useLanguage();
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
@@ -19,39 +22,43 @@ export function ClubHeader({ identity }: { identity: Identity | null }) {
       {identity?.member && identity.profile.status === 'active' && (
         <IconButton
           icon="bell"
-          label="Notifications"
+          label={t('Notifications')}
           onPress={() => router.push('/notifications')}
         />
       )}
       <MotionPressable
         accessibilityRole="button"
-        accessibilityLabel="My profile"
+        accessibilityLabel={t('My profile')}
         onPress={() => router.push('/profile')}
         style={styles.profile}
       >
-        <Avatar name={identity?.profile.display_name ?? ''} size={40} />
+        <Avatar
+          name={identity ? profileName(identity.profile, language) : ''}
+          size={40}
+        />
       </MotionPressable>
     </View>
   );
 }
 export function IdentityStats({ identity }: { identity: Identity }) {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const items = [
     {
       icon: 'shield' as const,
       value: identity.member
-        ? 'Active'
+        ? t('Active')
         : identity.application === 'pending'
-          ? 'In review'
-          : 'Not joined',
-      label: 'Membership',
+          ? t('In review')
+          : t('Not joined'),
+      label: t('Membership'),
       tint: theme.color.subtle,
       ink: theme.color.primary,
     },
     {
       icon: 'user' as const,
       value: identity.profile.class_name || 'Not set',
-      label: 'Your class',
+      label: t('Your class'),
       tint: theme.color.lavender,
       ink: theme.color.violet,
     },
@@ -59,11 +66,11 @@ export function IdentityStats({ identity }: { identity: Identity }) {
       icon: 'members' as const,
       value:
         identity.role === 'super_admin'
-          ? 'Super admin'
+          ? t('Super admin')
           : identity.role === 'admin'
-            ? 'Admin'
-            : 'Member',
-      label: 'Your role',
+            ? t('Admin')
+            : t('Member'),
+      label: t('Your role'),
       tint: theme.color.peach,
       ink: theme.color.amber,
     },
@@ -138,14 +145,15 @@ function OverviewLink({
   );
 }
 export function ClubOverview() {
+  const { t } = useLanguage();
   const work = useHomework('hw_summary');
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
     <ContentGrid>
       <OverviewLink
-        label="Assignment workspace"
-        title="Your assignments"
+        label={t('Assignment workspace')}
+        title={t('Your assignments')}
         icon="homework"
         onPress={() => router.push('/(tabs)/homework')}
       >
@@ -153,23 +161,26 @@ export function ClubOverview() {
           <View style={styles.copy}>
             <Text style={styles.cardSubtitle}>
               {work.error
-                ? 'Assignments could not load'
+                ? t('Assignments could not load')
                 : !work.data
-                  ? 'Loading assignments…'
+                  ? t('Loading assignments…')
                   : (work.data.next?.title ?? 'You’re all caught up')}
             </Text>
             {work.data && (
               <Body>
-                {work.data.todo} to do
+                {work.data.todo}
+                {t(' to do                ')}
                 {work.data.next
-                  ? ' · Due ' + dueLabel(work.data.next.due_at)
+                  ? t(' · Due ') + dueLabel(work.data.next.due_at)
                   : ''}
               </Body>
             )}
             {work.data?.pending != null && (
               <Body>
-                {work.data.submitted} submitted · {work.data.pending} awaiting
-                review
+                {work.data.submitted}
+                {t(' submitted · ')}
+                {work.data.pending}
+                {t(' awaiting review              ')}
               </Body>
             )}
           </View>
@@ -177,32 +188,36 @@ export function ClubOverview() {
         </View>
       </OverviewLink>
       <OverviewLink
-        label="Attendance"
-        title="Attendance check-in"
+        label={t('Attendance')}
+        title={t('Attendance check-in')}
         icon="attendance"
         onPress={() => router.push('/(tabs)/attendance')}
       >
         <Body>
-          Secure check-in is coming in MVP. Attendance is not collected yet.
+          {t(
+            'Secure check-in is coming in MVP. Attendance is not collected yet.        ',
+          )}
         </Body>
       </OverviewLink>
       <OverviewLink
-        label="Club announcements"
-        title="Announcements"
+        label={t('Club announcements')}
+        title={t('Announcements')}
         icon="announcement"
         onPress={() => router.push('/announcements')}
       >
         <View style={styles.highlight}>
           <Icon name="announcement" size={20} />
           <View style={styles.copy}>
-            <Text style={styles.cardSubtitle}>Stay connected to your club</Text>
-            <Text style={styles.detail}>Club updates arrive in V1.</Text>
+            <Text style={styles.cardSubtitle}>
+              {t('Stay connected to your club')}
+            </Text>
+            <Text style={styles.detail}>{t('Club updates arrive in V1.')}</Text>
           </View>
         </View>
       </OverviewLink>
       <OverviewLink
-        label="Your club calendar"
-        title="Upcoming club events"
+        label={t('Your club calendar')}
+        title={t('Upcoming club events')}
         icon="calendar"
         onPress={() => router.push('/(tabs)/events')}
       >
@@ -212,10 +227,10 @@ export function ClubOverview() {
           </View>
           <View style={styles.copy}>
             <Text style={styles.cardSubtitle}>
-              Make time for your community
+              {t('Make time for your community            ')}
             </Text>
             <Text style={styles.detail}>
-              Calendar and registration arrive in V1.
+              {t('Calendar and registration arrive in V1.            ')}
             </Text>
           </View>
         </View>

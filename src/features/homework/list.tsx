@@ -1,3 +1,4 @@
+import { useLanguage } from '../../locales/provider';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Body, Button, Card, Field, NavigationRow } from '../../components/ui';
@@ -12,6 +13,7 @@ export function AssignmentList({
   identity: Identity;
   submissions?: boolean;
 }) {
+  const { t } = useLanguage();
   const [staff, setStaff] = useState(
     !submissions && identity.role !== 'member',
   );
@@ -36,8 +38,8 @@ export function AssignmentList({
         {!submissions && identity.role !== 'member' && (
           <Choices
             items={[
-              ['staff', 'Manage assignments'],
-              ['mine', 'My assignments'],
+              ['staff', t('Manage assignments')],
+              ['mine', t('My assignments')],
             ]}
             value={staff ? 'staff' : 'mine'}
             onChange={(value) => {
@@ -48,13 +50,13 @@ export function AssignmentList({
         )}
         {staff && (
           <Button
-            title="Create assignment"
+            title={t('Create assignment')}
             icon="homework"
             onPress={() => router.push('/assignment-editor')}
           />
         )}
         <Field
-          label="Search assignments"
+          label={t('Search assignments')}
           value={search}
           maxLength={160}
           onChangeText={(v) => {
@@ -66,27 +68,27 @@ export function AssignmentList({
           items={
             staff
               ? [
-                  ['all', 'All'],
-                  ['draft', 'Drafts'],
-                  ['published', 'Published'],
+                  ['all', t('All')],
+                  ['draft', t('Drafts')],
+                  ['published', t('Published')],
                 ]
               : submissions
                 ? [
-                    ['submitted', 'Submitted'],
-                    ['returned', 'Returned'],
+                    ['submitted', t('Submitted')],
+                    ['returned', t('Returned')],
                   ]
                 : [
-                    ['todo', 'To do'],
-                    ['all', 'All'],
-                    ['submitted', 'Submitted'],
-                    ['returned', 'Returned'],
+                    ['todo', t('To do')],
+                    ['all', t('All')],
+                    ['submitted', t('Submitted')],
+                    ['returned', t('Returned')],
                   ]
           }
           value={filter}
           onChange={change}
         />
         <Button
-          title="Refresh assignments"
+          title={t('Refresh assignments')}
           onPress={rows.refresh}
           variant="ghost"
         />
@@ -99,12 +101,12 @@ export function AssignmentList({
             <Card>
               <Body>
                 {search || page > 0
-                  ? 'No assignments match your search.'
+                  ? t('No assignments match your search.')
                   : filter === 'all'
-                    ? 'No assignments yet.'
+                    ? t('No assignments yet.')
                     : filter === 'todo'
-                      ? 'You have no assignments to do.'
-                      : 'No assignments match this filter.'}
+                      ? t('You have no assignments to do.')
+                      : t('No assignments match this filter.')}
               </Body>
             </Card>
           )}
@@ -114,18 +116,18 @@ export function AssignmentList({
                 icon="homework"
                 title={row.title}
                 subtitle={
-                  'Due ' +
+                  t('Due ') +
                   dueLabel(row.due_at) +
                   ' · ' +
                   (staff
-                    ? row.lifecycle
+                    ? t(row.lifecycle)
                     : [
                         row.submission,
                         row.late && 'Late',
                         row.grading,
                         row.modification,
                       ]
-                        .filter(Boolean)
+                        .flatMap((value) => (value ? [t(value)] : []))
                         .join(' · '))
                 }
                 onPress={() =>
@@ -142,13 +144,13 @@ export function AssignmentList({
       )}
       {!submissions && (
         <Button
-          title="My submissions"
+          title={t('My submissions')}
           variant="secondary"
           onPress={() => router.push('/submissions')}
         />
       )}
       <Button
-        title="Back to home"
+        title={t('Back to home')}
         variant="ghost"
         onPress={() => router.replace('/(tabs)')}
       />

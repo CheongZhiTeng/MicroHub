@@ -1,3 +1,4 @@
+import { useLanguage } from '../locales/provider';
 import { Redirect } from 'expo-router';
 import { Button, Loading, Notice } from '../components/ui';
 import { useIdentity, type Identity } from './identity';
@@ -13,6 +14,7 @@ export function Access({
   admin?: boolean;
   member?: boolean;
 }) {
+  const { t } = useLanguage();
   const { session, loading: sessionLoading, recovery } = useSession();
   const { identity, loading, error, reload } = useIdentity();
   if (sessionLoading) return <Loading />;
@@ -32,19 +34,21 @@ export function Access({
     return (
       <>
         <Notice error text={error} />
-        <Button title="Retry" onPress={() => void reload()} />
+        <Button title={t('Retry')} onPress={() => void reload()} />
       </>
     );
   if (!identity || identity.profile.status === 'suspended')
     return (
       <Notice
         error
-        text="Your account is unavailable. Contact your school administrator."
+        text={t(
+          'Your account is unavailable. Contact your school administrator.',
+        )}
       />
     );
   if ((member || admin) && !identity.member)
-    return <Notice text="An approved club membership is required." />;
+    return <Notice text={t('An approved club membership is required.')} />;
   if (admin && identity.role === 'member')
-    return <Notice error text="Administrator access is required." />;
+    return <Notice error text={t('Administrator access is required.')} />;
   return <>{children(identity)}</>;
 }

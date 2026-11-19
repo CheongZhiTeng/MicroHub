@@ -4,5 +4,5 @@ export function memberSearchFilter(search: string): string | null {
   if (!term) return null;
   const pattern = `%${term.replace(/[\\%_]/g, '\\$&')}%`;
   const quoted = JSON.stringify(pattern);
-  return `display_name.ilike.${quoted},student_id.ilike.${quoted}`;
+  return `display_name.ilike.${quoted},name_zh.ilike.${quoted},name_en.ilike.${quoted},student_id.ilike.${quoted}`;
 }

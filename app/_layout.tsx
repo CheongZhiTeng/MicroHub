@@ -1,3 +1,4 @@
+import { LanguageProvider } from '../src/locales/provider';
 import { HomeworkDraftProvider } from '../src/features/homework/unsaved';
 import { MotionProvider, useReducedMotion } from '../src/components/motion';
 import { ThemeProvider, useTheme } from '../src/theme/provider';
@@ -27,13 +28,15 @@ export default function Layout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <MotionProvider>
-          <SessionProvider>
-            <HomeworkDraftProvider>
-              <Navigation />
-            </HomeworkDraftProvider>
-          </SessionProvider>
-        </MotionProvider>
+        <LanguageProvider>
+          <MotionProvider>
+            <SessionProvider>
+              <HomeworkDraftProvider>
+                <Navigation />
+              </HomeworkDraftProvider>
+            </SessionProvider>
+          </MotionProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

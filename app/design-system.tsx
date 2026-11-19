@@ -1,3 +1,4 @@
+import { useLanguage } from '../src/locales/provider';
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -15,37 +16,38 @@ import {
 import { ThemePicker } from '../src/components/theme-picker';
 import { ConfirmDialog } from '../src/components/confirm-dialog';
 export default function DesignSystem() {
+  const { t } = useLanguage();
   const [value, setValue] = useState('');
   const [open, setOpen] = useState(false);
   if (!__DEV__) return <Redirect href="/" />;
   return (
-    <Screen title="Component studio" subtitle="Development preview">
+    <Screen title={t('Component studio')} subtitle={t('Development preview')}>
       <ThemePicker />
       <Card>
-        <Heading>Actions & feedback</Heading>
-        <Body>Reusable building blocks for MicroHub.</Body>
-        <Button title="Primary action" onPress={() => setOpen(true)} />
+        <Heading>{t('Actions & feedback')}</Heading>
+        <Body>{t('Reusable building blocks for MicroHub.')}</Body>
+        <Button title={t('Primary action')} onPress={() => setOpen(true)} />
         <Button
-          title="Secondary action"
+          title={t('Secondary action')}
           variant="secondary"
           onPress={() => setOpen(true)}
         />
         <Button
-          title="Quiet action"
+          title={t('Quiet action')}
           variant="ghost"
           onPress={() => setOpen(true)}
         />
-        <Button title="Unavailable" disabled onPress={() => {}} />
-        <Button title="Saving" busy onPress={() => {}} />
-        <Badge label="In review" />
-        <Notice text="Changes saved" />
-        <Notice text="Please check your input" error />
+        <Button title={t('Unavailable')} disabled onPress={() => {}} />
+        <Button title={t('Saving')} busy onPress={() => {}} />
+        <Badge label={t('In review')} />
+        <Notice text={t('Changes saved')} />
+        <Notice text={t('Please check your input')} error />
         <Loading />
       </Card>
       <Card>
-        <Field label="Name" value={value} onChangeText={setValue} />
+        <Field label={t('Name')} value={value} onChangeText={setValue} />
         <PasswordField
-          label="Password"
+          label={t('Password')}
           value={value}
           onChangeText={setValue}
           creating
@@ -53,8 +55,8 @@ export default function DesignSystem() {
       </Card>
       <ConfirmDialog
         visible={open}
-        title="Example confirmation"
-        message="This preview changes no account data."
+        title={t('Example confirmation')}
+        message={t('This preview changes no account data.')}
         onCancel={() => setOpen(false)}
         onConfirm={() => setOpen(false)}
       />

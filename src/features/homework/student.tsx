@@ -1,3 +1,4 @@
+import { useLanguage } from '../../locales/provider';
 import { useEffect, useRef, useState } from 'react';
 import { uuid } from 'expo';
 import { View } from 'react-native';
@@ -20,6 +21,7 @@ export function StudentWork({
   data: Detail;
   refresh: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const { assignment: a, draft, versions, status } = data;
   const latest = versions[0];
   const source: Edit = {
@@ -85,7 +87,7 @@ export function StudentWork({
       setSaveError(
         e && typeof e === 'object' && 'message' in e
           ? String(e.message)
-          : 'Could not save your draft.',
+          : t('Could not save your draft.'),
       );
       await refresh();
     } finally {
@@ -108,22 +110,23 @@ export function StudentWork({
       setPreview(null);
       setLocal(null);
       await refresh();
-      return 'Submission received.';
+      return t('Submission received.');
     });
-  if (!status) return <Notice text="You were not assigned this work." />;
+  if (!status) return <Notice text={t('You were not assigned this work.')} />;
   return (
     <>
       <Card>
-        <SectionTitle icon="homework">Your work</SectionTitle>
+        <SectionTitle icon="homework">{t('Your work')}</SectionTitle>
         <Body>
           {[status.submission, status.modification, status.grading]
-            .filter(Boolean)
+            .flatMap((value) => (value ? [t(value)] : []))
             .join(' · ')}
         </Body>
         {latest && (
           <Body>
-            Last receipt · Version {latest.version} ·{' '}
-            {dueLabel(latest.submitted_at)} · {latest.late ? 'Late' : 'On time'}
+            {t('Last receipt · Version ')}
+            {latest.version} · {dueLabel(latest.submitted_at)} ·{' '}
+            {latest.late ? t('Late') : t('On time')}
           </Body>
         )}
         {blocked && <Notice text={blocked} />}
@@ -131,7 +134,7 @@ export function StudentWork({
           <>
             {a.allow_text && (
               <Field
-                label="Your response"
+                label={t('Your response')}
                 multiline
                 maxLength={20000}
                 value={edit.body}
@@ -141,7 +144,7 @@ export function StudentWork({
             )}
             {a.allow_link && (
               <Field
-                label="Submission link"
+                label={t('Submission link')}
                 keyboardType="url"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -154,13 +157,14 @@ export function StudentWork({
             )}
             {conflict ? (
               <View style={{ gap: 8 }}>
-                <Heading>Your draft changed on another device</Heading>
-                <Body>Your edits are still in the fields above.</Body>
+                <Heading>{t('Your draft changed on another device')}</Heading>
+                <Body>{t('Your edits are still in the fields above.')}</Body>
                 <Body>
-                  Server copy · {source.body || '(no text)'} {source.link}
+                  {t('Server copy · ')}
+                  {source.body || '(no text)'} {source.link}
                 </Body>
                 <Button
-                  title="Use server copy"
+                  title={t('Use server copy')}
                   variant="secondary"
                   onPress={() => {
                     setLocal(null);
@@ -170,7 +174,7 @@ export function StudentWork({
                 />
                 {!blocked && (
                   <Button
-                    title="Keep my edits"
+                    title={t('Keep my edits')}
                     onPress={() => {
                       setLocal({
                         ...edit,
@@ -188,26 +192,29 @@ export function StudentWork({
                 {Boolean(saveError) && <Notice error text={saveError} />}
                 <Body>
                   {saving
-                    ? 'Saving private draft…'
+                    ? t('Saving private draft…')
                     : local
-                      ? 'Unsaved edits'
+                      ? t('Unsaved edits')
                       : draft
-                        ? 'Private draft saved · ' + dueLabel(draft.updated_at)
+                        ? t('Private draft saved · ') +
+                          dueLabel(draft.updated_at)
                         : latest
-                          ? 'Start your revision from the previous version.'
-                          : 'Your draft is private and syncs after you stop typing.'}
+                          ? t('Start your revision from the previous version.')
+                          : t(
+                              'Your draft is private and syncs after you stop typing.',
+                            )}
                 </Body>
                 {!blocked && !preview && (
                   <>
                     <Button
-                      title="Save private draft"
+                      title={t('Save private draft')}
                       variant="secondary"
                       busy={saving}
                       disabled={!local && Boolean(draft)}
                       onPress={() => void save(edit)}
                     />
                     <Button
-                      title="Review submission"
+                      title={t('Review submission')}
                       disabled={
                         saving ||
                         Boolean(local) ||
@@ -226,19 +233,23 @@ export function StudentWork({
         )}
         {preview && (
           <>
-            <Heading>Confirm version {preview.base + 1}</Heading>
+            <Heading>
+              {t('Confirm version ')}
+              {preview.base + 1}
+            </Heading>
             {Boolean(preview.body) && <Body>{preview.body}</Body>}
             {Boolean(preview.link) && <Body>{preview.link}</Body>}
             <Body>
-              Effective deadline · {dueLabel(status.effective_due_at)}
+              {t('Effective deadline · ')}
+              {dueLabel(status.effective_due_at)}
             </Body>
             <Button
-              title="Confirm submission"
+              title={t('Confirm submission')}
               busy={action.busy}
               onPress={confirm}
             />
             <Button
-              title="Continue editing"
+              title={t('Continue editing')}
               variant="ghost"
               disabled={action.busy}
               onPress={() => setPreview(null)}
@@ -247,7 +258,7 @@ export function StudentWork({
         )}
         <Messages action={action} />
       </Card>
-      {versions.length > 0 && <Heading>Submission history</Heading>}
+      {versions.length > 0 && <Heading>{t('Submission history')}</Heading>}
       {versions.map((v) => (
         <Receipt key={v.id} version={v} />
       ))}

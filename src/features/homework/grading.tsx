@@ -1,3 +1,4 @@
+import { useLanguage } from '../../locales/provider';
 import { useState, useRef } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { uuid } from 'expo';
@@ -31,6 +32,7 @@ function GradeForm({
   data: Detail;
   refresh: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const [score, setScore] = useState(v.review?.score?.toString() ?? '');
   const [feedback, setFeedback] = useState(v.review?.feedback ?? '');
   const [include, setInclude] = useState(false);
@@ -68,10 +70,10 @@ function GradeForm({
       setConfirm(null);
       await refresh();
       return mode === 'save'
-        ? 'Grading draft saved privately.'
+        ? t('Grading draft saved privately.')
         : mode === 'release'
-          ? 'Feedback returned to the member.'
-          : 'Revision requested.';
+          ? t('Feedback returned to the member.')
+          : t('Revision requested.');
     });
   const ask = (mode: 'release' | 'revision') => {
     request.current = uuid.v4();
@@ -79,18 +81,25 @@ function GradeForm({
   };
   return (
     <Card>
-      <Heading>Grade version {v.version}</Heading>
+      <Heading>
+        {t('Grade version ')}
+        {v.version}
+      </Heading>
       {!current && (
-        <Notice text="A newer version is available. This draft stays with its original version." />
+        <Notice
+          text={t(
+            'A newer version is available. This draft stays with its original version.',
+          )}
+        />
       )}
       {stale && (
         <>
           <Notice
             error
-            text="Another review was saved. Reload it to continue."
+            text={t('Another review was saved. Reload it to continue.')}
           />
           <Button
-            title="Load saved review"
+            title={t('Load saved review')}
             onPress={() => {
               setRevision(v.review?.revision ?? 0);
               setScore(v.review?.score?.toString() ?? '');
@@ -102,7 +111,7 @@ function GradeForm({
       )}
       {data.assignment.max_points !== null && (
         <Field
-          label={'Score (out of ' + data.assignment.max_points + ')'}
+          label={t('Score (out of ') + data.assignment.max_points + ')'}
           keyboardType="decimal-pad"
           editable={!confirm && !action.busy}
           value={score}
@@ -110,7 +119,7 @@ function GradeForm({
         />
       )}
       <Field
-        label="Private feedback"
+        label={t('Private feedback')}
         multiline
         maxLength={12000}
         value={feedback}
@@ -120,19 +129,19 @@ function GradeForm({
       {!confirm ? (
         <>
           <Button
-            title="Save grading draft"
+            title={t('Save grading draft')}
             variant="secondary"
             disabled={stale}
             busy={action.busy}
             onPress={() => review('save')}
           />
           <Button
-            title="Return grade and feedback"
+            title={t('Return grade and feedback')}
             disabled={stale || !current || action.busy}
             onPress={() => ask('release')}
           />
           <Button
-            title="Request a revision"
+            title={t('Request a revision')}
             variant="secondary"
             disabled={stale || !current || action.busy}
             onPress={() => ask('revision')}
@@ -143,15 +152,15 @@ function GradeForm({
           {confirm === 'revision' && (
             <>
               <Field
-                label="Revision deadline (optional, MYT)"
+                label={t('Revision deadline (optional, MYT)')}
                 value={deadline}
                 onChangeText={setDeadline}
                 placeholder="YYYY-MM-DD HH:mm"
               />
               <Choices
                 items={[
-                  ['no', 'Send instructions only'],
-                  ['yes', 'Also return grade'],
+                  ['no', t('Send instructions only')],
+                  ['yes', t('Also return grade')],
                 ]}
                 value={include ? 'yes' : 'no'}
                 onChange={(x) => setInclude(x === 'yes')}
@@ -160,21 +169,21 @@ function GradeForm({
           )}
           <Body>
             {confirm === 'release'
-              ? 'The member will see this feedback and any score.'
-              : 'The member will be able to submit a new version.'}
+              ? t('The member will see this feedback and any score.')
+              : t('The member will be able to submit a new version.')}
           </Body>
           <Button
             title={
               confirm === 'release'
-                ? 'Confirm return'
-                : 'Confirm revision request'
+                ? t('Confirm return')
+                : t('Confirm revision request')
             }
             busy={action.busy}
             disabled={stale || !current}
             onPress={() => review(confirm)}
           />
           <Button
-            title="Cancel"
+            title={t('Cancel')}
             variant="ghost"
             disabled={action.busy}
             onPress={() => setConfirm(null)}
@@ -194,22 +203,27 @@ function MemberWork({
   member: string;
   changed: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const query = useHomework('hw_detail', { p_id: id, p_member: member });
   if (query.data === undefined)
     return <FetchState error={query.error} retry={query.refresh} />;
   const data = query.data;
-  if (!data?.status) return <Notice text="Recipient unavailable." />;
+  if (!data?.status) return <Notice text={t('Recipient unavailable.')} />;
   const reload = async () => {
     await Promise.all([query.refresh(), changed()]);
   };
   return (
     <>
       <Heading>{data.status.member_name || data.status.student_id}</Heading>
-      <Button title="Refresh member work" variant="ghost" onPress={reload} />
+      <Button
+        title={t('Refresh member work')}
+        variant="ghost"
+        onPress={reload}
+      />
       {data.versions.length ? (
         <VersionPanel data={data} refresh={reload} />
       ) : (
-        <Notice text="No formal submission yet." />
+        <Notice text={t('No formal submission yet.')} />
       )}
     </>
   );
@@ -221,13 +235,14 @@ function VersionPanel({
   data: Detail;
   refresh: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const [selection, select] = useState(data.versions[0]!.id);
   const v =
     data.versions.find((item) => item.id === selection) ?? data.versions[0]!;
   return (
     <>
       <Choices
-        items={data.versions.map((x) => [x.id, 'Version ' + x.version])}
+        items={data.versions.map((x) => [x.id, t('Version ') + x.version])}
         value={v.id}
         onChange={select}
       />
@@ -243,6 +258,7 @@ export function Grading({
   data: Detail;
   refresh: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState('all');
   const [sort, setSort] = useState('student');
   const [search, setSearch] = useState('');
@@ -260,17 +276,20 @@ export function Grading({
   return (
     <>
       <Card>
-        <Heading>Submission overview</Heading>
+        <Heading>{t('Submission overview')}</Heading>
         {counts && (
           <Body>
-            {counts.assigned} assigned · {counts.submitted} submitted ·{' '}
-            {counts.pending} awaiting review
+            {counts.assigned}
+            {t(' assigned · ')}
+            {counts.submitted}
+            {t(' submitted ·')} {counts.pending}
+            {t(' awaiting review          ')}
           </Body>
         )}
         <Body>
-          Counts use the published roster. Submitted includes late work.
-          Awaiting review counts each latest submission awaiting feedback,
-          excluding open revision requests and excused members.
+          {t(
+            'Counts use the published roster. Submitted includes late work. Awaiting review counts each latest submission awaiting feedback, excluding open revision requests and excused members.        ',
+          )}
         </Body>
       </Card>
       <View
@@ -283,9 +302,9 @@ export function Grading({
         {(width >= 1024 || !member) && (
           <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
             <Card>
-              <Heading>Recipient roster</Heading>
+              <Heading>{t('Recipient roster')}</Heading>
               <Field
-                label="Search recipients"
+                label={t('Search recipients')}
                 value={search}
                 onChangeText={(s) => {
                   setSearch(s);
@@ -294,14 +313,14 @@ export function Grading({
               />
               <Choices
                 items={[
-                  ['all', 'All recipients'],
-                  ['pending', 'Awaiting review'],
-                  ['Submitted', 'Submitted'],
-                  ['late', 'Late'],
-                  ['Missing', 'Missing'],
-                  ['Excused', 'Excused'],
-                  ['Revision requested', 'Revision requested'],
-                  ['Returned', 'Returned'],
+                  ['all', t('All recipients')],
+                  ['pending', t('Awaiting review')],
+                  ['Submitted', t('Submitted')],
+                  ['late', t('Late')],
+                  ['Missing', t('Missing')],
+                  ['Excused', t('Excused')],
+                  ['Revision requested', t('Revision requested')],
+                  ['Returned', t('Returned')],
                 ]}
                 value={filter}
                 onChange={(f) => {
@@ -309,12 +328,12 @@ export function Grading({
                   setPage(0);
                 }}
               />
-              <Body>Sort recipients</Body>
+              <Body>{t('Sort recipients')}</Body>
               <Choices
                 items={[
-                  ['student', 'Student ID'],
-                  ['name', 'Name'],
-                  ['recent', 'Latest submission'],
+                  ['student', t('Student ID')],
+                  ['name', t('Name')],
+                  ['recent', t('Latest submission')],
                 ]}
                 value={sort}
                 onChange={(value) => {
@@ -323,7 +342,7 @@ export function Grading({
                 }}
               />
               <Button
-                title="Refresh roster"
+                title={t('Refresh roster')}
                 variant="ghost"
                 onPress={() => {
                   void roster.refresh();
@@ -335,7 +354,7 @@ export function Grading({
               ) : (
                 <>
                   {roster.data.length === 0 && (
-                    <Body>No matching recipients.</Body>
+                    <Body>{t('No matching recipients.')}</Body>
                   )}
                   {roster.data.slice(0, pageSize).map((r) => (
                     <NavigationRow
@@ -367,7 +386,7 @@ export function Grading({
           <View style={{ flex: 1.4, minWidth: 0, gap: 12 }}>
             {width < 1024 && (
               <Button
-                title="Back to roster"
+                title={t('Back to roster')}
                 variant="secondary"
                 onPress={() => setMember('')}
               />

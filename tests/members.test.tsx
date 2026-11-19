@@ -41,7 +41,7 @@ test('repeating a search reloads data and punctuation remains in a quoted filter
   await fireEvent.press(screen.getByRole('button', { name: 'Search members' }));
   await waitFor(() => expect(result).toHaveBeenCalledTimes(2));
   expect(query.or).toHaveBeenLastCalledWith(
-    'display_name.ilike."%O\'Neil, Jr.%",student_id.ilike."%O\'Neil, Jr.%"',
+    'display_name.ilike."%O\'Neil, Jr.%",name_zh.ilike."%O\'Neil, Jr.%",name_en.ilike."%O\'Neil, Jr.%",student_id.ilike."%O\'Neil, Jr.%"',
   );
   await screen.findByText('No matching members.');
   await fireEvent.press(screen.getByRole('button', { name: 'Search members' }));

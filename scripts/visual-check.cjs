@@ -234,6 +234,21 @@ async function main() {
           .getByRole('button', { name: 'Sign in', exact: true })
           .waitFor();
         await settle();
+        await click('切换至简体中文');
+        await page.getByRole('heading', { name: '欢迎回来' }).waitFor();
+        await page.waitForFunction(
+          () => localStorage.getItem('microhub.language') === 'zh',
+        );
+        await page.reload();
+        await page.getByRole('button', { name: '登录', exact: true }).waitFor();
+        assert.equal(
+          await page.locator('html').getAttribute('lang'),
+          'zh-Hans',
+        );
+        await click('Switch to English');
+        await page
+          .getByRole('button', { name: 'Sign in', exact: true })
+          .waitFor();
         await page
           .getByRole('radio', { name: 'dark appearance', exact: true })
           .click();
@@ -463,13 +478,28 @@ async function main() {
         );
         await click('My profile');
         await page
-          .getByLabel('Full name', { exact: true })
+          .getByLabel('English name', { exact: true })
           .filter({ visible: true })
           .fill('Alex Tan');
         const nameField = page
-          .getByLabel('Full name', { exact: true })
+          .getByLabel('English name', { exact: true })
           .filter({ visible: true });
         await nameField.fill('Alex Draft');
+        await page
+          .getByRole('button', { name: '切换至简体中文', exact: true })
+          .filter({ visible: true })
+          .click();
+        assert.equal(
+          await page
+            .getByLabel('英文姓名', { exact: true })
+            .filter({ visible: true })
+            .inputValue(),
+          'Alex Draft',
+        );
+        await page
+          .getByRole('button', { name: 'Switch to English', exact: true })
+          .filter({ visible: true })
+          .click();
         await page.setViewportSize({
           width: size.width < 1024 ? 1280 : 390,
           height: size.height,
@@ -488,6 +518,10 @@ async function main() {
           'profile draft survives return to original width',
         );
         await nameField.fill('Alex Tan');
+        await page
+          .getByLabel('Chinese name', { exact: true })
+          .filter({ visible: true })
+          .fill('陈俊杰');
         await click('Save profile');
         await page.getByText('Profile saved.', { exact: true }).waitFor();
         assert.equal(saves, 1);

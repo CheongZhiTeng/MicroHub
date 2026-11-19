@@ -1,3 +1,4 @@
+import { useLanguage } from '../../locales/provider';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Body, Button, Card } from '../../components/ui';
@@ -11,13 +12,14 @@ export function AssignmentActions({
   assignment: Assignment;
   refresh: () => Promise<void>;
 }) {
+  const { t } = useLanguage();
   const [operation, setOperation] = useState<'remove' | 'add' | null>(null);
   const [targets, setTargets] = useState<string[]>([]);
   const action = useHomeworkAction();
   return (
     <Card>
       <Button
-        title="Copy to new draft"
+        title={t('Copy to new draft')}
         variant="secondary"
         icon="homework"
         onPress={() =>
@@ -29,23 +31,26 @@ export function AssignmentActions({
       />
       {a.lifecycle === 'draft' && (
         <Button
-          title="Delete draft"
+          title={t('Delete draft')}
           variant="ghost"
           onPress={() => setOperation('remove')}
         />
       )}
       {a.lifecycle === 'published' && (
         <Button
-          title="Add recipients"
+          title={t('Add recipients')}
           variant="secondary"
           onPress={() => setOperation('add')}
         />
       )}
       {operation === 'remove' && (
         <>
-          <Body>Delete the unpublished draft “{a.title}”?</Body>
+          <Body>
+            {t('Delete the unpublished draft “')}
+            {a.title}”?
+          </Body>
           <Button
-            title="Confirm delete"
+            title={t('Confirm delete')}
             variant="danger"
             busy={action.busy}
             onPress={() =>
@@ -64,7 +69,7 @@ export function AssignmentActions({
         <>
           <Audience targets={targets} setTargets={setTargets} />
           <Button
-            title="Assign to selected members"
+            title={t('Assign to selected members')}
             disabled={!targets.length}
             busy={action.busy}
             onPress={() =>
@@ -76,7 +81,7 @@ export function AssignmentActions({
                 setOperation(null);
                 setTargets([]);
                 await refresh();
-                return 'The selected members have this assignment.';
+                return t('The selected members have this assignment.');
               })
             }
           />
@@ -84,7 +89,7 @@ export function AssignmentActions({
       )}
       {operation && (
         <Button
-          title="Cancel changes"
+          title={t('Cancel changes')}
           variant="ghost"
           disabled={action.busy}
           onPress={() => setOperation(null)}

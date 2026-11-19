@@ -1,3 +1,4 @@
+import { useLanguage } from '../locales/provider';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Access } from '../features/access';
@@ -65,11 +66,12 @@ export const modules = {
 >;
 export type ModuleName = keyof typeof modules;
 export function PlannedModule({ name }: { name: ModuleName }) {
+  const { t } = useLanguage();
   const module = modules[name];
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
-    <Screen title={module.title} subtitle={module.subtitle}>
+    <Screen title={t(module.title)} subtitle={t(module.subtitle)}>
       <Access member>
         {() => (
           <>
@@ -92,15 +94,17 @@ export function PlannedModule({ name }: { name: ModuleName }) {
                   <Icon name="code" size={24} />
                 </View>
               </View>
-              <Badge label={`Coming in ${module.phase}`} />
-              <Heading>{module.heading}</Heading>
-              <Body>{module.description}</Body>
+              <Badge
+                label={t('Coming in {phase}').replace('{phase}', module.phase)}
+              />
+              <Heading>{t(module.heading)}</Heading>
+              <Body>{t(module.description)}</Body>
             </Card>
           </>
         )}
       </Access>
       <Button
-        title="Back to home"
+        title={t('Back to home')}
         variant="secondary"
         onPress={() => router.replace('/(tabs)')}
       />

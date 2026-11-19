@@ -1,3 +1,5 @@
+import { profileName, type ProfileNames } from '../src/lib/profile-name';
+import { useLanguage } from '../src/locales/provider';
 import { useWindowDimensions } from 'react-native';
 import { ConfirmDialog } from '../src/components/confirm-dialog';
 import { useBusy } from '../src/features/busy';
@@ -20,9 +22,10 @@ import { errorMessage } from '../src/lib/validation';
 type Application = {
   id: string;
   created_at: string;
-  profiles: { display_name: string; student_id: string; class_name: string };
+  profiles: ProfileNames & { student_id: string; class_name: string };
 };
 function Applications() {
+  const { t, language } = useLanguage();
   const { width } = useWindowDimensions();
   const [decline, setDecline] = useState<string | null>(null);
   const generation = useRef(0);
@@ -38,7 +41,7 @@ function Applications() {
       const { data, error } = await client()
         .from('membership_applications')
         .select(
-          'id,created_at,profiles!membership_applications_user_id_fkey(display_name,student_id,class_name)',
+          'id,created_at,profiles!membership_applications_user_id_fkey(display_name,name_zh,name_en,student_id,class_name)',
         )
         .eq('status', 'pending')
         .order('created_at')
@@ -83,8 +86,8 @@ function Applications() {
     <>
       <ConfirmDialog
         visible={decline !== null}
-        title="Decline application?"
-        message="The student can apply again after the waiting period."
+        title={t('Decline application?')}
+        message={t('The student can apply again after the waiting period.')}
         busy={busy}
         onCancel={() => setDecline(null)}
         onConfirm={() => {
@@ -98,8 +101,8 @@ function Applications() {
           {Boolean(error) && <Notice error text={error} />}
           {rows.length === 0 && !error && (
             <Card>
-              <SectionTitle icon="check">All caught up</SectionTitle>
-              <Body>No applications are waiting for review.</Body>
+              <SectionTitle icon="check">{t('All caught up')}</SectionTitle>
+              <Body>{t('No applications are waiting for review.')}</Body>
             </Card>
           )}
           {rows.map((row) => (
@@ -116,25 +119,25 @@ function Applications() {
                   : undefined
               }
             >
-              <Badge label="Awaiting review" />
-              <Heading>{row.profiles.display_name}</Heading>
+              <Badge label={t('Awaiting review')} />
+              <Heading>{profileName(row.profiles, language)}</Heading>
               <Body>
                 {row.profiles.student_id} · {row.profiles.class_name}
               </Body>
               <Body>
-                Applied{' '}
+                {t('Applied')}{' '}
                 {new Date(row.created_at).toLocaleDateString('en-MY', {
                   timeZone: 'Asia/Kuala_Lumpur',
                 })}
               </Body>
               <Button
                 icon="check"
-                title="Approve membership"
+                title={t('Approve membership')}
                 busy={busy}
                 onPress={() => void review(row.id, true)}
               />
               <Button
-                title="Decline application"
+                title={t('Decline application')}
                 variant="secondary"
                 busy={busy}
                 onPress={() => setDecline(row.id)}
@@ -142,14 +145,15 @@ function Applications() {
             </Card>
           ))}
           <Button
-            title="Refresh applications"
+            title={t('Refresh applications')}
             variant="secondary"
             busy={busy}
             onPress={() => void load()}
           />
           <Body>
-            Showing up to 30 oldest applications. Reviewed applications leave
-            this queue.
+            {t(
+              'Showing up to 30 oldest applications. Reviewed applications leave this queue.          ',
+            )}
           </Body>
         </>
       )}
@@ -157,11 +161,12 @@ function Applications() {
   );
 }
 export default function Administration() {
+  const { t } = useLanguage();
   return (
-    <Screen title="Administration" subtitle="Membership applications">
+    <Screen title={t('Administration')} subtitle={t('Membership applications')}>
       <Access admin>{() => <Applications />}</Access>
       <Button
-        title="Back to home"
+        title={t('Back to home')}
         variant="secondary"
         onPress={() => router.replace('/(tabs)')}
       />

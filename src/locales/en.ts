@@ -1,4 +1,4 @@
-// Centralize product copy now; language selection and Chinese ship in V1.
+// Shared English copy.
 export const en = {
   appName: 'MicroHub',
   tagline: 'One club. A shared place to grow.',

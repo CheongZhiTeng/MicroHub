@@ -1,3 +1,4 @@
+import { useLanguage } from '../src/locales/provider';
 import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -22,6 +23,7 @@ import {
   validOtp,
 } from '../src/lib/validation';
 export default function Register() {
+  const { t } = useLanguage();
   const passwordRef = useRef<InputHandle>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -88,13 +90,15 @@ export default function Register() {
   return (
     <Screen
       auth
-      title={sent ? 'Verify your email' : 'Join your club'}
-      subtitle="Your school email establishes your identity. Membership is approved separately."
+      title={sent ? t('Verify your email') : t('Join your club')}
+      subtitle={t(
+        'Your school email establishes your identity. Membership is approved separately.',
+      )}
     >
       <Card>
         <AuthSteps step={sent ? 2 : 1} />
         <Field
-          label="School email"
+          label={t('School email')}
           value={email}
           onChangeText={setEmail}
           editable={!sent && !busy}
@@ -109,9 +113,13 @@ export default function Register() {
         />
         {sent ? (
           <>
-            <Notice text="Check your school inbox for a six-digit code. Codes expire after 10 minutes." />
+            <Notice
+              text={t(
+                'Check your school inbox for a six-digit code. Codes expire after 10 minutes.',
+              )}
+            />
             <Field
-              label="Verification code"
+              label={t('Verification code')}
               editable={!busy}
               value={token}
               onChangeText={(value) =>
@@ -129,7 +137,7 @@ export default function Register() {
           <PasswordField
             inputRef={passwordRef}
             onSubmitEditing={() => void submit()}
-            label="Password (8–128 characters)"
+            label={t('Password (8–128 characters)')}
             value={password}
             onChangeText={setPassword}
             editable={!busy}
@@ -140,20 +148,21 @@ export default function Register() {
         {failed &&
           message.toLowerCase().includes('sending confirmation email') && (
             <Body>
-              We couldn’t deliver your code. Contact your club administrator for
-              help with verification emails.
+              {t(
+                'We couldn’t deliver your code. Contact your club administrator for help with verification emails.            ',
+              )}
             </Body>
           )}
         <Button
           fullWidth
-          title={sent ? 'Verify email' : 'Create account'}
+          title={sent ? t('Verify email') : t('Create account')}
           busy={busy}
           onPress={() => void submit()}
         />
         {sent && (
           <Button
             fullWidth
-            title="Resend code"
+            title={t('Resend code')}
             variant="ghost"
             busy={busy}
             onPress={() => void resend()}
@@ -163,8 +172,8 @@ export default function Register() {
           fullWidth
           title={
             sent
-              ? 'Use a different email'
-              : 'I already have a verification code'
+              ? t('Use a different email')
+              : t('I already have a verification code')
           }
           variant="ghost"
           busy={busy}
@@ -188,7 +197,7 @@ export default function Register() {
         />
         <Button
           fullWidth
-          title="Back to sign in"
+          title={t('Back to sign in')}
           variant="ghost"
           busy={busy}
           onPress={() => router.replace('/sign-in')}

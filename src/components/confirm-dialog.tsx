@@ -1,3 +1,4 @@
+import { useLanguage } from '../locales/provider';
 import { useEffect, useRef } from 'react';
 import { Modal, Platform, View } from 'react-native';
 import { Reveal } from './motion';
@@ -17,6 +18,7 @@ export function ConfirmDialog({
   onConfirm: () => void;
   busy?: boolean;
 }) {
+  const { t } = useLanguage();
   const root = useRef<React.ComponentRef<typeof View>>(null);
   useEffect(() => {
     if (!visible || Platform.OS !== 'web') return;
@@ -82,13 +84,13 @@ export function ConfirmDialog({
               <Heading>{title}</Heading>
               <Body>{message}</Body>
               <Button
-                title="Cancel"
+                title={t('Cancel')}
                 variant="ghost"
                 busy={busy}
                 onPress={onCancel}
               />
               <Button
-                title="Confirm"
+                title={t('Confirm')}
                 variant="danger"
                 busy={busy}
                 onPress={onConfirm}
