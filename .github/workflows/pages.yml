@@ -48,3 +48,26 @@ jobs:
         run: test "$PAGES_BASE" = "/MicroHub"
       - uses: actions/deploy-pages@v4
         id: deployment
+      - name: Verify the published homepage and sign-in page
+        env:
+          PAGES_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          for route in '' 'sign-in/'; do
+            url="${PAGES_URL%/}/${route}"
+            matched=false
+            for attempt in {1..12}; do
+              if curl --fail --silent --show-error --location --max-time 8 \
+                    --output "$RUNNER_TEMP/microhub-page.html" "$url" &&
+                 grep -Fq '/MicroHub/_expo/static/js/web/entry-' "$RUNNER_TEMP/microhub-page.html"; then
+                echo "Expo app verified at $url"
+                matched=true
+                break
+              fi
+              sleep 5
+            done
+            if [[ "$matched" != true ]]; then
+              echo "::error::The published page at $url did not serve the Expo app."
+              exit 1
+            fi
+          done
