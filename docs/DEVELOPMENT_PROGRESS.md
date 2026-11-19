@@ -1,5 +1,9 @@
 # Development progress
 
+## Clean-runner verification · 2026-11-19
+
+The feature branch's first remote Quality run exposed a pre-existing assumption in the independent Edge job. Deno attempted to use the Expo workspace's installed Node modules, which are absent in that job. A clean checkout reproduced the missing Supabase dependency. The workflow now resolves the Edge entry point's pinned npm import in Deno's own cache and runs its tests with isolated configuration. The corrected commands passed in a clean checkout with a fresh Deno cache and all six Edge tests passed. No migration accompanies this CI change. The application and migration acceptance checkpoint follows below.
+
 ## Homework MVP A · local acceptance · 2026-11-19
 
 **Branch:** `codex/homework-mvp-a`. Publishing, private text/link submissions, versioned feedback, revision requests and the home dashboard passed local acceptance. The [rehearsal](HOMEWORK_ACCEPTANCE.md) and [feature matrix](FEATURE_MATRIX.md) describe the tested flows and remaining scope.

@@ -44,7 +44,7 @@ Role/configuration management currently has checked backend RPCs; its full UI, i
 npm run check
 npx expo export --platform all
 npx expo install --check
-deno check supabase/functions/review-membership/index.ts
+deno check --no-config --node-modules-dir=none supabase/functions/review-membership/index.ts
 ```
 
 Unit/component/flow tests use Jest; database security tests run the actual migrations in PGlite PostgreSQL. Supabase-owned auth/storage fixtures exist only in the test harness. No test fixtures are served to the application. Hosted Supabase, email delivery and physical-device acceptance require separate tests before rollout. Do not disable RLS or commit secrets to get started.
