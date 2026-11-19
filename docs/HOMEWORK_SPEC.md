@@ -1,6 +1,6 @@
 # MicroHub Ultimate Homework System
 
-Planning checkpoint based on the latest homework plan and [original project requirements](SOURCE_REQUIREMENTS.zh-CN.txt). Implementation has not started. The [feature matrix](FEATURE_MATRIX.md) continues to track the full original scope.
+Planning checkpoint based on the latest homework plan and [original project requirements](SOURCE_REQUIREMENTS.zh-CN.txt). MVP A implementation and verification are recorded in [development progress](DEVELOPMENT_PROGRESS.md). The [feature matrix](FEATURE_MATRIX.md) continues to track the full original scope.
 
 ## Student and administrator flows
 

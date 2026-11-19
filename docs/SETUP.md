@@ -15,7 +15,7 @@ Both are public client values from Project Settings → API. A legacy anon key a
 
 ## Supabase schema and Auth
 
-1. Create a fresh Supabase project. Save database credentials in a password manager, not this repository. Apply migrations only after checking existing project data; the identity trigger rejects non-school accounts. For a fresh project run the two files in `supabase/migrations/` in filename order in SQL Editor, or use the CLI below. Do not reset an existing remote database.
+1. Create a fresh Supabase project. Save database credentials in a password manager, not this repository. Apply migrations only after checking existing project data; the identity trigger rejects non-school accounts. For a fresh project run the SQL migrations in `supabase/migrations/` in filename order in SQL Editor, or use the CLI below. Do not reset an existing remote database.
 2. In Authentication settings, enable email/password signup and **Confirm email**. Disable anonymous sign-ins, phone signup, public OAuth providers and unused auth providers. Set minimum password length to **8** and Password requirements to **Letters and digits** (at least one ASCII letter and one digit). The app accepts 8–128 characters. This supersedes the earlier 12-character setup guidance. Changing `supabase/config.toml` does not update an already-created hosted project: save these settings in the Supabase Dashboard. Configure OTP length 6, expiry 600 seconds, and email resend interval at least 60 seconds. Configure Auth rate limits and CAPTCHA for production abuse protection as appropriate to school policy.
 3. Configure custom SMTP and test delivery to `foonyewsa.edu.my`. Supabase's default mail service may restrict recipients and volume and is unsuitable for club rollout. Confirm with the school that student mailboxes can receive verification messages.
 4. In **Confirm signup** email template, include `Your MicroHub verification code is {{ .Token }}`. In **Reset password** template include `Your MicroHub recovery code is {{ .Token }}`. Keep valid HTML and the standard surrounding template fields. The app calls verifyOtp with `signup` or `recovery`; do not send only a default web verification link. For this build the email code is entered into the app; no callback route is required or implemented.
@@ -33,6 +33,8 @@ Use the official Supabase CLI via `npx supabase` or install the supported binary
 ```sh
 npx supabase login
 npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase migration list --linked
+npx supabase db push --dry-run
 npx supabase db push
 npx supabase functions deploy review-membership
 ```

@@ -4,19 +4,30 @@ import { useIdentity, type Identity } from './identity';
 import { useSession } from './session';
 export function Access({
   children,
+  signInParams,
   admin = false,
   member = false,
 }: {
   children: (identity: Identity) => React.ReactNode;
+  signInParams?: { next: string; id?: string; mode?: string };
   admin?: boolean;
   member?: boolean;
 }) {
   const { session, loading: sessionLoading, recovery } = useSession();
   const { identity, loading, error, reload } = useIdentity();
   if (sessionLoading) return <Loading />;
-  if (!session) return <Redirect href="/sign-in" />;
+  if (!session)
+    return (
+      <Redirect
+        href={
+          signInParams
+            ? { pathname: '/sign-in', params: signInParams }
+            : '/sign-in'
+        }
+      />
+    );
   if (recovery) return <Redirect href="/recover" />;
-  if (loading) return <Loading />;
+  if (loading && !identity) return <Loading />;
   if (error)
     return (
       <>

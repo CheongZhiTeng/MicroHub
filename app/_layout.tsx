@@ -1,3 +1,4 @@
+import { HomeworkDraftProvider } from '../src/features/homework/unsaved';
 import { MotionProvider, useReducedMotion } from '../src/components/motion';
 import { ThemeProvider, useTheme } from '../src/theme/provider';
 import { AppShell } from '../src/components/app-shell';
@@ -28,7 +29,9 @@ export default function Layout() {
       <ThemeProvider>
         <MotionProvider>
           <SessionProvider>
-            <Navigation />
+            <HomeworkDraftProvider>
+              <Navigation />
+            </HomeworkDraftProvider>
           </SessionProvider>
         </MotionProvider>
       </ThemeProvider>

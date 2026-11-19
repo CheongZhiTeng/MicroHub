@@ -1,5 +1,5 @@
 import { MotionPressable } from '../../src/components/motion';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, usePathname } from 'expo-router';
 import { Icon } from '../../src/components/icon';
 import { Loading, Screen } from '../../src/components/ui';
 import { useSession } from '../../src/features/session';
@@ -8,6 +8,7 @@ import { useWindowDimensions } from 'react-native';
 import { en } from '../../src/locales/en';
 export default function TabsLayout() {
   const { theme } = useTheme();
+  const pathname = usePathname();
   const { width } = useWindowDimensions();
   const { session, loading, recovery } = useSession();
   if (loading)
@@ -16,7 +17,16 @@ export default function TabsLayout() {
         <Loading />
       </Screen>
     );
-  if (!session) return <Redirect href="/sign-in" />;
+  if (!session)
+    return (
+      <Redirect
+        href={
+          pathname.replace(/\/$/, '').endsWith('/homework')
+            ? { pathname: '/sign-in', params: { next: 'homework' } }
+            : '/sign-in'
+        }
+      />
+    );
   if (recovery) return <Redirect href="/recover" />;
   return (
     <Tabs

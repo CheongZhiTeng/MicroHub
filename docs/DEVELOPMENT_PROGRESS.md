@@ -1,5 +1,12 @@
 # Development progress
 
+## Homework MVP A · application checkpoint · 2026-11-19
+
+- On `codex/homework-mvp-a` after database checkpoint `7e97eae`, the Assignments and My submissions routes, home card and private grading workspace now use the same Supabase RPCs on mobile and web. The author previews a saved draft before publishing. Student drafts autosave, keep unacknowledged edits in account-scoped memory, and offer explicit reconciliation. The desktop roster and grade panel share the mobile version history and release controls.
+- Real-stack verification: applied migrations `202611140001`, `202611140002`, `202611190001` in a disposable local Supabase/PostgreSQL 17 instance. Queried its migration history. Four isolated browser contexts signed in through local GoTrue and exercised the Pages export, PostgREST and actual RLS. The rehearsal passed publication, non-recipient denial, cross-device drafts, visible conflict resolution, recovery after the successful submission response was dropped, draft grade privacy, release, revision, and authenticated deep-link refresh. See [reproduction](HOMEWORK_ACCEPTANCE.md).
+- TypeScript, ESLint, 77 app/web tests, identity and homework database suites, formatting, and Expo iOS/Android/web exports passed. No physical-device or hosted homework acceptance has been recorded. Hosted migration status is unverified. The existing Pages deployment is still on its deployment branch.
+- Next checkpoint: exercise real concurrent database requests and review the remaining first-batch acceptance cases.
+
 ## Homework MVP A · database checkpoint · 2026-11-19
 
 - Branch `codex/homework-mvp-a` started from `366e9a4`. The remote Pages branch was verified at `202636e`.

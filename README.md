@@ -1,8 +1,8 @@
 # MicroHub
 
-A private Android/iOS application for **one school club**, built with Expo, React Native, TypeScript, Expo Router and Supabase. Designed for development from an iPad through GitHub Codespaces.
+A private web, Android and iOS application for **one school club**, built with Expo, React Native, TypeScript, Expo Router and Supabase. Designed for development from an iPad through GitHub Codespaces.
 
-**Status: initial MVP foundation, not a complete MVP or production release.** This increment implements real Supabase authentication and membership flows. Homework, attendance and full dashboards are upcoming MVP modules; navigation describes their status without sample data. V1/V2 implementation has not begun.
+**Feature branch status.** Homework MVP A connects assignment publishing, private text/link drafts, submission history, grading and revisions to the existing authentication and membership flows. See [homework acceptance](docs/HOMEWORK_ACCEPTANCE.md) for migration and test scope. File uploads and attendance remain upcoming MVP modules.
 
 ## Start
 

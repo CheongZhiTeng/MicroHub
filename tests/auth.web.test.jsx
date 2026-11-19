@@ -10,6 +10,7 @@ import { Screen } from '../src/components/ui';
 
 jest.mock('expo-router', () => ({
   router: { replace: jest.fn(), push: jest.fn() },
+  useLocalSearchParams: () => ({}),
   Redirect: () => null,
 }));
 jest.mock('react-native-safe-area-context', () => ({

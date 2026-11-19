@@ -8,6 +8,8 @@ import { PlannedModule } from '../src/components/planned-module';
 import { client } from '../src/lib/supabase';
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), replace: jest.fn() },
+  useFocusEffect: (cb: () => void) =>
+    jest.requireActual('react').useEffect(cb, [cb]),
   Redirect: () => null,
 }));
 jest.mock('react-native-safe-area-context', () => ({
@@ -39,6 +41,12 @@ function identity(value: Identity) {
   });
 }
 beforeEach(() => {
+  jest.mocked(client).mockReturnValue({
+    rpc: jest.fn().mockResolvedValue({
+      data: { todo: 0, next: null, pending: null, submitted: null },
+      error: null,
+    }),
+  } as unknown as ReturnType<typeof client>);
   identity(member);
   jest.mocked(useSession).mockReturnValue({
     session: { user: { id: 'user' } } as never,

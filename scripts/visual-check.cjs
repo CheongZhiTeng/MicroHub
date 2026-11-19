@@ -135,6 +135,8 @@ async function main() {
               signups++;
               body = { user, session: null };
             } else if (url.pathname === '/auth/v1/user') body = user;
+            else if (url.pathname.endsWith('rpc/hw_summary'))
+              body = { todo: 0, next: null, submitted: null, pending: null };
             else if (url.pathname.includes('rpc/review_membership')) {
               approved = true;
               body = null;
@@ -497,11 +499,13 @@ async function main() {
         await click('Back to home');
         await click('Assignment workspace');
         await page
-          .getByText('Your next chapter starts here', { exact: true })
+          .getByText('You have no assignments to do.', { exact: true })
           .waitFor();
         await snapshot('assignments');
         await click('My submissions');
-        await page.getByText('Make your work count', { exact: true }).waitFor();
+        await page
+          .getByRole('heading', { name: 'My submissions', exact: true })
+          .waitFor();
         await click('Back to home');
         for (const [button, heading] of [
           ['Attendance', 'See you at the next meeting'],

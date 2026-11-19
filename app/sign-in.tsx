@@ -1,5 +1,5 @@
 import { useBusy } from '../src/features/busy';
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import type { InputHandle } from '../src/components/ui';
 import {
@@ -19,6 +19,11 @@ import {
 } from '../src/lib/validation';
 import { en } from '../src/locales/en';
 export default function SignIn() {
+  const { next, id, mode } = useLocalSearchParams<{
+    next?: string;
+    id?: string;
+    mode?: string;
+  }>();
   const { session, recovery } = useSession();
   const passwordRef = useRef<InputHandle>(null);
   const [email, setEmail] = useState('');
@@ -26,7 +31,27 @@ export default function SignIn() {
   const { busy, start, finish } = useBusy();
   const [error, setError] = useState('');
   if (!configured) return <Redirect href="/" />;
-  if (session) return <Redirect href={recovery ? '/recover' : '/(tabs)'} />;
+  if (session) {
+    if (recovery) return <Redirect href="/recover" />;
+    if (
+      next === 'assignment' &&
+      typeof id === 'string' &&
+      /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)
+    )
+      return (
+        <Redirect
+          href={{
+            pathname: '/assignment',
+            params: { id, mode: mode === 'manage' ? 'manage' : 'mine' },
+          }}
+        />
+      );
+    if (next === 'homework' || next === 'submissions')
+      return (
+        <Redirect href={next === 'homework' ? '/homework' : '/submissions'} />
+      );
+    return <Redirect href="/(tabs)" />;
+  }
   const login = async () => {
     setError('');
     if (!isSchoolEmail(normalizeEmail(email))) {

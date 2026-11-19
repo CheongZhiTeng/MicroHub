@@ -7,15 +7,6 @@ import { Icon, type IconName } from './icon';
 import { Badge, Body, Button, Card, Heading, Screen } from './ui';
 
 export const modules = {
-  homework: {
-    title: 'Assignments',
-    subtitle: 'A little progress, every week.',
-    icon: 'homework',
-    phase: 'MVP',
-    heading: 'Your next chapter starts here',
-    description:
-      'Assignment creation, submissions and private feedback are being prepared. Assignments cannot be created or submitted yet.',
-  },
   attendance: {
     title: 'Attendance',
     subtitle: 'Every meeting brings us closer.',
@@ -61,15 +52,6 @@ export const modules = {
     description:
       'A shared library for useful links, guides and learning materials is planned for V2. Resource uploads are not available yet.',
   },
-  submissions: {
-    title: 'My submissions',
-    subtitle: 'Your work, all in one place.',
-    icon: 'homework',
-    phase: 'MVP',
-    heading: 'Make your work count',
-    description:
-      'Text, link and file submissions will be available with the assignment module. No work can be submitted in this version.',
-  },
 } satisfies Record<
   string,
   {
@@ -97,13 +79,11 @@ export function PlannedModule({ name }: { name: ModuleName }) {
                   styles.illustration,
                   {
                     backgroundColor:
-                      name === 'homework' || name === 'submissions'
-                        ? theme.color.lavender
-                        : name === 'events'
-                          ? theme.color.sky
-                          : name === 'resources'
-                            ? theme.color.peach
-                            : theme.color.subtle,
+                      name === 'events'
+                        ? theme.color.sky
+                        : name === 'resources'
+                          ? theme.color.peach
+                          : theme.color.subtle,
                   },
                 ]}
               >
@@ -115,13 +95,6 @@ export function PlannedModule({ name }: { name: ModuleName }) {
               <Badge label={`Coming in ${module.phase}`} />
               <Heading>{module.heading}</Heading>
               <Body>{module.description}</Body>
-              {name === 'homework' && (
-                <Button
-                  title="My submissions"
-                  variant="secondary"
-                  onPress={() => router.push('/submissions')}
-                />
-              )}
             </Card>
           </>
         )}

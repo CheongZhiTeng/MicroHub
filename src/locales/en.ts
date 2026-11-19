@@ -12,8 +12,6 @@ export const en = {
     'Set the two public Supabase values in .env, apply the migrations, then restart Expo. See docs/SETUP.md.',
   membershipNeeded:
     'Your membership needs approval before club content becomes available.',
-  homeworkPending:
-    'Assignment tools are the next MVP module. No assignments are available in this foundation build.',
   attendancePending:
     'Secure check-in is planned for the next MVP increment. Attendance is not being collected yet.',
   eventsPending:

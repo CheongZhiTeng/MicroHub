@@ -1,3 +1,4 @@
+import { useHomework, dueLabel } from '../features/homework/api';
 import { ContentGrid } from './layout';
 import { MotionPressable } from './motion';
 import { router } from 'expo-router';
@@ -137,6 +138,7 @@ function OverviewLink({
   );
 }
 export function ClubOverview() {
+  const work = useHomework('hw_summary');
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
@@ -149,8 +151,27 @@ export function ClubOverview() {
       >
         <View style={styles.assignment}>
           <View style={styles.copy}>
-            <Text style={styles.cardSubtitle}>Your next challenge awaits</Text>
-            <Body>Submission tools are coming in MVP.</Body>
+            <Text style={styles.cardSubtitle}>
+              {work.error
+                ? 'Assignments could not load'
+                : !work.data
+                  ? 'Loading assignments…'
+                  : (work.data.next?.title ?? 'You’re all caught up')}
+            </Text>
+            {work.data && (
+              <Body>
+                {work.data.todo} to do
+                {work.data.next
+                  ? ' · Due ' + dueLabel(work.data.next.due_at)
+                  : ''}
+              </Body>
+            )}
+            {work.data?.pending != null && (
+              <Body>
+                {work.data.submitted} submitted · {work.data.pending} awaiting
+                review
+              </Body>
+            )}
           </View>
           <StudyArt />
         </View>
