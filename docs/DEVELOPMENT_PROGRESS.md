@@ -1,6 +1,26 @@
 # Development progress
 
-Updated 2026-11-17 (Asia/Kuala_Lumpur). Current phase: **MVP, increment 1 — identity and membership foundation**. MVP is not accepted or complete. No V1/V2 business functionality has begun; the UI branch includes clearly marked availability screens for future modules. Source requirements were fully extracted and all 76 items are preserved in FEATURE_MATRIX.md, including the inapplicable multi-club requirement.
+## Current checkpoint · 2026-11-19 (Asia/Kuala_Lumpur)
+
+- **Baseline:** `codex/github-pages` at `202636e` before this documentation checkpoint. The approved Modern Campus v2 interface and the GitHub Pages deployment are on this branch.
+- **Completed:** Identity, profile, member directory, membership application and review, responsive design, theme switching, Pages build and deployment. The user confirmed the site opens and approved the style. GitHub Actions run [44508677772](https://github.com/CheongZhiTeng/MicroHub/actions/runs/44508677772) passed its live homepage and sign-in checks.
+- **Remaining:** The homework route is an availability screen. Homework MVP A has not started. Real two-account cross-device homework acceptance is pending, as are later homework batches, attendance and other roadmap items. The user has previously reported hosted verification, login and initial administrator bootstrap. That evidence is separate from fixture tests and hosted migration-history verification.
+- **Technical decisions:** Expo and GitHub Pages share the same Supabase project and UI. Use the [homework specification](HOMEWORK_SPEC.md) with the [original source requirements](SOURCE_REQUIREMENTS.zh-CN.txt) and [feature matrix](FEATURE_MATRIX.md). Preserve the existing Auth, role and RLS boundaries. The development and recovery procedure lives in [AGENTS.md](../AGENTS.md).
+- **Verification baseline:** The Pages increment passed `npm run check` (77 app tests and 14 PostgreSQL scenarios, 15 results including the parent); 60 browser checks used HTTP fixtures. Live Pages verification checked the served Expo assets. The documentation checkpoint runs formatting and diff checks; it does not change runtime code.
+- **Next concrete step:** When homework implementation is requested, start from the verified Pages baseline on a feature branch. Inspect existing authorization and migrations, then implement the MVP A data model with role and privacy tests.
+
+### Migration ledger
+
+| Version and file                       | In Git    | Local evidence                                | Hosted status                                                                                                    |
+| -------------------------------------- | --------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `202611140001_identity_membership.sql` | Committed | Included in previously passing database suite | User reported running the setup SQL and successful identity flows. Exact migration history has not been queried. |
+| `202611140002_private_storage.sql`     | Committed | Included in previously passing database suite | Exact migration history and hosted storage configuration are unverified.                                         |
+
+No hosted migration was executed for this checkpoint. Before applying any future migration, inspect the intended Supabase project's recorded versions (for example via `supabase migration list --linked` if authorized and correctly linked). If setup SQL was run manually, compare the relevant schema with its migration before acting on a missing version entry.
+
+## Historical progress
+
+Foundation snapshot from 2026-11-17 (Asia/Kuala_Lumpur). Current phase: **MVP, increment 1 — identity and membership foundation**. MVP is not accepted or complete. No V1/V2 business functionality has begun; the UI branch includes clearly marked availability screens for future modules. Source requirements were fully extracted and all 76 items are preserved in FEATURE_MATRIX.md, including the inapplicable multi-club requirement.
 
 ## Implemented in this increment
 
