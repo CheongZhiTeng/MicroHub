@@ -522,12 +522,18 @@ async function main() {
         await page.waitForFunction(
           () => document.activeElement?.textContent === 'Cancel',
         );
+        const confirmFocus = page
+          .getByRole('button', { name: 'Confirm', exact: true })
+          .and(page.locator(':focus'));
+        const cancelFocus = page
+          .getByRole('button', { name: 'Cancel', exact: true })
+          .and(page.locator(':focus'));
         await page.keyboard.press('Tab');
-        assert(
-          await page
-            .getByRole('button', { name: 'Confirm', exact: true })
-            .evaluate((el) => el === document.activeElement),
-        );
+        await confirmFocus.waitFor();
+        await page.keyboard.press('Tab');
+        await cancelFocus.waitFor();
+        await page.keyboard.press('Shift+Tab');
+        await confirmFocus.waitFor();
         await page.keyboard.press('Escape');
         await page
           .getByText('Decline application?', { exact: true })
