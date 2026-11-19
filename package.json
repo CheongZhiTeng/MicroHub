@@ -19,7 +19,8 @@
     "test": "jest --runInBand && npm run test:web",
     "test:db": "node --test tests/database.test.mjs",
     "check": "npm run typecheck && npm run lint && npm test && npm run test:db && npm run format:check",
-    "test:web": "jest --config jest.web.config.js --runInBand"
+    "test:web": "jest --config jest.web.config.js --runInBand",
+    "build:pages": "node scripts/build-pages.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",

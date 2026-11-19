@@ -12,20 +12,37 @@ const root = path.resolve(
 const output = path.resolve(
   process.env.VISUAL_OUTPUT_DIR || 'docs/screenshots',
 );
+const pages = process.env.VISUAL_GITHUB_PAGES === '1';
+const basePath = pages ? '/MicroHub' : '';
+const origin = 'http://127.0.0.1:8091';
 fs.mkdirSync(output, { recursive: true });
 const server = createServer((req, res) => {
+  const url = new URL(req.url, origin);
+  const pathname = decodeURIComponent(url.pathname);
+  if (pages && pathname !== basePath && !pathname.startsWith(basePath + '/')) {
+    res.writeHead(404).end();
+    return;
+  }
   const file = path.resolve(
     root,
-    '.' + decodeURIComponent(new URL(req.url, 'http://localhost').pathname),
+    '.' + (pathname.slice(basePath.length) || '/'),
   );
   if (!file.startsWith(root + path.sep) && file !== root) {
     res.writeHead(403).end();
     return;
   }
-  const target =
-    fs.existsSync(file) && fs.statSync(file).isFile()
-      ? file
-      : path.join(root, 'index.html');
+  let target = file;
+  if (pages && fs.existsSync(file) && fs.statSync(file).isDirectory()) {
+    if (!pathname.endsWith('/')) {
+      res.writeHead(301, { Location: url.pathname + '/' + url.search }).end();
+      return;
+    }
+    target = path.join(file, 'index.html');
+  }
+  if (!fs.existsSync(target) || !fs.statSync(target).isFile()) {
+    if (pages) res.statusCode = 404;
+    target = path.join(root, pages ? '404.html' : 'index.html');
+  }
   res.setHeader(
     'Content-Type',
     target.endsWith('.js')
@@ -199,7 +216,18 @@ async function main() {
           );
           checks++;
         };
-        await page.goto('http://127.0.0.1:8091');
+        if (pages) {
+          const recover = await page.goto(origin + basePath + '/recover');
+          assert.equal(recover.status(), 200, 'recovery deep link resolves');
+          await page
+            .getByRole('heading', { name: 'Reset your password' })
+            .waitFor();
+          const members = await page.goto(origin + basePath + '/members');
+          assert.equal(members.status(), 200, 'protected deep link resolves');
+          await page.waitForURL(new RegExp(basePath + '/sign-in/?$'));
+        }
+        const home = await page.goto(origin + basePath + '/');
+        assert.equal(home.status(), 200, 'home document resolves');
         await page
           .getByRole('button', { name: 'Sign in', exact: true })
           .waitFor();
@@ -210,7 +238,14 @@ async function main() {
         await page.waitForFunction(
           () => localStorage.getItem('microhub.appearance') === 'dark',
         );
-        await page.reload();
+        const reload = await page.reload();
+        assert.equal(
+          reload.status(),
+          200,
+          'refresh resolves the current route',
+        );
+        if (pages)
+          assert(new URL(page.url()).pathname.startsWith(basePath + '/'));
         await page
           .getByRole('radio', { name: 'dark appearance', exact: true })
           .waitFor();

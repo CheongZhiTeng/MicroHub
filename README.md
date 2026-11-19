@@ -56,3 +56,7 @@ The reference-based interface from `codex/ui-redesign` is now integrated into `c
 ### Modern Campus v2 preview
 
 `codex/modern-campus-v2` adds light/dark/system appearance, compact shared controls and a desktop workspace for the same school-club accounts. See [design system, verification and Codespaces instructions](docs/MODERN_CAMPUS_V2.md). This branch is awaiting visual acceptance before merging.
+
+### Website deployment
+
+The `codex/github-pages` branch adds a GitHub Pages build for the same Expo app and Supabase project. See the [Pages setup and cross-device verification guide](docs/GITHUB_PAGES.md).
