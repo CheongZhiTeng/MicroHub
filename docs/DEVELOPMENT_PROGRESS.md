@@ -1,5 +1,11 @@
 # Development progress
 
+## Homework MVP A · remote verification · 2026-11-20 (Malaysia)
+
+Both GitHub Actions jobs passed for the implementation at `bd836c3` on `codex/homework-mvp-a`. The clean runner installed dependencies, ran the project checks, exported the app for all platforms, and checked and tested the Edge function in a separate job. GitHub reported two runtime deprecation warnings for the checkout and Node setup actions. [Quality run 44538208767](https://github.com/CheongZhiTeng/MicroHub/actions/runs/44538208767)
+
+The four homework migrations are verified on the disposable local Supabase stack. During recovery, the working tree was clean and the remote Pages branch still pointed to `202636e`. Hosted staging history and iPad Safari / Expo Go device acceptance remain pending. Resume at the staging checks in [homework acceptance](HOMEWORK_ACCEPTANCE.md).
+
 ## Clean-runner verification · 2026-11-19
 
 The feature branch's first remote Quality run exposed a pre-existing assumption in the independent Edge job. Deno attempted to use the Expo workspace's installed Node modules, which are absent in that job. A clean checkout reproduced the missing Supabase dependency. The workflow now resolves the Edge entry point's pinned npm import in Deno's own cache and runs its tests with isolated configuration. The corrected commands passed in a clean checkout with a fresh Deno cache and all six Edge tests passed. No migration accompanies this CI change. The application and migration acceptance checkpoint follows below.
