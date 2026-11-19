@@ -1,5 +1,11 @@
 # Development progress
 
+## Hosted staging acceptance · awaiting project connection · 2026-11-20 (Malaysia)
+
+The working tree was clean on `codex/homework-mvp-a` at `4c623f8`. The staging preflight found no linked Supabase project, staging URL or Supabase credential in the Cloud environment. The CLI returned `AccessTokenRequiredError` for project discovery. The environment's outbound proxy rejected the HTTPS connection to `api.supabase.com` with CONNECT 403.
+
+Hosted migration history, test accounts and browser results are unverified. No hosted migration, account creation, assignment write or deployment was performed. Resume when the owner identifies the dedicated test project or preview branch by its public Project URL. Establish access for that target through environment settings, compare its migration history and schema, then exercise the [acceptance flow](HOMEWORK_ACCEPTANCE.md).
+
 ## Homework MVP A · remote verification · 2026-11-20 (Malaysia)
 
 Both GitHub Actions jobs passed for the implementation at `bd836c3` on `codex/homework-mvp-a`. The clean runner installed dependencies, ran the project checks, exported the app for all platforms, and checked and tested the Edge function in a separate job. GitHub reported two runtime deprecation warnings for the checkout and Node setup actions. [Quality run 44538208767](https://github.com/CheongZhiTeng/MicroHub/actions/runs/44538208767)
