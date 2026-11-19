@@ -99,6 +99,12 @@ async function run() {
     const page = await ctx.newPage();
     pages.push(page);
     page.setDefaultTimeout(14000);
+    page.on('console', (entry) => {
+      if (
+        /Unexpected text node|Text strings must be rendered/.test(entry.text())
+      )
+        errors.push(entry.text());
+    });
     page.on('pageerror', (e) => errors.push(e.message));
     return page;
   }
@@ -218,6 +224,53 @@ async function run() {
       ),
       'Phone layout overflows',
     );
+    await click(staff, 'Refresh member work');
+    await see(
+      staff,
+      'A newer version is available. This draft stays with its original version.',
+    );
+    await click(staff, 'Version 2');
+    await see(staff, 'Grade version 2');
+    await staff.setViewportSize({ width: 390, height: 850 });
+    await click(staff, 'Back to roster');
+    await click(staff, 'Homework Alice · ' + alice.studentId);
+    await see(staff, 'Grade version 2');
+    await staff.setViewportSize({ width: 1280, height: 850 });
+    await click(staff, 'Add recipients');
+    await staff
+      .getByLabel('Find recipients by name or student ID')
+      .fill(bob.studentId);
+    await click(staff, 'Homework Bob · ' + bob.studentId);
+    await click(staff, 'Assign to selected members');
+    await see(staff, 'The selected members have this assignment.');
+    await click(outsider, 'Refresh assignment');
+    await outsider.getByLabel('Your response').waitFor();
+    assert.equal(
+      await outsider.getByText('Clear explanation.', { exact: true }).count(),
+      0,
+    );
+    await click(staff, 'Latest submission');
+    await click(staff, 'Copy to new draft');
+    assert.equal(
+      await staff.getByLabel('Title', { exact: true }).inputValue(),
+      'Copy of ' + title,
+    );
+    await see(staff, '0 selected');
+    await click(staff, 'All active members');
+    await click(staff, 'Save draft and preview');
+    await see(staff, 'Student preview');
+    const copyId = new URL(staff.url()).searchParams.get('id');
+    assert(copyId && copyId !== id);
+    await click(staff, 'Delete draft');
+    await click(staff, 'Confirm delete');
+    await staff
+      .getByRole('button', { name: 'Create assignment', exact: true })
+      .waitFor();
+    assert.equal(
+      (await checked(service.from('assignments').select('id').eq('id', copyId)))
+        .length,
+      0,
+    );
     await staff.getByRole('link', { name: 'Go to Home', exact: true }).click();
     await staff.getByText(/submitted · [1-9]\d* awaiting review/).waitFor();
     await desk.reload();
@@ -225,6 +278,17 @@ async function run() {
     await desk.getByLabel('Password', { exact: true }).fill(password);
     await click(desk, 'Sign in');
     await desk.getByText(/Last receipt · Version 2/).waitFor();
+    const reviewer = await user('Second reviewer', 'admin');
+    await require('./homework-concurrency.cjs')({
+      api,
+      key: process.env.PUBLISHABLE_KEY,
+      password,
+      teacher,
+      reviewer,
+      student: bob,
+      other: alice,
+      id,
+    });
     assert.deepEqual(errors, []);
     console.log(
       'Local Supabase + Pages passed: selected publish, non-recipient denial, two-device draft, two receipts, private grade, release, revision, dashboard and authenticated deep-link reload.',

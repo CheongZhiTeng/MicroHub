@@ -21,7 +21,7 @@ export default function Editor() {
         copy ? 'Copy assignment' : id ? 'Edit assignment' : 'Create assignment'
       }
     >
-      <Access admin>
+      <Access admin signInParams={{ next: 'assignment-editor', id, copy }}>
         {(user) =>
           source ? (
             <Existing

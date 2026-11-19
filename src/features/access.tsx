@@ -9,7 +9,7 @@ export function Access({
   member = false,
 }: {
   children: (identity: Identity) => React.ReactNode;
-  signInParams?: { next: string; id?: string; mode?: string };
+  signInParams?: { next: string; id?: string; mode?: string; copy?: string };
   admin?: boolean;
   member?: boolean;
 }) {

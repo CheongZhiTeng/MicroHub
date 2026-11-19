@@ -1,5 +1,11 @@
 # Development progress
 
+## Homework MVP A · roster and concurrency checkpoint · 2026-11-19
+
+- Added server-side roster ordering by student ID, name or most recent submission before pagination. On narrow screens the selected submission has its own pane and a return-to-roster action. Existing four-argument roster callers remain supported. Homework editor deep links also survive web sign-in.
+- Compared local Supabase history, then applied the only pending version, `202611190003_homework_roster_order.sql`. The full browser rehearsal passed with copy, deletion, supplemental assignment and switching the grading workspace between mobile and desktop widths. Concurrent requests through independent GoTrue sessions and PostgREST connections produced one winning draft write, one receipt for repeated submissions, one winning grader, one release for duplicate confirmations and consistent history during resubmission.
+- No hosted migration or Pages publication. Next: finish boundary-case review, final regression checks and publish the isolated feature branch.
+
 ## Homework MVP A · assignment maintenance checkpoint · 2026-11-19
 
 - Administrators can copy settings to a fresh draft, delete an unchanged unpublished draft after confirmation, and explicitly add named active recipients after publication. Adding a member preserves all existing receipts and feedback. Draft edits use the original revision even when the screen refreshes. The grading panel pins the version a reviewer opened.

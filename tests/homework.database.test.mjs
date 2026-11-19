@@ -161,6 +161,20 @@ test('homework lifecycle, privacy and concurrency contracts', async (t) => {
         0,
       );
       assert.equal((await detail(bob)).assignment.id, id);
+      assert.deepEqual(
+        (
+          await as(
+            admin,
+            "select member_id from hw_roster($1,'all','',0,'recent')",
+            [id],
+          )
+        ).map((r) => r.member_id),
+        [alice, bob],
+      );
+      assert.deepEqual(
+        await as(bob, "select * from hw_roster($1,'all','',0,'name')", [id]),
+        [],
+      );
       assert.equal((await detail(bob, alice)).status, null);
       assert.deepEqual((await detail(bob, alice)).versions, []);
       assert.equal((await detail(alice)).versions[0].events.length, 3);

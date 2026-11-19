@@ -19,10 +19,11 @@ import {
 } from '../src/lib/validation';
 import { en } from '../src/locales/en';
 export default function SignIn() {
-  const { next, id, mode } = useLocalSearchParams<{
+  const { next, id, mode, copy } = useLocalSearchParams<{
     next?: string;
     id?: string;
     mode?: string;
+    copy?: string;
   }>();
   const { session, recovery } = useSession();
   const passwordRef = useRef<InputHandle>(null);
@@ -33,11 +34,22 @@ export default function SignIn() {
   if (!configured) return <Redirect href="/" />;
   if (session) {
     if (recovery) return <Redirect href="/recover" />;
-    if (
-      next === 'assignment' &&
-      typeof id === 'string' &&
-      /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)
-    )
+    const validId = (value: unknown): value is string =>
+      typeof value === 'string' &&
+      /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
+    if (next === 'assignment-editor')
+      return (
+        <Redirect
+          href={{
+            pathname: '/assignment-editor',
+            params: {
+              ...(validId(id) ? { id } : {}),
+              ...(validId(copy) ? { copy } : {}),
+            },
+          }}
+        />
+      );
+    if (next === 'assignment' && validId(id))
       return (
         <Redirect
           href={{

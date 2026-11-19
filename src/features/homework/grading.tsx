@@ -244,6 +244,7 @@ export function Grading({
   refresh: () => Promise<void>;
 }) {
   const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('student');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [member, setMember] = useState('');
@@ -251,6 +252,7 @@ export function Grading({
   const roster = useHomework('hw_roster', {
     p_id: data.assignment.id,
     p_filter: filter,
+    p_sort: sort,
     p_search: search.trim(),
     p_page: page,
   });
@@ -278,76 +280,98 @@ export function Grading({
           alignItems: 'stretch',
         }}
       >
-        <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
-          <Card>
-            <Heading>Recipient roster</Heading>
-            <Field
-              label="Search recipients"
-              value={search}
-              onChangeText={(s) => {
-                setSearch(s);
-                setPage(0);
-              }}
-            />
-            <Choices
-              items={[
-                ['all', 'All recipients'],
-                ['pending', 'Awaiting review'],
-                ['Submitted', 'Submitted'],
-                ['late', 'Late'],
-                ['Missing', 'Missing'],
-                ['Excused', 'Excused'],
-                ['Revision requested', 'Revision requested'],
-                ['Returned', 'Returned'],
-              ]}
-              value={filter}
-              onChange={(f) => {
-                setFilter(f);
-                setPage(0);
-              }}
-            />
-            <Button
-              title="Refresh roster"
-              variant="ghost"
-              onPress={() => {
-                void roster.refresh();
-                void refresh();
-              }}
-            />
-            {!roster.data ? (
-              <FetchState error={roster.error} retry={roster.refresh} />
-            ) : (
-              <>
-                {roster.data.length === 0 && (
-                  <Body>No matching recipients.</Body>
-                )}
-                {roster.data.slice(0, pageSize).map((r) => (
-                  <NavigationRow
-                    key={r.member_id}
-                    title={(r.member_name || 'Member') + ' · ' + r.student_id}
-                    icon="user"
-                    subtitle={[
-                      r.submission,
-                      r.late && 'Late',
-                      r.grading,
-                      r.modification,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                    onPress={() => setMember(r.member_id)}
+        {(width >= 1024 || !member) && (
+          <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
+            <Card>
+              <Heading>Recipient roster</Heading>
+              <Field
+                label="Search recipients"
+                value={search}
+                onChangeText={(s) => {
+                  setSearch(s);
+                  setPage(0);
+                }}
+              />
+              <Choices
+                items={[
+                  ['all', 'All recipients'],
+                  ['pending', 'Awaiting review'],
+                  ['Submitted', 'Submitted'],
+                  ['late', 'Late'],
+                  ['Missing', 'Missing'],
+                  ['Excused', 'Excused'],
+                  ['Revision requested', 'Revision requested'],
+                  ['Returned', 'Returned'],
+                ]}
+                value={filter}
+                onChange={(f) => {
+                  setFilter(f);
+                  setPage(0);
+                }}
+              />
+              <Body>Sort recipients</Body>
+              <Choices
+                items={[
+                  ['student', 'Student ID'],
+                  ['name', 'Name'],
+                  ['recent', 'Latest submission'],
+                ]}
+                value={sort}
+                onChange={(value) => {
+                  setSort(value);
+                  setPage(0);
+                }}
+              />
+              <Button
+                title="Refresh roster"
+                variant="ghost"
+                onPress={() => {
+                  void roster.refresh();
+                  void refresh();
+                }}
+              />
+              {!roster.data ? (
+                <FetchState error={roster.error} retry={roster.refresh} />
+              ) : (
+                <>
+                  {roster.data.length === 0 && (
+                    <Body>No matching recipients.</Body>
+                  )}
+                  {roster.data.slice(0, pageSize).map((r) => (
+                    <NavigationRow
+                      key={r.member_id}
+                      title={(r.member_name || 'Member') + ' · ' + r.student_id}
+                      icon="user"
+                      subtitle={[
+                        r.submission,
+                        r.late && 'Late',
+                        r.grading,
+                        r.modification,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                      onPress={() => setMember(r.member_id)}
+                    />
+                  ))}
+                  <Paging
+                    page={page}
+                    count={roster.data.length}
+                    onChange={setPage}
                   />
-                ))}
-                <Paging
-                  page={page}
-                  count={roster.data.length}
-                  onChange={setPage}
-                />
-              </>
-            )}
-          </Card>
-        </View>
-        {member && (
+                </>
+              )}
+            </Card>
+          </View>
+        )}
+        {Boolean(member) && (
           <View style={{ flex: 1.4, minWidth: 0, gap: 12 }}>
+            {width < 1024 && (
+              <Button
+                title="Back to roster"
+                variant="secondary"
+                onPress={() => setMember('')}
+              />
+            )}
             <MemberWork
               key={member}
               id={data.assignment.id}
