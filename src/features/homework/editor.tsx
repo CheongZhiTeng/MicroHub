@@ -14,7 +14,7 @@ import {
 } from './api';
 import { Choices, FetchState, Messages, Paging } from './controls';
 
-function Audience({
+export function Audience({
   targets,
   setTargets,
 }: {
@@ -64,10 +64,19 @@ function Audience({
     </>
   );
 }
-export function AssignmentEditor({ initial }: { initial?: Detail }) {
+export function AssignmentEditor({
+  initial,
+  copy = false,
+}: {
+  initial?: Detail;
+  copy?: boolean;
+}) {
   const a = initial?.assignment;
-  const [id] = useState(() => a?.id ?? uuid.v4());
-  const [title, setTitle] = useState(a?.title ?? '');
+  const [id] = useState(() => (!copy && a?.id) || uuid.v4());
+  const [baseRevision] = useState(copy ? 0 : (a?.revision ?? 0));
+  const [title, setTitle] = useState(
+    copy && a ? ('Copy of ' + a.title).slice(0, 160) : (a?.title ?? ''),
+  );
   const [instructions, setInstructions] = useState(a?.instructions ?? '');
   const [due, setDue] = useState(() =>
     dateInput(a?.due_at ?? new Date(Date.now() + 7 * 86400000).toISOString()),
@@ -82,7 +91,9 @@ export function AssignmentEditor({ initial }: { initial?: Detail }) {
   );
   const [late, setLate] = useState(a?.allow_late ?? true);
   const [audience, setAudience] = useState<string>(a?.audience ?? 'all');
-  const [targets, setTargets] = useState(initial?.targets ?? []);
+  const [targets, setTargets] = useState<string[]>(
+    copy ? [] : (initial?.targets ?? []),
+  );
   const action = useHomeworkAction();
   const save = () =>
     action.run(async () => {
@@ -95,7 +106,7 @@ export function AssignmentEditor({ initial }: { initial?: Detail }) {
         throw Error('Select at least one recipient.');
       await homework('hw_save_assignment', {
         p_id: id,
-        p_revision: a?.revision ?? 0,
+        p_revision: baseRevision,
         p_title: title.trim(),
         p_instructions: instructions,
         p_due: deadline,

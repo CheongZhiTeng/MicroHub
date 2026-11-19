@@ -146,6 +146,47 @@ test('homework lifecycle, privacy and concurrency contracts', async (t) => {
     },
   );
   await t.test(
+    'additional recipients, private peer history and draft-only deletion',
+    async () => {
+      await assert.rejects(
+        scalar(bob, 'hw_add_recipients($1,$2)', [id, [bob]]),
+        /Administrator/,
+      );
+      assert.equal(
+        await scalar(admin, 'hw_add_recipients($1,$2)', [id, [alice, bob]]),
+        1,
+      );
+      assert.equal(
+        await scalar(admin, 'hw_add_recipients($1,$2)', [id, [alice, bob]]),
+        0,
+      );
+      assert.equal((await detail(bob)).assignment.id, id);
+      assert.equal((await detail(bob, alice)).status, null);
+      assert.deepEqual((await detail(bob, alice)).versions, []);
+      assert.equal((await detail(alice)).versions[0].events.length, 3);
+      await assert.rejects(
+        scalar(admin, 'hw_delete_draft($1,2)', [id]),
+        /unpublished/,
+      );
+      const temp = randomUUID();
+      await scalar(
+        admin,
+        "hw_save_assignment($1,0,'Discard','',now(),null,true,false,true,'selected',$2)",
+        [temp, [bob]],
+      );
+      await assert.rejects(
+        scalar(bob, 'hw_delete_draft($1,1)', [temp]),
+        /Administrator/,
+      );
+      await assert.rejects(
+        scalar(admin, 'hw_delete_draft($1,0)', [temp]),
+        /unchanged/,
+      );
+      await scalar(admin, 'hw_delete_draft($1,1)', [temp]);
+      assert.equal(await scalar(admin, 'hw_detail($1,null)', [temp]), null);
+    },
+  );
+  await t.test(
     'authorized resubmission, old feedback and historical timestamps survive',
     async () => {
       await db.query(

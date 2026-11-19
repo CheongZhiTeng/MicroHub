@@ -16,6 +16,7 @@ import {
 import { Brief, FetchState, Messages } from '../src/features/homework/controls';
 import { StudentWork } from '../src/features/homework/student';
 import { Grading } from '../src/features/homework/grading';
+import { AssignmentActions } from '../src/features/homework/maintenance';
 function Workspace({ id, manage }: { id: string; manage: boolean }) {
   const result = useHomework('hw_detail', { p_id: id });
   const action = useHomeworkAction();
@@ -73,6 +74,7 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
       ) : (
         <StudentWork data={data} refresh={result.refresh} />
       )}
+      {manage && <AssignmentActions assignment={a} refresh={result.refresh} />}
       <Messages action={action} />
       <Button
         title="Refresh assignment"

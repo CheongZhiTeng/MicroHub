@@ -195,31 +195,44 @@ function MemberWork({
   changed: () => Promise<void>;
 }) {
   const query = useHomework('hw_detail', { p_id: id, p_member: member });
-  const [selection, select] = useState<string | null>(null);
   if (query.data === undefined)
     return <FetchState error={query.error} retry={query.refresh} />;
   const data = query.data;
   if (!data?.status) return <Notice text="Recipient unavailable." />;
-  const v = data.versions.find((x) => x.id === selection) ?? data.versions[0];
   const reload = async () => {
     await Promise.all([query.refresh(), changed()]);
   };
   return (
     <>
       <Heading>{data.status.member_name || data.status.student_id}</Heading>
-      {!v ? (
-        <Notice text="No formal submission yet." />
+      <Button title="Refresh member work" variant="ghost" onPress={reload} />
+      {data.versions.length ? (
+        <VersionPanel data={data} refresh={reload} />
       ) : (
-        <>
-          <Choices
-            items={data.versions.map((x) => [x.id, 'Version ' + x.version])}
-            value={v.id}
-            onChange={select}
-          />
-          <Receipt version={v} />
-          <GradeForm key={v.id} v={v} data={data} refresh={reload} />
-        </>
+        <Notice text="No formal submission yet." />
       )}
+    </>
+  );
+}
+function VersionPanel({
+  data,
+  refresh,
+}: {
+  data: Detail;
+  refresh: () => Promise<void>;
+}) {
+  const [selection, select] = useState(data.versions[0]!.id);
+  const v =
+    data.versions.find((item) => item.id === selection) ?? data.versions[0]!;
+  return (
+    <>
+      <Choices
+        items={data.versions.map((x) => [x.id, 'Version ' + x.version])}
+        value={v.id}
+        onChange={select}
+      />
+      <Receipt version={v} />
+      <GradeForm key={v.id} v={v} data={data} refresh={refresh} />
     </>
   );
 }

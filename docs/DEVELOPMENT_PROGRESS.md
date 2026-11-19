@@ -1,5 +1,11 @@
 # Development progress
 
+## Homework MVP A · assignment maintenance checkpoint · 2026-11-19
+
+- Administrators can copy settings to a fresh draft, delete an unchanged unpublished draft after confirmation, and explicitly add named active recipients after publication. Adding a member preserves all existing receipts and feedback. Draft edits use the original revision even when the screen refreshes. The grading panel pins the version a reviewer opened.
+- Migration `202611190002_homework_recipients.sql` was the sole pending version when compared with the local Supabase migration history. Applied it to the local test project. Hosted execution remains unverified. Added peer privacy, repeated additions, deletion permissions and stale deletion tests. Database suites passed (23 reported results including the two parents) and strict TypeScript passed.
+- Next: run overlapping requests on the local stack and repeat browser acceptance with the maintenance controls.
+
 ## Homework MVP A · application checkpoint · 2026-11-19
 
 - On `codex/homework-mvp-a` after database checkpoint `7e97eae`, the Assignments and My submissions routes, home card and private grading workspace now use the same Supabase RPCs on mobile and web. The author previews a saved draft before publishing. Student drafts autosave, keep unacknowledged edits in account-scoped memory, and offer explicit reconciliation. The desktop roster and grade panel share the mobile version history and release controls.

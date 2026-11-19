@@ -82,6 +82,8 @@ type Responses = {
   hw_candidates: { id: string; student_id: string; display_name: string }[];
   hw_save_assignment: number;
   hw_publish: number;
+  hw_add_recipients: number;
+  hw_delete_draft: null;
   hw_save_draft: number;
   hw_submit: Version;
   hw_review: number;
