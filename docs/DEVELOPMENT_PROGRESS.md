@@ -1,6 +1,13 @@
 # Development progress
 
-## Current checkpoint · 2026-11-19 (Asia/Kuala_Lumpur)
+## Homework MVP A · database checkpoint · 2026-11-19
+
+- Branch `codex/homework-mvp-a` started from `366e9a4`. The remote Pages branch was verified at `202636e`.
+- Implemented active-recipient snapshots, private synced drafts, immutable submission receipts, revision checks, staff-only grading drafts, append-only released feedback, separate revision grants and caller-scoped list/roster/count queries. All write paths serialize on the assignment or recipient and recheck permissions.
+- Migration ledger addition: `202611190001_homework.sql` executed with both foundation migrations in a fresh local PGlite PostgreSQL database. Six homework scenarios passed (seven results including parent). Hosted history is unverified. This workspace has no linked project or database credentials; no hosted migration or Pages deployment was run.
+- Next checkpoint: connect the existing Expo routes and dashboard, exercise mobile/desktop browser sessions, and verify real overlapping transactions. Files, photos and the remaining MVP B/V1 requirements stay in the original specification.
+
+## Previous checkpoint · 2026-11-19 (Asia/Kuala_Lumpur)
 
 - **Baseline:** `codex/github-pages` at `202636e` before this documentation checkpoint. The approved Modern Campus v2 interface and the GitHub Pages deployment are on this branch.
 - **Completed:** Identity, profile, member directory, membership application and review, responsive design, theme switching, Pages build and deployment. The user confirmed the site opens and approved the style. GitHub Actions run [44508677772](https://github.com/CheongZhiTeng/MicroHub/actions/runs/44508677772) passed its live homepage and sign-in checks.
