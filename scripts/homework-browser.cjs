@@ -142,7 +142,12 @@ async function run() {
     const link = origin + '/assignment/?id=' + id + '&mode=mine';
     await login(phone, alice, link);
     await see(phone, 'This assignment is unavailable to your account.');
-    await click(staff, 'Publish assignment');
+    const publish = staff.getByRole('button', {
+      name: 'Publish assignment',
+      exact: true,
+    });
+    await publish.focus();
+    await publish.press('Enter');
     await see(staff, 'Published to 1 members.');
     await click(phone, 'Refresh assignment');
     await phone.getByLabel('Your response').fill('First device draft');

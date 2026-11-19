@@ -299,6 +299,23 @@ test('homework lifecycle, privacy and concurrency contracts', async (t) => {
     },
   );
   await t.test(
+    'a closed assignment requires a usable individual revision window',
+    async () => {
+      const latest = (await detail(alice)).versions[0];
+      const request = (deadline) =>
+        scalar(
+          admin,
+          "hw_review($1,0,'revision',null,'Please revise',false,$2,$3)",
+          [latest.id, deadline, randomUUID()],
+        );
+      await assert.rejects(request(null), /future personal deadline/);
+      assert.equal((await detail(alice)).versions[0].events.length, 0);
+      await request(new Date(Date.now() + 86400000).toISOString());
+      assert.equal((await detail(alice)).status.blocked, null);
+      assert.match((await detail(bob)).status.blocked, /closed/);
+    },
+  );
+  await t.test(
     'revocation removes old direct links and RPC access, retains staff history',
     async () => {
       await db.query(

@@ -1,5 +1,22 @@
 # Development progress
 
+## Homework MVP A · local acceptance · 2026-11-19
+
+**Branch:** `codex/homework-mvp-a`. Publishing, private text/link submissions, versioned feedback, revision requests and the home dashboard passed local acceptance. The [rehearsal](HOMEWORK_ACCEPTANCE.md) and [feature matrix](FEATURE_MATRIX.md) describe the tested flows and remaining scope.
+
+| Homework migration                          | Disposable Supabase PostgreSQL 17 | Hosted project |
+| ------------------------------------------- | --------------------------------- | -------------- |
+| `202611190001_homework.sql`                 | Applied and recorded              | Unverified     |
+| `202611190002_homework_recipients.sql`      | Applied and recorded              | Unverified     |
+| `202611190003_homework_roster_order.sql`    | Applied and recorded              | Unverified     |
+| `202611190004_homework_revision_window.sql` | Applied and recorded              | Unverified     |
+
+Before applying each subsequent version, the local CLI migration list showed it as the only pending version. The final database query confirmed all four homework versions and both foundation versions. The last migration rejects an unusable revision grant atomically. A closed assignment needs a valid personal deadline before a member can resubmit.
+
+**Verification.** TypeScript, ESLint and Prettier passed. The app/web suites passed 77 tests. PostgreSQL passed 22 behavioral cases (24 reported results including the two suites). The membership Edge function passed Deno typechecking and six tests. Expo exported Android, iOS and web, and its offline dependency check passed. The Pages export served the authenticated assignment routes at the project base path. Four independent Chromium contexts used real local Supabase Auth, PostgreSQL and PostgREST. Additional authenticated sessions exercised competing writes. The existing visual regression suite passed 30 phone-dark and desktop-light checks using HTTP fixtures. The local Auth container's built-in health probe used the environment proxy; successful password sign-ins, authorized reads, denied reads and mutations verified the running service directly.
+
+**Handoff.** Source and test data remained on the feature branch and disposable local stack respectively. No hosted migration or production Pages deployment was run. Next, compare the intended staging project's actual schema and migration history, apply the pending homework versions through the project workflow, then check iPad Safari and native Expo Go with designated test accounts. MVP B remains pending, including private attachments, exception/lifecycle management and completion reporting.
+
 ## Homework MVP A · roster and concurrency checkpoint · 2026-11-19
 
 - Added server-side roster ordering by student ID, name or most recent submission before pagination. On narrow screens the selected submission has its own pane and a return-to-roster action. Existing four-argument roster callers remain supported. Homework editor deep links also survive web sign-in.
