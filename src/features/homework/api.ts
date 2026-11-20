@@ -104,7 +104,44 @@ export type Summary = {
   submitted: number | null;
   pending: number | null;
 };
+export type ReportRow = {
+  member_id: string;
+  student_id: string;
+  member_name: string;
+  submission: string;
+  grading: string | null;
+  late: boolean | null;
+  version_id: string | null;
+  version: number;
+  review_revision: number | null;
+  released_score: number | null;
+  effective_due_at: string;
+  submitted_at: string | null;
+};
 type Responses = {
+  hw_report: ReportRow[];
+  hw_release_saved: null;
+  hw_schedule: null;
+  hw_schedule_info: { run_at: string; failure: string | null } | null;
+  hw_comments: {
+    id: string;
+    author_name: string;
+    body: string;
+    created_at: string;
+  }[];
+  hw_comment: null;
+  hw_tools: { id: string; kind: string; title: string; content: string }[];
+  hw_preferences: null;
+  hw_inbox: {
+    preferences: { due: boolean; feedback: boolean; grading: boolean };
+    items: {
+      id: string;
+      title: string;
+      kind: string;
+      at_time: string;
+      mode: string;
+    }[];
+  };
   hw_file_settings: null;
   hw_file_remove: null;
   hw_scopes: { id: string; name: string }[];
@@ -142,6 +179,11 @@ export async function homework<K extends keyof Responses>(
   return data as Responses[K];
 }
 type ReadName =
+  | 'hw_report'
+  | 'hw_schedule_info'
+  | 'hw_comments'
+  | 'hw_tools'
+  | 'hw_inbox'
   | 'hw_scopes'
   | 'hw_group_candidates'
   | 'hw_list'

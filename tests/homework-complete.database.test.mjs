@@ -181,3 +181,68 @@ test('file-only receipt binds verified files, closes pending uploads and protect
   );
   await assert.rejects(q(alice, 'hw_file_remove($1)', [f]), /immutable/);
 });
+test('scheduled publication, scoped discussion, reminders, CSV rows and retried bulk returns', async (t) => {
+  const { db, as } = await homeworkBackend();
+  t.after(() => db.close());
+  const id = randomUUID();
+  const q = async (user, x, args = []) =>
+    (await as(user, 'select ' + x + ' v', args))[0].v;
+  await q(
+    admin,
+    "hw_save_assignment($1,0,'Quiz','Work',now()+interval '1 hour',10,true,true,true,'selected',$2)",
+    [id, [alice]],
+  );
+  await q(admin, "hw_schedule($1,1,now()+interval '3 minutes')", [id]);
+  assert.equal(await q(alice, 'hw_schedule_info($1)', [id]), null);
+  await db.query(
+    "update homework_schedules set run_at=now()-interval '1 minute' where assignment_id=$1",
+    [id],
+  );
+  await db.query('select homework_private.publish_due()');
+  await q(alice, "hw_comment($1,$2,'What time?')", [id, randomUUID()]);
+  assert.equal(
+    (await as(alice, 'select * from hw_comments($1,0)', [id])).length,
+    1,
+  );
+  assert.deepEqual(await as(bob, 'select * from hw_comments($1,0)', [id]), []);
+  await assert.rejects(
+    q(bob, "hw_comment($1,$2,'Hi')", [id, randomUUID()]),
+    /unavailable/,
+  );
+  assert.equal((await q(alice, 'hw_inbox(0)')).items[0].kind, 'Due soon');
+  await q(alice, 'hw_preferences(false,true,true)');
+  assert.equal((await q(alice, 'hw_inbox(0)')).items.length, 0);
+  await q(alice, "hw_save_draft($1,0,0,'Done','')", [id]);
+  const v = (
+    await as(alice, 'select * from hw_submit($1,0,1,$2)', [id, randomUUID()])
+  )[0].id;
+  await q(admin, "hw_review($1,0,'save',7,'Ready',false,null,$2)", [
+    v,
+    randomUUID(),
+  ]);
+  const [row] = await as(admin, 'select * from hw_report($1,0)', [id]);
+  assert.equal(row.review_revision, 1);
+  assert.equal(row.released_score, null);
+  assert.deepEqual(await as(alice, 'select * from hw_report($1,0)', [id]), []);
+  const key = randomUUID();
+  await assert.rejects(
+    q(admin, 'hw_release_saved($1,$2,0,$3)', [id, v, key]),
+    /conflict/,
+  );
+  await q(admin, 'hw_release_saved($1,$2,1,$3)', [id, v, key]);
+  await q(admin, 'hw_release_saved($1,$2,1,$3)', [id, v, key]);
+  assert.equal((await q(alice, 'hw_inbox(0)')).items.length, 1);
+  assert.equal(
+    Number(
+      (await as(admin, 'select * from hw_report($1,0)', [id]))[0]
+        .released_score,
+    ),
+    7,
+  );
+  await as(
+    admin,
+    "insert into homework_grading_tools values($1,$2,'rubric','Logic','Reasoning | 5')",
+    [randomUUID(), admin],
+  );
+  assert.deepEqual(await as(secondAdmin, 'select * from hw_tools()'), []);
+});

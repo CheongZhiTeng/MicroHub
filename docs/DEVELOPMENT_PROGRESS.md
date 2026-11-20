@@ -220,3 +220,7 @@ Branch `codex/homework-complete`. Migrations `202611200002` and `202611200003` a
 ## Private homework attachments · local implementation
 
 Migration `202611200004` introduces per-assignment limits, draft and reference metadata, immutable version binding and a Storage deletion queue. The Edge function authenticates uploads, inspects bytes, restricts types and size, and issues 60-second private download links under caller RLS. Mobile/web clients support picking files, progress and retry. The database suite covers pending upload denial, file-only receipts, private reads and privileged finalization. Hosted Storage/Edge rollout is pending.
+
+## Homework operations checkpoint · 2026-11-20
+
+Migration `202611200005` adds scheduled publication with publisher reauthorization, assignment discussions, in-app deadline/return/grading reminders with per-user preferences, private reusable grading tools, per-version bulk return and a scoped grades report. The UI supports rubric scoring, comment reuse, batch preview/result details, completion analysis and CSV export. The isolated Supabase ledger was checked and migrations 002–005 applied in order. Production rollout and native device acceptance remain pending.

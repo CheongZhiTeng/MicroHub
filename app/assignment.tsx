@@ -20,6 +20,11 @@ import { PolicyEditor } from '../src/features/homework/policies';
 import { Grading } from '../src/features/homework/grading';
 import { AssignmentActions } from '../src/features/homework/maintenance';
 import { FilePanel } from '../src/features/homework/files';
+import {
+  Schedule,
+  Reports,
+  Discussion,
+} from '../src/features/homework/operations';
 function Workspace({
   id,
   requested,
@@ -99,6 +104,19 @@ function Workspace({
         <Grading data={data} refresh={result.refresh} />
       ) : (
         <StudentWork data={data} refresh={result.refresh} />
+      )}
+      {a.file_limit !== undefined && (
+        <>
+          {manage && a.lifecycle === 'draft' && (
+            <Schedule a={a} refresh={result.refresh} />
+          )}
+          {manage && a.lifecycle !== 'draft' && (
+            <Reports a={a} refresh={result.refresh} />
+          )}
+          {a.lifecycle !== 'draft' && !data.status?.detached && (
+            <Discussion a={a} />
+          )}
+        </>
       )}
       {manage && data.can_manage && (
         <PolicyEditor

@@ -25,6 +25,7 @@ import {
 
 import { PolicyEditor } from './policies';
 import { useSession } from '../session';
+import { GradingLibrary } from './operations';
 import { FileList } from './files';
 function GradeForm({
   v,
@@ -111,6 +112,15 @@ function GradeForm({
             }}
           />
         </>
+      )}
+      {!confirm && data.assignment.file_limit !== undefined && (
+        <GradingLibrary
+          max={data.assignment.max_points}
+          onApply={(msg, mark) => {
+            setFeedback((v) => [v, msg].filter(Boolean).join('\n'));
+            if (mark !== undefined) setScore(String(mark));
+          }}
+        />
       )}
       {data.assignment.max_points !== null && (
         <Field
