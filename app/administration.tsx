@@ -1,4 +1,8 @@
-import { profileName, type ProfileNames } from '../src/lib/profile-name';
+import {
+  hasBilingualNames,
+  profileName,
+  type ProfileNames,
+} from '../src/lib/profile-name';
 import { useLanguage } from '../src/locales/provider';
 import { useWindowDimensions } from 'react-native';
 import { ConfirmDialog } from '../src/components/confirm-dialog';
@@ -24,7 +28,7 @@ type Application = {
   created_at: string;
   profiles: ProfileNames & { student_id: string; class_name: string };
 };
-function Applications() {
+function Applications({ bilingual }: { bilingual: boolean }) {
   const { t, language } = useLanguage();
   const { width } = useWindowDimensions();
   const [decline, setDecline] = useState<string | null>(null);
@@ -41,7 +45,7 @@ function Applications() {
       const { data, error } = await client()
         .from('membership_applications')
         .select(
-          'id,created_at,profiles!membership_applications_user_id_fkey(display_name,name_zh,name_en,student_id,class_name)',
+          `id,created_at,profiles!membership_applications_user_id_fkey(display_name,student_id,class_name${bilingual ? ',name_zh,name_en' : ''})`,
         )
         .eq('status', 'pending')
         .order('created_at')
@@ -56,7 +60,7 @@ function Applications() {
     } finally {
       if (requestId === generation.current) setLoading(false);
     }
-  }, []);
+  }, [bilingual]);
   // Remote query loading state is synchronized with its network request.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -164,7 +168,11 @@ export default function Administration() {
   const { t } = useLanguage();
   return (
     <Screen title={t('Administration')} subtitle={t('Membership applications')}>
-      <Access admin>{() => <Applications />}</Access>
+      <Access admin>
+        {(identity) => (
+          <Applications bilingual={hasBilingualNames(identity.profile)} />
+        )}
+      </Access>
       <Button
         title={t('Back to home')}
         variant="secondary"

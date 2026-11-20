@@ -1,3 +1,4 @@
+import { hasBilingualNames } from '../src/lib/profile-name';
 import { useLanguage } from '../src/locales/provider';
 import { useBusy } from '../src/features/busy';
 import { router } from 'expo-router';
@@ -18,8 +19,13 @@ import { client } from '../src/lib/supabase';
 import { errorMessage } from '../src/lib/validation';
 function ProfileForm({ identity }: { identity: Identity }) {
   const { t, language } = useLanguage();
+  const bilingual = hasBilingualNames(identity.profile);
   const [nameZh, setNameZh] = useState(identity.profile.name_zh ?? '');
-  const [nameEn, setNameEn] = useState(identity.profile.name_en ?? '');
+  const [nameEn, setNameEn] = useState(
+    bilingual
+      ? (identity.profile.name_en ?? '')
+      : identity.profile.display_name,
+  );
   const [className, setClassName] = useState(identity.profile.class_name);
   const { busy, start, finish } = useBusy();
   const [message, setMessage] = useState('');
@@ -29,14 +35,19 @@ function ProfileForm({ identity }: { identity: Identity }) {
     setMessage('');
     setFailed(false);
     try {
-      if (!nameZh.trim() || !nameEn.trim() || !className.trim())
-        throw new Error('Enter your Chinese name, English name, and class.');
+      if (!nameEn.trim() || !className.trim() || (bilingual && !nameZh.trim()))
+        throw new Error(
+          bilingual
+            ? 'Enter your Chinese name, English name, and class.'
+            : 'Enter your name and class.',
+        );
       const { data, error } = await client()
         .from('profiles')
         .update({
           display_name: nameEn.trim(),
-          name_en: nameEn.trim(),
-          name_zh: nameZh.trim(),
+          ...(bilingual
+            ? { name_en: nameEn.trim(), name_zh: nameZh.trim() }
+            : {}),
           class_name: className.trim(),
         })
         .eq('id', identity.profile.id)
@@ -65,13 +76,16 @@ function ProfileForm({ identity }: { identity: Identity }) {
         {t('Student ID: ')}
         {identity.profile.student_id}
       </Body>
-      <Field
-        label={t('Chinese name')}
-        value={nameZh}
-        onChangeText={setNameZh}
-        maxLength={100}
-      />
-      {!identity.profile.name_en &&
+      {bilingual && (
+        <Field
+          label={t('Chinese name')}
+          value={nameZh}
+          onChangeText={setNameZh}
+          maxLength={100}
+        />
+      )}
+      {bilingual &&
+        !identity.profile.name_en &&
         !identity.profile.name_zh &&
         Boolean(identity.profile.display_name) && (
           <Body>
@@ -79,7 +93,7 @@ function ProfileForm({ identity }: { identity: Identity }) {
           </Body>
         )}
       <Field
-        label={t('English name')}
+        label={t(bilingual ? 'English name' : 'Full name')}
         value={nameEn}
         onChangeText={setNameEn}
         maxLength={100}
@@ -109,7 +123,12 @@ export default function Profile() {
     >
       <Access>
         {(identity) => (
-          <ProfileForm key={identity.profile.id} identity={identity} />
+          <ProfileForm
+            key={
+              identity.profile.id + ':' + hasBilingualNames(identity.profile)
+            }
+            identity={identity}
+          />
         )}
       </Access>
       <Button

@@ -1,4 +1,4 @@
-import { profileName } from '../../src/lib/profile-name';
+import { hasBilingualNames, profileName } from '../../src/lib/profile-name';
 import { useLanguage } from '../../src/locales/provider';
 import {
   ClubHeader,
@@ -81,7 +81,9 @@ export default function Home() {
                 <Heading>{t('Become a member')}</Heading>
                 <Body>
                   {t(
-                    'Complete your profile, then request approval from a club administrator.                ',
+                    hasBilingualNames(identity.profile)
+                      ? 'Complete your profile, then request approval from a club administrator.'
+                      : 'Enter your name and class before applying for membership.',
                   )}
                 </Body>
                 <Button

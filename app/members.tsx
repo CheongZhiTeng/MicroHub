@@ -1,4 +1,8 @@
-import { profileName, type ProfileNames } from '../src/lib/profile-name';
+import {
+  hasBilingualNames,
+  profileName,
+  type ProfileNames,
+} from '../src/lib/profile-name';
 import { useLanguage } from '../src/locales/provider';
 import { View, useWindowDimensions } from 'react-native';
 import { memberSearchFilter } from '../src/lib/member-search';
@@ -26,7 +30,7 @@ type Member = ProfileNames & {
   class_name: string;
   platform_roles: { role: string } | null;
 };
-function Directory() {
+function Directory({ bilingual }: { bilingual: boolean }) {
   const { t, language } = useLanguage();
   const { width } = useWindowDimensions();
   const generation = useRef(0);
@@ -44,13 +48,14 @@ function Directory() {
       let request = client()
         .from('profiles')
         .select(
-          'id,display_name,name_zh,name_en,student_id,class_name,platform_roles(role),memberships!inner(status)',
+          'id,display_name,student_id,class_name,platform_roles(role),memberships!inner(status)' +
+            (bilingual ? ',name_zh,name_en' : ''),
         )
         .eq('memberships.status', 'active')
         .eq('status', 'active')
         .order('student_id')
         .range(page * 30, page * 30 + 29);
-      const filter = memberSearchFilter(search);
+      const filter = memberSearchFilter(search, bilingual);
       if (filter) request = request.or(filter);
       const { data, error } = await request.returns<Member[]>();
       if (error) throw error;
@@ -62,7 +67,7 @@ function Directory() {
     } finally {
       if (requestId === generation.current) setBusy(false);
     }
-  }, [search, page]);
+  }, [search, page, bilingual]);
   // Remote query loading state is synchronized with its network request.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -160,7 +165,11 @@ export default function Members() {
   const { t } = useLanguage();
   return (
     <Screen title={t('Member directory')} subtitle={t('Your club community')}>
-      <Access member>{() => <Directory />}</Access>
+      <Access member>
+        {(identity) => (
+          <Directory bilingual={hasBilingualNames(identity.profile)} />
+        )}
+      </Access>
       <Button
         title={t('Back to home')}
         variant="secondary"

@@ -89,11 +89,14 @@ type Responses = {
   hw_review: number;
 };
 type Params = Record<string, unknown>;
+export const homeworkUnavailable = 'Homework is not available yet.';
 export async function homework<K extends keyof Responses>(
   name: K,
   params: Params = {},
 ) {
   const { data, error } = await client().rpc(name, params);
+  if (error?.code === 'PGRST202' || error?.code === '42883')
+    throw new Error(homeworkUnavailable);
   if (error) throw error;
   return data as Responses[K];
 }

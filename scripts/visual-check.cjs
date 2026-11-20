@@ -13,6 +13,8 @@ const output = path.resolve(
   process.env.VISUAL_OUTPUT_DIR || 'docs/screenshots',
 );
 const pages = process.env.VISUAL_GITHUB_PAGES === '1';
+const legacyProfile = process.env.VISUAL_LEGACY_PROFILE === '1';
+const nameLabel = legacyProfile ? 'Full name' : 'English name';
 const basePath = pages ? '/MicroHub' : '';
 const origin = 'http://127.0.0.1:8091';
 fs.mkdirSync(output, { recursive: true });
@@ -66,6 +68,9 @@ const user = {
 const profile = {
   id: user.id,
   display_name: 'Alex Tan',
+  ...(process.env.VISUAL_LEGACY_PROFILE === '1'
+    ? {}
+    : { name_en: null, name_zh: null }),
   student_id: '000001',
   class_name: 'S2 Science',
   status: 'active',
@@ -116,6 +121,16 @@ async function main() {
           console.error('PAGE', e.message);
         });
         page.on('console', (msg) => {
+          if (
+            legacyProfile &&
+            msg
+              .location()
+              .url.startsWith(
+                'https://microhub-preview.supabase.co/rest/v1/rpc/hw_',
+              ) &&
+            msg.text().includes('status of 404')
+          )
+            return;
           if (msg.type() === 'error') {
             errors.push(msg.text());
             console.error(msg.text());
@@ -130,6 +145,16 @@ async function main() {
           async (route) => {
             const url = new URL(route.request().url());
             let body = [];
+            if (legacyProfile && url.pathname.includes('/rpc/hw_')) {
+              return route.fulfill({
+                status: 404,
+                json: {
+                  code: 'PGRST202',
+                  message: 'Could not find the function in the schema cache',
+                },
+              });
+            }
+
             if (url.pathname === '/auth/v1/token') body = session;
             else if (url.pathname === '/auth/v1/signup') {
               signups++;
@@ -142,6 +167,9 @@ async function main() {
               body = null;
             } else if (url.pathname.endsWith('/profiles')) {
               if (route.request().method() === 'PATCH') {
+                const update = route.request().postDataJSON();
+                assert.equal(Object.hasOwn(update, 'name_zh'), !legacyProfile);
+                assert.equal(Object.hasOwn(update, 'name_en'), !legacyProfile);
                 saves++;
                 body = { id: user.id };
               } else
@@ -478,11 +506,11 @@ async function main() {
         );
         await click('My profile');
         await page
-          .getByLabel('English name', { exact: true })
+          .getByLabel(nameLabel, { exact: true })
           .filter({ visible: true })
           .fill('Alex Tan');
         const nameField = page
-          .getByLabel('English name', { exact: true })
+          .getByLabel(nameLabel, { exact: true })
           .filter({ visible: true });
         await nameField.fill('Alex Draft');
         await page
@@ -491,7 +519,7 @@ async function main() {
           .click();
         assert.equal(
           await page
-            .getByLabel('英文姓名', { exact: true })
+            .getByLabel(legacyProfile ? '全名' : '英文姓名', { exact: true })
             .filter({ visible: true })
             .inputValue(),
           'Alex Draft',
@@ -518,10 +546,12 @@ async function main() {
           'profile draft survives return to original width',
         );
         await nameField.fill('Alex Tan');
-        await page
-          .getByLabel('Chinese name', { exact: true })
-          .filter({ visible: true })
-          .fill('陈俊杰');
+        if (!legacyProfile) {
+          await page
+            .getByLabel('Chinese name', { exact: true })
+            .filter({ visible: true })
+            .fill('陈俊杰');
+        }
         await click('Save profile');
         await page.getByText('Profile saved.', { exact: true }).waitFor();
         assert.equal(saves, 1);
@@ -532,9 +562,16 @@ async function main() {
         await snapshot('members');
         await click('Back to home');
         await click('Assignment workspace');
-        await page
-          .getByText('You have no assignments to do.', { exact: true })
-          .waitFor();
+        if (legacyProfile) {
+          await page
+            .getByRole('alert')
+            .filter({ hasText: 'Homework is not available yet.' })
+            .waitFor();
+        } else {
+          await page
+            .getByText('You have no assignments to do.', { exact: true })
+            .waitFor();
+        }
         await snapshot('assignments');
         await click('My submissions');
         await page

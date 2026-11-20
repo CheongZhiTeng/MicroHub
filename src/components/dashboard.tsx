@@ -1,6 +1,10 @@
 import { profileName } from '../lib/profile-name';
 import { useLanguage } from '../locales/provider';
-import { useHomework, dueLabel } from '../features/homework/api';
+import {
+  useHomework,
+  dueLabel,
+  homeworkUnavailable,
+} from '../features/homework/api';
 import { ContentGrid } from './layout';
 import { MotionPressable } from './motion';
 import { router } from 'expo-router';
@@ -161,10 +165,14 @@ export function ClubOverview() {
           <View style={styles.copy}>
             <Text style={styles.cardSubtitle}>
               {work.error
-                ? t('Assignments could not load')
+                ? t(
+                    work.error === homeworkUnavailable
+                      ? homeworkUnavailable
+                      : 'Assignments could not load',
+                  )
                 : !work.data
                   ? t('Loading assignments…')
-                  : (work.data.next?.title ?? 'You’re all caught up')}
+                  : (work.data.next?.title ?? t('You’re all caught up'))}
             </Text>
             {work.data && (
               <Body>

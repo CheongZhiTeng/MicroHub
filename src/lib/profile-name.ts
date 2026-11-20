@@ -9,3 +9,7 @@ export function profileName(profile: ProfileNames, language: 'en' | 'zh') {
   const other = language === 'zh' ? profile.name_en : profile.name_zh;
   return preferred || other || profile.display_name;
 }
+
+export function hasBilingualNames(profile: ProfileNames) {
+  return profile.name_en !== undefined && profile.name_zh !== undefined;
+}

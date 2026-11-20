@@ -15,3 +15,8 @@ Use [docs/DEVELOPMENT_PROGRESS.md](docs/DEVELOPMENT_PROGRESS.md) as the canonica
 - For migrations, record filename and version, target environment, execution status, and verification evidence. Before applying a migration, compare its version with the target's history. If something ran outside the CLI, verify the schema and history before resolving a mismatch. Never replay a migration on inference or rewrite migration history without authorization.
 - If work is interrupted before a feature is complete, record the partial state when possible, including uncommitted changes, pending tests and the last known good commit. A partial checkpoint cannot be marked complete.
 - Preserve the [original product requirements](docs/SOURCE_REQUIREMENTS.zh-CN.txt), [feature matrix](docs/FEATURE_MATRIX.md), and module specifications. Record approved changes to scope or acceptance criteria alongside the original requirements. Do not omit functionality, security checks, or necessary verification to save context.
+
+## Publish finished changes
+
+- Keep the base branch `main` and the GitHub Pages deployment branch `codex/github-pages` current after finishing a change. Run the project checks and fast-forward both branches to the verified release commit.
+- Wait for the Pages workflow and confirm that the served commit matches the release. When a database change is pending, keep the existing site usable during the transition and report which features still depend on the migration.

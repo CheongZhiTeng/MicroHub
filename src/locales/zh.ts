@@ -1,5 +1,10 @@
 // Handwritten Simplified Chinese copy for MicroHub.
 export const zh: Readonly<Record<string, string>> = {
+  'Full name': '全名',
+  'Enter your name and class.': '请填写姓名和班级。',
+  'Enter your name and class before applying for membership.':
+    '请先填写姓名和班级，再提交入会申请。',
+  'Homework is not available yet.': '作业功能尚未开放。',
   Home: '首页',
   Homework: '作业',
   Attendance: '考勤',

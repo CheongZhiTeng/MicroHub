@@ -39,13 +39,7 @@ export function useIdentity() {
     try {
       const db = client();
       const results = await Promise.all([
-        db
-          .from('profiles')
-          .select(
-            'id,student_id,display_name,name_zh,name_en,class_name,status',
-          )
-          .eq('id', userId)
-          .single(),
+        db.from('profiles').select('*').eq('id', userId).single(),
         db.from('platform_roles').select('role').eq('user_id', userId).single(),
         db
           .from('memberships')

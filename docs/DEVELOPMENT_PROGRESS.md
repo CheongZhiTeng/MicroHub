@@ -1,5 +1,11 @@
 # Development progress
 
+## Base branch and Pages release · 2026-11-20 (Malaysia)
+
+The release brings the latest app code to `main` and the existing `codex/github-pages` deployment branch. Finished releases now update both branches and verify the served commit through the Pages workflow. See [publishing instructions](../AGENTS.md#publish-finished-changes).
+
+The language switch works against the previous Supabase schema. The profile form, directory and admin review use the available name fields. When homework RPCs are pending, the interface reports that Homework is unavailable. Hosted migration status is still unverified. The bilingual name fields and the homework backend become available when their respective migrations are applied.
+
 ## Chinese and English interface and profile names · 2026-11-20 (Malaysia)
 
 The header switches between English and handwritten Simplified Chinese across the shared Expo app. The choice is saved on that device. Profile editing asks for Chinese name, English name and class. The dashboard and member directory prefer the name matching the interface language, and directory search accepts either name. Existing display names remain available as a fallback until members update their profiles.

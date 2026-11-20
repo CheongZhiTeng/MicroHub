@@ -26,6 +26,8 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      - name: Mark the build with its source commit
+        run: printf '%s\n' "$GITHUB_SHA" > dist/pages/microhub-release.txt
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist/pages
@@ -53,6 +55,20 @@ jobs:
           PAGES_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
           set -euo pipefail
+          release_url="${PAGES_URL%/}/microhub-release.txt"
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --location --max-time 8 \
+                "$release_url?commit=$GITHUB_SHA" -o "$RUNNER_TEMP/microhub-release.txt" &&
+               grep -Fxq "$GITHUB_SHA" "$RUNNER_TEMP/microhub-release.txt"; then
+              echo "Published commit verified at $release_url"
+              break
+            fi
+            if [[ "$attempt" == 12 ]]; then
+              echo "::error::The published site did not report commit $GITHUB_SHA."
+              exit 1
+            fi
+            sleep 5
+          done
           for route in '' 'sign-in/'; do
             url="${PAGES_URL%/}/${route}"
             matched=false

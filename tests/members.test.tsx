@@ -12,7 +12,13 @@ jest.mock('react-native-safe-area-context', () => ({
     jest.requireActual<typeof import('react-native')>('react-native').View,
 }));
 jest.mock('../src/features/access', () => ({
-  Access: ({ children }: { children: () => React.ReactNode }) => children(),
+  Access: ({
+    children,
+  }: {
+    children: (identity: {
+      profile: { name_en: null; name_zh: null };
+    }) => React.ReactNode;
+  }) => children({ profile: { name_en: null, name_zh: null } }),
 }));
 jest.mock('../src/lib/supabase', () => ({ client: jest.fn() }));
 test('repeating a search reloads data and punctuation remains in a quoted filter', async () => {
