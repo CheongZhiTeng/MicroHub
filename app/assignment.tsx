@@ -19,6 +19,7 @@ import { StudentWork } from '../src/features/homework/student';
 import { PolicyEditor } from '../src/features/homework/policies';
 import { Grading } from '../src/features/homework/grading';
 import { AssignmentActions } from '../src/features/homework/maintenance';
+import { FilePanel } from '../src/features/homework/files';
 function Workspace({
   id,
   requested,
@@ -49,6 +50,17 @@ function Workspace({
         assignment={a}
         due={manage ? undefined : data.status?.effective_due_at}
       />
+      {a.file_limit !== undefined &&
+        ((a.lifecycle === 'draft' && manage) ||
+          data.files?.some((f) => f.reference)) && (
+          <FilePanel
+            assignment={a}
+            files={(data.files ?? []).filter((f) => f.reference)}
+            reference
+            editable={manage && a.lifecycle === 'draft'}
+            refresh={result.refresh}
+          />
+        )}
       {a.lifecycle === 'draft' ? (
         <Card>
           <Heading>{t('Student preview')}</Heading>

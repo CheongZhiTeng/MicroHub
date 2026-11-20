@@ -14,6 +14,7 @@ import {
 import { homework, useHomeworkAction, dueLabel, type Detail } from './api';
 import { Messages, Receipt } from './controls';
 import { useUnsavedEdit, type Edit } from './unsaved';
+import { FilePanel, FileList } from './files';
 export function StudentWork({
   data,
   refresh,
@@ -24,6 +25,7 @@ export function StudentWork({
   const { t } = useLanguage();
   const { assignment: a, draft, versions, status } = data;
   const latest = versions[0];
+  const files = (data.files ?? []).filter((f) => !f.reference && !f.version_id);
   const source: Edit = {
     base: status?.latest ?? 0,
     revision: draft?.revision ?? 0,
@@ -115,6 +117,15 @@ export function StudentWork({
   if (!status) return <Notice text={t('You were not assigned this work.')} />;
   return (
     <>
+      {!!a.file_limit && (
+        <FilePanel
+          assignment={a}
+          base={source.base}
+          files={files}
+          editable={!blocked && !preview && !local && !saving}
+          refresh={refresh}
+        />
+      )}
       <Card>
         <SectionTitle icon="homework">{t('Your work')}</SectionTitle>
         <Body>
@@ -219,7 +230,10 @@ export function StudentWork({
                         saving ||
                         Boolean(local) ||
                         !draft ||
-                        (!edit.body.trim() && !edit.link.trim())
+                        files.some((f) => f.state === 'pending') ||
+                        (!edit.body.trim() &&
+                          !edit.link.trim() &&
+                          !files.length)
                       }
                       onPress={() =>
                         setPreview({ ...edit, request: uuid.v4() })
@@ -237,6 +251,7 @@ export function StudentWork({
               {t('Confirm version ')}
               {preview.base + 1}
             </Heading>
+            <FileList files={files} />
             {Boolean(preview.body) && <Body>{preview.body}</Body>}
             {Boolean(preview.link) && <Body>{preview.link}</Body>}
             <Body>
@@ -260,7 +275,12 @@ export function StudentWork({
       </Card>
       {versions.length > 0 && <Heading>{t('Submission history')}</Heading>}
       {versions.map((v) => (
-        <Receipt key={v.id} version={v} />
+        <View key={v.id}>
+          <Receipt version={v} />
+          <FileList
+            files={(data.files ?? []).filter((f) => f.version_id === v.id)}
+          />
+        </View>
       ))}
     </>
   );

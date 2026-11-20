@@ -129,3 +129,55 @@ test('deadline changes, excusal and lifecycle preserve submission receipts', asy
   );
   assert.equal(d.assignment.lifecycle, 'archived');
 });
+test('file-only receipt binds verified files, closes pending uploads and protects peer files', async (t) => {
+  const { db, as } = await homeworkBackend();
+  t.after(() => db.close());
+  const id = randomUUID(),
+    f = randomUUID(),
+    hash = 'a'.repeat(64);
+  const q = async (user, x, args = []) =>
+    (await as(user, 'select ' + x + ' v', args))[0].v;
+  await q(
+    admin,
+    "hw_save_assignment($1,0,'Photo','Work',now()+interval '1 day',10,true,true,true,'all','{}')",
+    [id],
+  );
+  await q(admin, "hw_file_settings($1,1,1,200,'photo')", [id]);
+  await q(admin, 'hw_publish($1,2)', [id]);
+  const reserve = (mime, size) =>
+    q(alice, "hw_file_reserve($1,$2,false,'pic.png',$3,$4,$5,0)", [
+      id,
+      f,
+      mime,
+      size,
+      hash,
+    ]);
+  await assert.rejects(reserve('text/plain', 20), /limits/);
+  await assert.rejects(reserve('image/png', 201), /limits/);
+  await reserve('image/png', 32);
+  await q(alice, "hw_save_draft($1,0,0,'','')", [id]);
+  await assert.rejects(
+    q(alice, 'hw_submit($1,0,1,$2)', [id, randomUUID()]),
+    /pending/,
+  );
+  await assert.rejects(
+    q(alice, 'hw_file_finish($1,$2)', [f, hash]),
+    /permission/,
+  );
+  await db.query('select hw_file_finish($1,$2)', [f, hash]);
+  const v = (
+    await as(alice, 'select * from hw_submit($1,0,2,$2)', [id, randomUUID()])
+  )[0];
+  const own = await q(alice, 'hw_detail($1)', [id]);
+  assert.equal(own.files[0].version_id, v.id);
+  assert.equal(own.files[0].filename, 'pic.png');
+  assert.deepEqual(
+    await as(bob, 'select id from assignment_attachments where id=$1', [f]),
+    [],
+  );
+  assert.equal(
+    (await q(admin, 'hw_detail($1,$2)', [id, alice])).files.length,
+    1,
+  );
+  await assert.rejects(q(alice, 'hw_file_remove($1)', [f]), /immutable/);
+});

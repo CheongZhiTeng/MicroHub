@@ -9,11 +9,11 @@ export const [admin, alice, bob, secondAdmin] = [1, 2, 3, 4].map(
 // shipped migrations and authenticated role, including in the browser rehearsal.
 export async function homeworkBackend() {
   const db = new PGlite();
-  await db.exec(`create role anon; create role authenticated; create schema auth;
+  await db.exec(`create role anon; create role service_role; create role authenticated; create schema auth;
     create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
     create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
     grant usage on schema auth,public to authenticated,anon;
-    create schema storage; create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`);
+    create schema storage; create table storage.objects(bucket_id text,name text); create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`);
   const directory = new URL('../supabase/migrations/', import.meta.url);
   for (const file of (await readdir(directory))
     .filter((f) => f.endsWith('.sql'))

@@ -216,3 +216,7 @@ Validation for this branch: TypeScript/ESLint/formatting, 77 application tests, 
 ## Homework scope and lifecycle checkpoint · 2026-11-20
 
 Branch `codex/homework-complete`. Migrations `202611200002` and `202611200003` add group-scoped publishing, recipient snapshots, cross-group and self-grading restrictions, transfer history, audited published edits, close/reopen/archive, individual deadlines and excusal. The grading overview uses eligible recipients as the completion denominator. Local isolated PostgreSQL exercises these operations. Hosted migrations remain unverified. Attachment and daily-operation acceptance follow.
+
+## Private homework attachments · local implementation
+
+Migration `202611200004` introduces per-assignment limits, draft and reference metadata, immutable version binding and a Storage deletion queue. The Edge function authenticates uploads, inspects bytes, restricts types and size, and issues 60-second private download links under caller RLS. Mobile/web clients support picking files, progress and retry. The database suite covers pending upload denial, file-only receipts, private reads and privileged finalization. Hosted Storage/Edge rollout is pending.

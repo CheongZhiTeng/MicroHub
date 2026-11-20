@@ -5,7 +5,18 @@ import { client } from '../../lib/supabase';
 import { errorMessage } from '../../lib/validation';
 import { useBusy } from '../busy';
 
+export type Attachment = {
+  id: string;
+  filename: string;
+  size_bytes: number;
+  state: string;
+  reference: boolean;
+  version_id: string | null;
+};
 export type Assignment = {
+  file_limit?: number;
+  file_bytes?: number;
+  file_mode?: string;
   id: string;
   title: string;
   instructions: string;
@@ -69,6 +80,7 @@ export type Detail = {
   targets: string[];
   draft: Draft | null;
   versions: Version[];
+  files?: Attachment[];
   can_manage?: boolean;
   counts: {
     eligible?: number;
@@ -93,6 +105,8 @@ export type Summary = {
   pending: number | null;
 };
 type Responses = {
+  hw_file_settings: null;
+  hw_file_remove: null;
   hw_scopes: { id: string; name: string }[];
   hw_group_candidates: {
     id: string;

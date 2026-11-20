@@ -25,6 +25,7 @@ import {
 
 import { PolicyEditor } from './policies';
 import { useSession } from '../session';
+import { FileList } from './files';
 function GradeForm({
   v,
   data,
@@ -261,6 +262,9 @@ function VersionPanel({
         onChange={select}
       />
       <Receipt version={v} />
+      <FileList
+        files={(data.files ?? []).filter((f) => f.version_id === v.id)}
+      />
       <GradeForm key={v.id} v={v} data={data} refresh={refresh} />
     </>
   );
