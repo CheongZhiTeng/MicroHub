@@ -99,11 +99,13 @@ export function AssignmentEditor({
   );
   const [max, setMax] = useState(a?.max_points?.toString() ?? '');
   const [type, setType] = useState(
-    !a || (a.allow_text && a.allow_link)
-      ? 'both'
-      : a.allow_text
-        ? 'text'
-        : 'link',
+    a && !a.allow_text && !a.allow_link
+      ? 'files'
+      : !a || (a.allow_text && a.allow_link)
+        ? 'both'
+        : a.allow_text
+          ? 'text'
+          : 'link',
   );
   const [late, setLate] = useState(a?.allow_late ?? true);
   const [audience, setAudience] = useState<string>(a?.audience ?? 'all');
@@ -120,20 +122,29 @@ export function AssignmentEditor({
         throw Error('Enter a maximum above zero and at most 100,000.');
       if (audience === 'selected' && !targets.length)
         throw Error('Select at least one recipient.');
-      await homework(groupId ? 'hw_save_scoped' : 'hw_save_assignment', {
-        ...(groupId ? { p_group: groupId } : {}),
-        p_id: id,
-        p_revision: baseRevision,
-        p_title: title.trim(),
-        p_instructions: instructions,
-        p_due: deadline,
-        p_points: maxPoints,
-        p_text: type !== 'link',
-        p_link: type !== 'text',
-        p_late: late,
-        p_audience: audience,
-        p_targets: audience === 'selected' ? targets : [],
-      });
+      await homework(
+        copy && a?.joint !== undefined
+          ? 'hw_copy_assignment'
+          : groupId
+            ? 'hw_save_scoped'
+            : 'hw_save_assignment',
+        {
+          ...(groupId ? { p_group: groupId } : {}),
+          p_id: id,
+          ...(copy && a?.joint !== undefined
+            ? { p_source: a.id, p_group: groupId || null }
+            : { p_revision: baseRevision }),
+          p_title: title.trim(),
+          p_instructions: instructions,
+          p_due: deadline,
+          p_points: maxPoints,
+          p_text: type === 'text' || type === 'both',
+          p_link: type === 'link' || type === 'both',
+          p_late: late,
+          p_audience: audience,
+          p_targets: audience === 'selected' ? targets : [],
+        },
+      );
       router.replace({
         pathname: '/assignment',
         params: { id, mode: 'manage' },
@@ -176,6 +187,7 @@ export function AssignmentEditor({
             ['both', t('Text and link')],
             ['text', t('Text only')],
             ['link', t('Link only')],
+            ...(a?.file_limit ? [['files', t('Files only')] as const] : []),
           ]}
           value={type}
           onChange={setType}

@@ -3,14 +3,7 @@ import { Platform } from 'react-native';
 import { uuid } from 'expo';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import {
-  Body,
-  Button,
-  Card,
-  Field,
-  Heading,
-  Notice,
-} from '../../components/ui';
+import { Body, Button, Card, Field, Heading } from '../../components/ui';
 import { useLanguage } from '../../locales/provider';
 import { client } from '../../lib/supabase';
 import { errorMessage } from '../../lib/validation';

@@ -224,3 +224,7 @@ Migration `202611200004` introduces per-assignment limits, draft and reference m
 ## Homework operations checkpoint · 2026-11-20
 
 Migration `202611200005` adds scheduled publication with publisher reauthorization, assignment discussions, in-app deadline/return/grading reminders with per-user preferences, private reusable grading tools, per-version bulk return and a scoped grades report. The UI supports rubric scoring, comment reuse, batch preview/result details, completion analysis and CSV export. The isolated Supabase ledger was checked and migrations 002–005 applied in order. Production rollout and native device acceptance remain pending.
+
+## Shared group submissions · 2026-11-20
+
+Migrations `202611200006` and `202611200007` are applied to the isolated local Supabase ledger. Assigned students can edit one revision-checked group draft and submit it once for the eligible group snapshot. Each member receives a separate immutable receipt. Shared files map to each member's version; feedback and subsequent revisions are private. Group participants cannot grade the team's shared submission. Draft settings also support file-only intake and copying submission rules. PostgreSQL tests exercised conflicting edits, deduplicated hand-ins, private revision, file access and departure history. Hosted databases remain unmodified.

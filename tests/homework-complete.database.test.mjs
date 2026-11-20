@@ -246,3 +246,85 @@ test('scheduled publication, scoped discussion, reminders, CSV rows and retried 
   );
   assert.deepEqual(await as(secondAdmin, 'select * from hw_tools()'), []);
 });
+test('team draft collisions, one shared hand-in, individual review and transfer history', async (t) => {
+  const { db, as } = await homeworkBackend();
+  t.after(() => db.close());
+  const group = randomUUID(),
+    task = randomUUID(),
+    file = randomUUID(),
+    hash = 'f'.repeat(64);
+  await db.query(
+    "insert into club_groups(id,name,state,teacher_id) values($1,'Team','active',$2)",
+    [group, secondAdmin],
+  );
+  await db.query(
+    'insert into group_students values($1,$3,true),($2,$3,false)',
+    [alice, bob, group],
+  );
+  const q = async (u, x, args = []) =>
+    (await as(u, 'select ' + x + ' v', args))[0].v;
+  await q(
+    alice,
+    "hw_save_scoped($1,0,'Team quiz','Write together',now()+interval '1 day',10,true,true,true,'all','{}',$2)",
+    [task, group],
+  );
+  await q(alice, 'hw_work_mode($1,1,true)', [task]);
+  await q(alice, "hw_file_settings($1,2,1,200,'any')", [task]);
+  await q(alice, 'hw_publish($1,3)', [task]);
+  await q(bob, "hw_save_draft($1,0,0,'Shared','')", [task]);
+  assert.equal((await q(alice, 'hw_detail($1)', [task])).draft.body, 'Shared');
+  await assert.rejects(
+    q(alice, "hw_save_draft($1,0,0,'Overwrite','')", [task]),
+    /conflict/,
+  );
+  await q(
+    alice,
+    "hw_file_reserve($1,$2,false,'report.txt','text/plain',4,$3,0)",
+    [task, file, hash],
+  );
+  await db.query('select hw_file_finish($1,$2)', [file, hash]);
+  const submit = async (u) =>
+    (
+      await as(u, 'select * from hw_submit($1,0,2,$2)', [task, randomUUID()])
+    )[0];
+  const b = await submit(bob),
+    a = await submit(alice);
+  assert.equal(a.team_batch, b.team_batch);
+  assert.notEqual(a.id, b.id);
+  assert.equal(
+    (await q(alice, 'hw_detail($1)', [task])).files[0].version_id,
+    a.id,
+  );
+  assert.equal(
+    (await q(bob, 'hw_detail($1)', [task])).files[0].version_id,
+    b.id,
+  );
+  await assert.rejects(
+    q(alice, "hw_review($1,0,'release',8,'Team',true,null,$2)", [
+      b.id,
+      randomUUID(),
+    ]),
+    /Administrator/,
+  );
+  await q(
+    secondAdmin,
+    "hw_review($1,0,'revision',8,'Revise individually',true,null,$2)",
+    [b.id, randomUUID()],
+  );
+  assert.equal(
+    (await q(alice, 'hw_detail($1)', [task])).versions[0].events.length,
+    0,
+  );
+  await q(bob, "hw_save_draft($1,1,0,'Personal revision','')", [task]);
+  const later = (
+    await as(bob, 'select * from hw_submit($1,1,1,$2)', [task, randomUUID()])
+  )[0];
+  assert.equal(later.version, 2);
+  assert.equal(later.team_batch, null);
+  await db.query('delete from group_students where user_id=$1', [bob]);
+  assert.equal(
+    (await q(bob, 'hw_detail($1)', [task])).files[0].version_id,
+    b.id,
+  );
+  assert.equal(await q(bob, 'hw_joint_draft($1)', [task]), null);
+});

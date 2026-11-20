@@ -14,6 +14,7 @@ export type Attachment = {
   version_id: string | null;
 };
 export type Assignment = {
+  joint?: boolean;
   file_limit?: number;
   file_bytes?: number;
   file_mode?: string;
@@ -63,6 +64,8 @@ export type Feedback = {
   revision_due_at: string | null;
 };
 export type Version = {
+  can_grade?: boolean;
+  team_batch?: string | null;
   id: string;
   version: number;
   body: string;
@@ -75,6 +78,7 @@ export type Version = {
   events: Feedback[];
 };
 export type Detail = {
+  joint_open?: boolean;
   assignment: Assignment;
   status: Recipient | null;
   targets: string[];
@@ -119,6 +123,9 @@ export type ReportRow = {
   submitted_at: string | null;
 };
 type Responses = {
+  hw_work_mode: null;
+  hw_media_only: null;
+  hw_copy_assignment: number;
   hw_report: ReportRow[];
   hw_release_saved: null;
   hw_schedule: null;

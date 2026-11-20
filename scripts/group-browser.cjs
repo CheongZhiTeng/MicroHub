@@ -110,6 +110,19 @@ module.exports = async function groupBrowser({
     claims.find((r) => r.error).error.message,
     /already assigned|Roster changed/,
   );
+  await require('./homework-full-browser.cjs')({
+    user,
+    device,
+    login,
+    click,
+    see,
+    origin,
+    teacher,
+    student,
+    session,
+    group: first.id,
+    a,
+  });
   console.log(
     'Groups passed: desktop coordinator, tablet teacher, phone leader, login return and simultaneous placement.',
   );

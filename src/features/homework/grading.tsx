@@ -275,7 +275,11 @@ function VersionPanel({
       <FileList
         files={(data.files ?? []).filter((f) => f.version_id === v.id)}
       />
-      <GradeForm key={v.id} v={v} data={data} refresh={refresh} />
+      {v.can_grade === false ? (
+        <Notice text={t('Another grader must review your submission.')} />
+      ) : (
+        <GradeForm key={v.id} v={v} data={data} refresh={refresh} />
+      )}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Linking, Platform } from 'react-native';
 import * as Picker from 'expo-document-picker';
 import { uuid } from 'expo';
@@ -58,23 +58,26 @@ export function FilePanel({
 }) {
   const { t } = useLanguage();
   const action = useHomeworkAction();
-  const retry = useRef<{ id: string; file: Picker.DocumentPickerAsset } | null>(
-    null,
-  );
+  const [retry, setRetry] = useState<{
+    id: string;
+    file: Picker.DocumentPickerAsset;
+  } | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [limit, setLimit] = useState(String(a.file_limit ?? 0)),
     [mb, setMb] = useState(String((a.file_bytes ?? 5242880) / 1048576)),
     [mode, setMode] = useState(a.file_mode ?? 'any');
   async function upload(repeat: boolean) {
+    let entry = retry;
     if (!repeat) {
       const picked = await Picker.getDocumentAsync({
         copyToCacheDirectory: true,
         type: ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'],
       });
       if (picked.canceled) return;
-      retry.current = { id: uuid.v4(), file: picked.assets[0]! };
+      entry = { id: uuid.v4(), file: picked.assets[0]! };
+      setRetry(entry);
     }
-    const entry = retry.current;
+
     if (!entry) return;
     const { file, id } = entry;
     if (
@@ -134,7 +137,7 @@ export function FilePanel({
         };
         xhr.send(form);
       });
-      retry.current = null;
+      setRetry(null);
     } finally {
       setProgress(null);
       await refresh();
@@ -146,6 +149,26 @@ export function FilePanel({
       <FileList files={files} />
       {reference && editable && (
         <>
+          {a.joint !== undefined && !!a.file_limit && (
+            <Button
+              title={t(
+                a.allow_text || a.allow_link
+                  ? 'Require files only'
+                  : 'Allow text and links too',
+              )}
+              variant="secondary"
+              onPress={() =>
+                action.run(async () => {
+                  await homework('hw_media_only', {
+                    p_id: a.id,
+                    p_revision: a.revision,
+                    p_only: a.allow_text || a.allow_link,
+                  });
+                  await refresh();
+                })
+              }
+            />
+          )}
           <Field
             label={t('Files per submission (0–10)')}
             value={limit}
@@ -222,7 +245,7 @@ export function FilePanel({
               {t('Upload progress')} · {progress}%
             </Body>
           )}
-          {Boolean(action.error) && retry.current && (
+          {Boolean(action.error) && retry && (
             <Button
               title={t('Retry upload')}
               onPress={() => action.run(() => upload(true))}

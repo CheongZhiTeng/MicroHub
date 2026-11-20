@@ -115,6 +115,7 @@ export function Brief({
   return (
     <Card>
       <Heading>{a.title}</Heading>
+      {a.joint && <Body>{t('Shared group submission')}</Body>}
       {a.group_name && <Body>{a.group_name}</Body>}
       {Boolean(a.instructions) && <Body>{a.instructions}</Body>}
       <Body>
@@ -123,7 +124,11 @@ export function Brief({
       </Body>
       <Body>
         {a.max_points === null ? t('Ungraded') : a.max_points + t(' points')} ·{' '}
-        {[a.allow_text && 'Text', a.allow_link && 'Link']
+        {[
+          a.allow_text && t('Text'),
+          a.allow_link && t('Link'),
+          !!a.file_limit && t('Files'),
+        ]
           .filter(Boolean)
           .join(' + ')}{' '}
         ·{' '}

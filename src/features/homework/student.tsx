@@ -117,6 +117,13 @@ export function StudentWork({
   if (!status) return <Notice text={t('You were not assigned this work.')} />;
   return (
     <>
+      {data.joint_open && (
+        <Notice
+          text={t(
+            'Your group shares this draft. Submitting gives each eligible teammate a receipt. Grades and later revisions are private.',
+          )}
+        />
+      )}
       {!!a.file_limit && (
         <FilePanel
           assignment={a}
@@ -212,7 +219,9 @@ export function StudentWork({
                         : latest
                           ? t('Start your revision from the previous version.')
                           : t(
-                              'Your draft is private and syncs after you stop typing.',
+                              data.joint_open
+                                ? 'This draft syncs with your group.'
+                                : 'Your draft is private and syncs after you stop typing.',
                             )}
                 </Body>
                 {!blocked && !preview && (
@@ -248,7 +257,11 @@ export function StudentWork({
         {preview && (
           <>
             <Heading>
-              {t('Confirm version ')}
+              {t(
+                data.joint_open
+                  ? 'Confirm team submission · Version '
+                  : 'Confirm version ',
+              )}
               {preview.base + 1}
             </Heading>
             <FileList files={files} />

@@ -69,6 +69,27 @@ function Workspace({
       {a.lifecycle === 'draft' ? (
         <Card>
           <Heading>{t('Student preview')}</Heading>
+          {a.group_id && a.joint !== undefined && (
+            <Button
+              variant="secondary"
+              title={t(
+                a.joint
+                  ? 'Switch to individual submissions'
+                  : 'Use one shared group submission',
+              )}
+              busy={action.busy}
+              onPress={() =>
+                action.run(async () => {
+                  await homework('hw_work_mode', {
+                    p_id: id,
+                    p_revision: a.revision,
+                    p_joint: !a.joint,
+                  });
+                  await result.refresh();
+                })
+              }
+            />
+          )}
           <Body>
             {t(
               'Only administrators can see this draft. Publishing assigns it to',

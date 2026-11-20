@@ -88,7 +88,11 @@ async function run() {
         const url = new URL(route.request().url());
         try {
           const response = await route.fetch({
-            url: api + url.pathname + url.search,
+            url:
+              process.env.HOMEWORK_FILES_URL &&
+              url.pathname === '/functions/v1/homework-files'
+                ? process.env.HOMEWORK_FILES_URL + url.search
+                : api + url.pathname + url.search,
           });
           await route.fulfill({ response });
         } catch (e) {
