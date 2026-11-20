@@ -115,6 +115,7 @@ export function Brief({
   return (
     <Card>
       <Heading>{a.title}</Heading>
+      {a.group_name && <Body>{a.group_name}</Body>}
       {Boolean(a.instructions) && <Body>{a.instructions}</Body>}
       <Body>
         {t('Due ')}

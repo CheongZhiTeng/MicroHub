@@ -16,9 +16,18 @@ import {
 } from '../src/features/homework/api';
 import { Brief, FetchState, Messages } from '../src/features/homework/controls';
 import { StudentWork } from '../src/features/homework/student';
+import { PolicyEditor } from '../src/features/homework/policies';
 import { Grading } from '../src/features/homework/grading';
 import { AssignmentActions } from '../src/features/homework/maintenance';
-function Workspace({ id, manage }: { id: string; manage: boolean }) {
+function Workspace({
+  id,
+  requested,
+  legacy,
+}: {
+  id: string;
+  requested: boolean;
+  legacy: boolean;
+}) {
   const { t } = useLanguage();
   const result = useHomework('hw_detail', { p_id: id });
   const action = useHomeworkAction();
@@ -33,6 +42,7 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
       </>
     );
   const a = data.assignment;
+  const manage = requested && (data.can_manage ?? legacy);
   return (
     <>
       <Brief
@@ -47,7 +57,7 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
               'Only administrators can see this draft. Publishing assigns it to',
             )}{' '}
             {a.audience === 'all'
-              ? t('all active members')
+              ? t(a.group_id ? 'All group students' : 'all active members')
               : data.targets.length + t(' selected members')}
             .
           </Body>
@@ -78,6 +88,13 @@ function Workspace({ id, manage }: { id: string; manage: boolean }) {
       ) : (
         <StudentWork data={data} refresh={result.refresh} />
       )}
+      {manage && data.can_manage && (
+        <PolicyEditor
+          key={a.revision}
+          assignment={a}
+          refresh={result.refresh}
+        />
+      )}
       {manage && <AssignmentActions assignment={a} refresh={result.refresh} />}
       <Messages action={action} />
       <Button
@@ -103,7 +120,8 @@ export default function AssignmentRoute() {
             <Workspace
               key={identity.profile.id + id}
               id={id}
-              manage={mode === 'manage' && identity.role !== 'member'}
+              requested={mode === 'manage'}
+              legacy={identity.role !== 'member'}
             />
           ) : (
             <Notice text={t('Choose an assignment from your list.')} />

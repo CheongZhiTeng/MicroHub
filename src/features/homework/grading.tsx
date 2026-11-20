@@ -23,6 +23,8 @@ import {
   type Version,
 } from './api';
 
+import { PolicyEditor } from './policies';
+import { useSession } from '../session';
 function GradeForm({
   v,
   data,
@@ -204,6 +206,7 @@ function MemberWork({
   changed: () => Promise<void>;
 }) {
   const { t } = useLanguage();
+  const { session } = useSession();
   const query = useHomework('hw_detail', { p_id: id, p_member: member });
   if (query.data === undefined)
     return <FetchState error={query.error} retry={query.refresh} />;
@@ -220,7 +223,18 @@ function MemberWork({
         variant="ghost"
         onPress={reload}
       />
-      {data.versions.length ? (
+      {data.can_manage &&
+        (!data.assignment.group_id || member !== session?.user.id) && (
+          <PolicyEditor
+            key={data.status.exception_revision}
+            assignment={data.assignment}
+            recipient={data.status}
+            refresh={reload}
+          />
+        )}
+      {data.assignment.group_id && member === session?.user.id ? (
+        <Notice text={t('Another grader must review your submission.')} />
+      ) : data.versions.length ? (
         <VersionPanel data={data} refresh={reload} />
       ) : (
         <Notice text={t('No formal submission yet.')} />
@@ -277,6 +291,17 @@ export function Grading({
     <>
       <Card>
         <Heading>{t('Submission overview')}</Heading>
+        {counts?.eligible !== undefined && (
+          <Body>
+            {t('Completion rate')} ·{' '}
+            {counts.eligible
+              ? Math.round((100 * counts.submitted) / counts.eligible) + '%'
+              : t('Not applicable')}{' '}
+            ({counts.submitted}/{counts.eligible}) · {t('Missing')}{' '}
+            {counts.missing} · {t('Excused')} {counts.excused} · {t('Late')}{' '}
+            {counts.late} · {t('Returned')} {counts.returned}
+          </Body>
+        )}
         {counts && (
           <Body>
             {counts.assigned}

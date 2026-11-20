@@ -17,7 +17,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest --runInBand && npm run test:web",
-    "test:db": "node --test tests/database.test.mjs tests/homework.database.test.mjs tests/groups.database.test.mjs",
+    "test:db": "node --test tests/database.test.mjs tests/homework.database.test.mjs tests/groups.database.test.mjs tests/homework-complete.database.test.mjs",
     "check": "npm run typecheck && npm run lint && npm test && npm run test:db && npm run format:check",
     "test:web": "jest --config jest.web.config.js --runInBand",
     "build:pages": "node scripts/build-pages.cjs"
@@ -26,6 +26,7 @@
     "@supabase/supabase-js": "^2.0.0",
     "expo": "~58.0.25",
     "expo-constants": "~58.0.16",
+    "expo-document-picker": "~58.0.5",
     "expo-linking": "~58.0.17",
     "expo-router": "~58.0.31",
     "expo-secure-store": "~58.0.0",

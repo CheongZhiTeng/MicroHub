@@ -14,6 +14,7 @@ export function AssignmentList({
   submissions?: boolean;
 }) {
   const { t } = useLanguage();
+  const scopes = useHomework('hw_scopes');
   const [staff, setStaff] = useState(
     !submissions && identity.role !== 'member',
   );
@@ -35,19 +36,20 @@ export function AssignmentList({
   return (
     <>
       <Card>
-        {!submissions && identity.role !== 'member' && (
-          <Choices
-            items={[
-              ['staff', t('Manage assignments')],
-              ['mine', t('My assignments')],
-            ]}
-            value={staff ? 'staff' : 'mine'}
-            onChange={(value) => {
-              setStaff(value === 'staff');
-              change(value === 'staff' ? 'all' : 'todo');
-            }}
-          />
-        )}
+        {!submissions &&
+          (identity.role !== 'member' || !!scopes.data?.length) && (
+            <Choices
+              items={[
+                ['staff', t('Manage assignments')],
+                ['mine', t('My assignments')],
+              ]}
+              value={staff ? 'staff' : 'mine'}
+              onChange={(value) => {
+                setStaff(value === 'staff');
+                change(value === 'staff' ? 'all' : 'todo');
+              }}
+            />
+          )}
         {staff && (
           <Button
             title={t('Create assignment')}
@@ -116,6 +118,7 @@ export function AssignmentList({
                 icon="homework"
                 title={row.title}
                 subtitle={
+                  (row.group_name ? row.group_name + ' · ' : '') +
                   t('Due ') +
                   dueLabel(row.due_at) +
                   ' · ' +

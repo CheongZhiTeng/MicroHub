@@ -212,3 +212,7 @@ Implemented on `codex/modern-campus-v2` from `536cb51`, pending user visual acce
 The user has reported successful hosted verification-email delivery, login and first Super Admin bootstrap. Those are user-reported checks; this environment's browser tests still use fixtures. Ordinary-member real-device acceptance and full hosted end-to-end testing remain pending.
 
 Validation for this branch: TypeScript/ESLint/formatting, 77 application tests, 14 PostgreSQL authorization scenarios, all three platform exports, and 150 browser screen checks across five widths and light/dark appearance passed. Browser flows use isolated fixtures. Live theme switching, unsaved form retention across breakpoints, and keyboard confirmation behavior are included. Rendered screenshots and reproduction steps are linked in the v2 design document.
+
+## Homework scope and lifecycle checkpoint · 2026-11-20
+
+Branch `codex/homework-complete`. Migrations `202611200002` and `202611200003` add group-scoped publishing, recipient snapshots, cross-group and self-grading restrictions, transfer history, audited published edits, close/reopen/archive, individual deadlines and excusal. The grading overview uses eligible recipients as the completion denominator. Local isolated PostgreSQL exercises these operations. Hosted migrations remain unverified. Attachment and daily-operation acceptance follow.

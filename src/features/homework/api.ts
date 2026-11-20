@@ -15,6 +15,8 @@ export type Assignment = {
   allow_text: boolean;
   allow_link: boolean;
   allow_late: boolean;
+  group_name?: string | null;
+  group_id?: string | null;
   audience: 'all' | 'selected';
   revision: number;
 };
@@ -22,6 +24,9 @@ export type Recipient = {
   member_id: string;
   member_name: string;
   student_id: string;
+  exception_revision?: number;
+  extension_at?: string | null;
+  detached?: boolean;
   effective_due_at: string;
   latest: number;
   draft_revision: number | null;
@@ -64,9 +69,22 @@ export type Detail = {
   targets: string[];
   draft: Draft | null;
   versions: Version[];
-  counts: { assigned: number; submitted: number; pending: number } | null;
+  can_manage?: boolean;
+  counts: {
+    eligible?: number;
+    missing?: number;
+    returned?: number;
+    late?: number;
+    excused?: number;
+    assigned: number;
+    submitted: number;
+    pending: number;
+  } | null;
 };
-export type Item = Pick<Assignment, 'id' | 'title' | 'due_at' | 'lifecycle'> &
+export type Item = Pick<
+  Assignment,
+  'id' | 'title' | 'due_at' | 'lifecycle' | 'group_name'
+> &
   Pick<Recipient, 'submission' | 'grading' | 'late' | 'modification'>;
 export type Summary = {
   todo: number;
@@ -75,6 +93,15 @@ export type Summary = {
   pending: number | null;
 };
 type Responses = {
+  hw_scopes: { id: string; name: string }[];
+  hw_group_candidates: {
+    id: string;
+    student_id: string;
+    display_name: string;
+  }[];
+  hw_save_scoped: number;
+  hw_maintain: null;
+  hw_exception: null;
   hw_list: Item[];
   hw_detail: Detail | null;
   hw_roster: Recipient[];
@@ -101,7 +128,13 @@ export async function homework<K extends keyof Responses>(
   return data as Responses[K];
 }
 type ReadName =
-  'hw_list' | 'hw_detail' | 'hw_roster' | 'hw_summary' | 'hw_candidates';
+  | 'hw_scopes'
+  | 'hw_group_candidates'
+  | 'hw_list'
+  | 'hw_detail'
+  | 'hw_roster'
+  | 'hw_summary'
+  | 'hw_candidates';
 export function useHomework<K extends ReadName>(name: K, params: Params = {}) {
   const key = JSON.stringify(params);
   const generation = useRef(0);

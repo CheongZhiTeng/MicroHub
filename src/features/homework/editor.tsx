@@ -18,14 +18,17 @@ import { Choices, FetchState, Messages, Paging } from './controls';
 export function Audience({
   targets,
   setTargets,
+  groupId,
 }: {
+  groupId?: string | null;
   targets: string[];
   setTargets: (v: string[]) => void;
 }) {
   const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
-  const rows = useHomework('hw_candidates', {
+  const rows = useHomework(groupId ? 'hw_group_candidates' : 'hw_candidates', {
+    ...(groupId ? { p_group: groupId } : {}),
     p_search: search.trim(),
     p_page: page,
   });
@@ -72,12 +75,19 @@ export function Audience({
 export function AssignmentEditor({
   initial,
   copy = false,
+  club,
+  scopes,
 }: {
   initial?: Detail;
   copy?: boolean;
+  club: boolean;
+  scopes: { id: string; name: string }[];
 }) {
   const { t } = useLanguage();
   const a = initial?.assignment;
+  const [groupId, setGroupId] = useState(
+    a?.group_id ?? (club ? '' : (scopes[0]?.id ?? '')),
+  );
   const [id] = useState(() => (!copy && a?.id) || uuid.v4());
   const [baseRevision] = useState(copy ? 0 : (a?.revision ?? 0));
   const [title, setTitle] = useState(
@@ -110,7 +120,8 @@ export function AssignmentEditor({
         throw Error('Enter a maximum above zero and at most 100,000.');
       if (audience === 'selected' && !targets.length)
         throw Error('Select at least one recipient.');
-      await homework('hw_save_assignment', {
+      await homework(groupId ? 'hw_save_scoped' : 'hw_save_assignment', {
+        ...(groupId ? { p_group: groupId } : {}),
         p_id: id,
         p_revision: baseRevision,
         p_title: title.trim(),
@@ -180,16 +191,34 @@ export function AssignmentEditor({
       </Card>
       <Card>
         <SectionTitle icon="members">{t('Recipients')}</SectionTitle>
+        {scopes.length > 0 && (
+          <Choices
+            items={[
+              ...(club ? [['', t('Whole club')] as const] : []),
+              ...scopes.map((s) => [s.id, s.name] as const),
+            ]}
+            value={groupId}
+            disabled={!!initial && !copy}
+            onChange={(v) => {
+              setGroupId(v);
+              setTargets([]);
+            }}
+          />
+        )}
         <Choices
           items={[
-            ['all', t('All active members')],
+            ['all', t(groupId ? 'All group students' : 'All active members')],
             ['selected', t('Select members')],
           ]}
           value={audience}
           onChange={setAudience}
         />
         {audience === 'selected' && (
-          <Audience targets={targets} setTargets={setTargets} />
+          <Audience
+            groupId={groupId}
+            targets={targets}
+            setTargets={setTargets}
+          />
         )}
         <Messages action={action} />
         <Button

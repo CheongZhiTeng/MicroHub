@@ -5,19 +5,31 @@ import { Access } from '../src/features/access';
 import { AssignmentEditor } from '../src/features/homework/editor';
 import { useHomework } from '../src/features/homework/api';
 import { FetchState } from '../src/features/homework/controls';
-function Existing({ id, copy }: { id: string; copy: boolean }) {
+type ScopeProps = { club: boolean; scopes: { id: string; name: string }[] };
+function Existing({
+  id,
+  copy,
+  ...scope
+}: { id: string; copy: boolean } & ScopeProps) {
   const { t } = useLanguage();
   const result = useHomework('hw_detail', { p_id: id });
   if (result.data === undefined)
     return <FetchState error={result.error} retry={result.refresh} />;
-  if (!result.data || (!copy && result.data.assignment.lifecycle !== 'draft'))
+  if (
+    !result.data ||
+    !(result.data.can_manage ?? scope.club) ||
+    (!copy && result.data.assignment.lifecycle !== 'draft')
+  )
     return <Notice text={t('This draft is unavailable for editing.')} />;
-  return <AssignmentEditor key={id} initial={result.data} copy={copy} />;
+  return (
+    <AssignmentEditor key={id} initial={result.data} copy={copy} {...scope} />
+  );
 }
 export default function Editor() {
   const { t } = useLanguage();
   const { id, copy } = useLocalSearchParams<{ id?: string; copy?: string }>();
   const source = id || copy;
+  const scopes = useHomework('hw_scopes');
   return (
     <Screen
       title={
@@ -28,16 +40,26 @@ export default function Editor() {
             : t('Create assignment')
       }
     >
-      <Access admin signInParams={{ next: 'assignment-editor', id, copy }}>
+      <Access member signInParams={{ next: 'assignment-editor', id, copy }}>
         {(user) =>
-          source ? (
+          !scopes.data && !scopes.error ? (
+            <FetchState retry={scopes.refresh} />
+          ) : user.role === 'member' && !scopes.data?.length ? (
+            <Notice text={t('Assignment staff access is required.')} />
+          ) : source ? (
             <Existing
               key={user.profile.id + source + Boolean(copy)}
+              club={user.role !== 'member'}
+              scopes={scopes.data ?? []}
               id={source}
               copy={Boolean(copy)}
             />
           ) : (
-            <AssignmentEditor key={user.profile.id} />
+            <AssignmentEditor
+              club={user.role !== 'member'}
+              scopes={scopes.data ?? []}
+              key={user.profile.id}
+            />
           )
         }
       </Access>

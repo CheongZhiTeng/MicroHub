@@ -67,7 +67,11 @@ export function AssignmentActions({
       )}
       {operation === 'add' && (
         <>
-          <Audience targets={targets} setTargets={setTargets} />
+          <Audience
+            groupId={a.group_id}
+            targets={targets}
+            setTargets={setTargets}
+          />
           <Button
             title={t('Assign to selected members')}
             disabled={!targets.length}
