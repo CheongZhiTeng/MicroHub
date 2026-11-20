@@ -17,7 +17,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest --runInBand && npm run test:web",
-    "test:db": "node --test tests/database.test.mjs tests/homework.database.test.mjs",
+    "test:db": "node --test tests/database.test.mjs tests/homework.database.test.mjs tests/groups.database.test.mjs",
     "check": "npm run typecheck && npm run lint && npm test && npm run test:db && npm run format:check",
     "test:web": "jest --config jest.web.config.js --runInBand",
     "build:pages": "node scripts/build-pages.cjs"

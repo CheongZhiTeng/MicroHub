@@ -72,6 +72,11 @@ export default function More() {
         {identity?.member && identity.profile.status === 'active' && (
           <>
             <NavigationRow
+              icon="members"
+              title={t('My group')}
+              onPress={() => router.push('/groups')}
+            />
+            <NavigationRow
               icon="announcement"
               title={t('Announcements')}
               onPress={() => router.push('/announcements')}

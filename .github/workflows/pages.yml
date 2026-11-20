@@ -50,7 +50,7 @@ jobs:
         run: test "$PAGES_BASE" = "/MicroHub"
       - uses: actions/deploy-pages@v4
         id: deployment
-      - name: Verify the published homepage and sign-in page
+      - name: Verify the published homepage, sign-in and groups routes
         env:
           PAGES_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
@@ -69,7 +69,7 @@ jobs:
             fi
             sleep 5
           done
-          for route in '' 'sign-in/'; do
+          for route in '' 'sign-in/' 'groups/'; do
             url="${PAGES_URL%/}/${route}"
             matched=false
             for attempt in {1..12}; do

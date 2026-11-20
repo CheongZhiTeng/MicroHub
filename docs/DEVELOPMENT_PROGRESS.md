@@ -1,5 +1,15 @@
 # Development progress
 
+## Group foundation · 2026-11-20
+
+Branch `codex/group-foundations`. The [confirmed group plan](GROUP_SYSTEM_PLAN.md) is the scope reference. **More → My group** supports bilingual lookup, roster and change history, teacher and leader appointments, transfers, activation and archival. Global Super Admins appoint teachers and transfer students. A teacher can manage their own roster using a regular member account. Students see the roster after activation. Group changes retain an audit trail and use transactional authorization and revision checks.
+
+Migration `202611200001_groups.sql` was the only pending migration in the isolated local Supabase stack. Applied there after checking history through `202611190005`. The local ledger now includes `202611200001`. Hosted migration history is unavailable and hosted rollout remains pending. Older backends display a setup notice on the group route.
+
+`npm run check`, the Pages export, and the Expo iOS, Android and web exports passed. The PostgreSQL tests covered two groups, transfers, inactive accounts, direct access, stale writes, leader limits and atomic replacement. Chromium sessions exercised a desktop coordinator, tablet teacher and phone-size student against real local Supabase, including approval, sign-in return, and competing teachers claiming one student. The existing homework browser and concurrency rehearsals passed. Physical-device and hosted database acceptance remain open.
+
+Next increment: group-scoped homework recipients, publication, grading and direct release by group leaders, with self-grading and cross-group access denied. Group announcements and calendar integration follow.
+
 ## Base branch and Pages release · 2026-11-20 (Malaysia)
 
 The release brings the latest app code to `main` and the existing `codex/github-pages` deployment branch. Finished releases now update both branches and verify the served commit through the Pages workflow. See [publishing instructions](../AGENTS.md#publish-finished-changes).

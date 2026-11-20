@@ -294,6 +294,17 @@ async function run() {
       other: alice,
       id,
     });
+    await require('./group-browser.cjs')({
+      user,
+      device,
+      login,
+      click,
+      see,
+      origin,
+      api,
+      password,
+      key: process.env.PUBLISHABLE_KEY,
+    });
     assert.deepEqual(errors, []);
     console.log(
       'Local Supabase + Pages passed: selected publish, non-recipient denial, two-device draft, two receipts, private grade, release, revision, dashboard and authenticated deep-link reload.',

@@ -39,6 +39,7 @@ export default function SignIn() {
     const validId = (value: unknown): value is string =>
       typeof value === 'string' &&
       /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
+    if (next === 'groups') return <Redirect href="/groups" />;
     if (next === 'assignment-editor')
       return (
         <Redirect
