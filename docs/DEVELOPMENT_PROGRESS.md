@@ -1,5 +1,9 @@
 # Development progress
 
+## Shared draft labels · 2026-11-21
+
+Chinese and English saving indicators and actions distinguish the shared group draft from a private response. The full project checks passed (108 tests). Desktop and phone-size browser sessions against the isolated Supabase stack verified the group label, explicit grading approval and successful batch return. Both fixes ship on the shared Pages branch; hosted migration remains pending.
+
 ## Bulk return consent · 2026-11-21
 
 Migration `202611210001` makes bulk return opt-in per saved review revision. Private saves, corrections and requests to revise invalidate prior approval. The preview and bulk RPC both enforce it. Verified the isolated ledger through `202611200010` before applying the migration there; all 31 database cases passed including withheld scores and stale previews. Hosted migration pending.

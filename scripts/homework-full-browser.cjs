@@ -47,6 +47,7 @@ module.exports = async function homeworkFull({
   await see(leader, 'Submission overview');
   const link = origin + '/assignment/?id=' + id + '&mode=mine';
   await login(phone, learner, link);
+  await see(phone, 'Save group draft');
   await phone
     .getByLabel('Your response')
     .fill('A shared answer from the phone.');

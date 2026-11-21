@@ -210,7 +210,11 @@ export function StudentWork({
                 {Boolean(saveError) && <Notice error text={saveError} />}
                 <Body>
                   {saving
-                    ? t('Saving private draft…')
+                    ? t(
+                        data.joint_open
+                          ? 'Saving group draft…'
+                          : 'Saving private draft…',
+                      )
                     : local
                       ? t('Unsaved edits')
                       : draft
@@ -230,7 +234,11 @@ export function StudentWork({
                 {!blocked && !preview && (
                   <>
                     <Button
-                      title={t('Save private draft')}
+                      title={t(
+                        data.joint_open
+                          ? 'Save group draft'
+                          : 'Save private draft',
+                      )}
                       variant="secondary"
                       busy={saving}
                       disabled={!local && Boolean(draft)}

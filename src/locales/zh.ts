@@ -551,6 +551,8 @@ export const zh: Readonly<Record<string, string>> = {
     '你可以在上个版本的基础上修改。',
   'Your draft is private and syncs after you stop typing.':
     '草稿仅自己可见，停止输入后会自动同步。',
+  'Save group draft': '保存小组草稿',
+  'Saving group draft…': '正在保存小组草稿…',
   'Save private draft': '保存私人草稿',
   'Review submission': '检查提交内容',
   'Confirm version': '确认版本',
