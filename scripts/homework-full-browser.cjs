@@ -2,6 +2,22 @@
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
 const { Buffer } = require('node:buffer');
+async function referencePdf(page) {
+  const chooser = page.waitForEvent('filechooser');
+  await page
+    .getByRole('button', { name: 'Add reference file', exact: true })
+    .click();
+  await (
+    await chooser
+  ).setFiles({
+    name: 'worksheet.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF'),
+  });
+  await page
+    .getByRole('button', { name: 'worksheet.pdf · 1 KB', exact: true })
+    .waitFor();
+}
 module.exports = async function homeworkFull({
   user,
   device,
@@ -18,7 +34,10 @@ module.exports = async function homeworkFull({
   const learner = await user('Team partner', 'member');
   const ws = await a.rpc('group_workspace');
   assert.ifError(ws.error);
-  const rev = ws.data.groups.find((g) => g.id === group).revision;
+  const roster = ws.data.groups.find((g) => g.id === group);
+  const rev = roster.revision;
+  const recipients =
+    roster.roster.filter((p) => p.group_id === group && p.eligible).length + 1;
   const assigned = await a.rpc('group_change', {
     p_action: 'assign',
     p_person: learner.id,
@@ -26,7 +45,7 @@ module.exports = async function homeworkFull({
     p_revision: rev,
   });
   assert.ifError(assigned.error);
-  const leader = await device(1080),
+  const leader = await device(390),
     phone = await device(390, 'dark'),
     staff = await device(1280);
   await login(leader, student, origin + '/assignment-editor/');
@@ -36,14 +55,21 @@ module.exports = async function homeworkFull({
   await leader.getByLabel('Maximum points', { exact: true }).fill('10');
   await click(leader, 'Save draft and preview');
   await see(leader, 'Student preview');
+  await leader
+    .getByText(recipients + ' students · Individual submissions', {
+      exact: false,
+    })
+    .waitFor();
+  if (process.env.HOMEWORK_FILES_URL) await referencePdf(leader);
   await click(leader, 'Use one shared group submission');
   await see(leader, 'Switch to individual submissions');
+  await click(leader, 'Student file settings');
   await leader.getByLabel('Files per submission (0–10)').fill('2');
   await click(leader, 'Save file rules');
   await see(leader, 'Require files only');
   const id = new URL(leader.url()).searchParams.get('id');
   assert.ok(id);
-  await click(leader, 'Publish assignment');
+  await leader.getByRole('button', { name: /^Publish to / }).click();
   await see(leader, 'Submission overview');
   const link = origin + '/assignment/?id=' + id + '&mode=mine';
   await login(phone, learner, link);
@@ -104,7 +130,7 @@ module.exports = async function homeworkFull({
     const browserFile = phone.waitForEvent('download');
     await click(phone, 'solution.txt · 1 KB');
     assert.equal((await browserFile).suggestedFilename(), 'solution.txt');
-    const f = info.data.files[0];
+    const f = info.data.files.find((item) => item.filename === 'solution.txt');
     assert.ok(f.version_id);
     const access = (await c.auth.getSession()).data.session.access_token;
     const res = await fetch(endpoint + '?mode=download', {
@@ -188,3 +214,5 @@ module.exports = async function homeworkFull({
         : ''),
   );
 };
+
+module.exports.referencePdf = referencePdf;

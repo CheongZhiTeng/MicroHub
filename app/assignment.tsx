@@ -10,6 +10,7 @@ import {
 } from '../src/components/ui';
 import { Access } from '../src/features/access';
 import {
+  type Assignment,
   homework,
   useHomework,
   useHomeworkAction,
@@ -26,6 +27,87 @@ import {
   Discussion,
   ChangeHistory,
 } from '../src/features/homework/operations';
+function DraftPreview({
+  action,
+  a,
+  refresh,
+}: {
+  action: ReturnType<typeof useHomeworkAction>;
+  a: Assignment;
+  refresh: () => Promise<void>;
+}) {
+  const { t } = useLanguage();
+  const id = a.id;
+  const audience = useHomework('hw_preview_count', { p_id: id });
+  return (
+    <>
+      <Card>
+        <Heading>{t('Student preview')}</Heading>
+        {a.group_id && a.joint !== undefined && (
+          <Button
+            variant="secondary"
+            title={t(
+              a.joint
+                ? 'Switch to individual submissions'
+                : 'Use one shared group submission',
+            )}
+            busy={action.busy}
+            onPress={() =>
+              action.run(async () => {
+                await homework('hw_work_mode', {
+                  p_id: id,
+                  p_revision: a.revision,
+                  p_joint: !a.joint,
+                });
+                await refresh();
+              })
+            }
+          />
+        )}
+        <Body>
+          {[
+            a.group_name || t('Whole club'),
+            typeof audience.data === 'number'
+              ? audience.data +
+                t(audience.data === 1 ? ' student' : ' students')
+              : t('Recipient count unavailable'),
+            t(a.joint ? 'Shared group submission' : 'Individual submissions'),
+          ].join(' · ')}
+        </Body>
+        <Button
+          title={t('Edit draft')}
+          variant="secondary"
+          onPress={() =>
+            router.push({ pathname: '/assignment-editor', params: { id } })
+          }
+        />
+        <Button
+          title={
+            t('Publish to ') +
+            (a.group_name || t('Whole club')) +
+            (a.audience === 'selected' ? t(' (selected students)') : '')
+          }
+          disabled={!audience.data}
+          busy={action.busy}
+          onPress={() =>
+            action.run(async () => {
+              const count = await homework('hw_publish', {
+                p_id: id,
+                p_revision: a.revision,
+              });
+              await refresh();
+              return t('Published to ') + count + t(' members.');
+            })
+          }
+        />
+      </Card>
+      {audience.error && <Notice error text={audience.error} />}
+      {a.file_limit !== undefined && (
+        <Schedule a={a} refresh={refresh} canSchedule={!!audience.data} />
+      )}
+    </>
+  );
+}
 function Workspace({
   id,
   requested,
@@ -36,8 +118,8 @@ function Workspace({
   legacy: boolean;
 }) {
   const { t } = useLanguage();
-  const result = useHomework('hw_detail', { p_id: id });
   const action = useHomeworkAction();
+  const result = useHomework('hw_detail', { p_id: id });
   if (result.data === undefined)
     return <FetchState error={result.error} retry={result.refresh} />;
   const data = result.data;
@@ -68,60 +150,12 @@ function Workspace({
           />
         )}
       {a.lifecycle === 'draft' ? (
-        <Card>
-          <Heading>{t('Student preview')}</Heading>
-          {a.group_id && a.joint !== undefined && (
-            <Button
-              variant="secondary"
-              title={t(
-                a.joint
-                  ? 'Switch to individual submissions'
-                  : 'Use one shared group submission',
-              )}
-              busy={action.busy}
-              onPress={() =>
-                action.run(async () => {
-                  await homework('hw_work_mode', {
-                    p_id: id,
-                    p_revision: a.revision,
-                    p_joint: !a.joint,
-                  });
-                  await result.refresh();
-                })
-              }
-            />
-          )}
-          <Body>
-            {t(
-              'Only administrators can see this draft. Publishing assigns it to',
-            )}{' '}
-            {a.audience === 'all'
-              ? t(a.group_id ? 'All group students' : 'all active members')
-              : data.targets.length + t(' selected members')}
-            .
-          </Body>
-          <Button
-            title={t('Edit draft')}
-            variant="secondary"
-            onPress={() =>
-              router.push({ pathname: '/assignment-editor', params: { id } })
-            }
-          />
-          <Button
-            title={t('Publish assignment')}
-            busy={action.busy}
-            onPress={() =>
-              action.run(async () => {
-                const count = await homework('hw_publish', {
-                  p_id: id,
-                  p_revision: a.revision,
-                });
-                await result.refresh();
-                return t('Published to ') + count + t(' members.');
-              })
-            }
-          />
-        </Card>
+        <DraftPreview
+          action={action}
+          key={'preview-' + a.revision}
+          a={a}
+          refresh={result.refresh}
+        />
       ) : manage ? (
         <Grading data={data} refresh={result.refresh} />
       ) : (
@@ -129,9 +163,6 @@ function Workspace({
       )}
       {a.file_limit !== undefined && (
         <>
-          {manage && a.lifecycle === 'draft' && (
-            <Schedule a={a} refresh={result.refresh} />
-          )}
           {manage && a.lifecycle !== 'draft' && (
             <>
               <Reports a={a} refresh={result.refresh} />
@@ -150,8 +181,8 @@ function Workspace({
           refresh={result.refresh}
         />
       )}
-      {manage && <AssignmentActions assignment={a} refresh={result.refresh} />}
       <Messages action={action} />
+      {manage && <AssignmentActions assignment={a} refresh={result.refresh} />}
       <Button
         title={t('Refresh assignment')}
         variant="ghost"

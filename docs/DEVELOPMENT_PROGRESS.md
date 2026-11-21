@@ -1,5 +1,9 @@
 # Development progress
 
+## Teacher authoring and release verification · 2026-11-21
+
+Audience selection comes first, with separate reference uploads, collapsed submission rules and a bilingual recipient count before publication. Browsers at desktop and phone widths uploaded reference PDFs and published individual/selected and group assignments against local Auth, PostgreSQL, Edge and private Storage. All 110 automated tests passed, including an upgrade from the old schema with a previously graded teacher submission. Android, iOS and web exports succeeded. Production needs only migration `202611210002`; the existing homework-files deployment is sufficient.
+
 ## Student assignment audiences · 2026-11-21
 
 On `codex/homework-student-audience`, migration `202611210002` aligns candidate search, preview, scheduled and immediate publication, and late additions. Super admins and appointed teachers are excluded, including historical assignments and later appointments. Receipts and grades are retained. Verified the isolated ledger at `202611210001`, applied locally and passed 32 database tests. The operator confirmed the hosted ledger through `202611210001` and the homework-files deployment; the new migration is pending there.

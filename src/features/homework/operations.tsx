@@ -19,9 +19,11 @@ import {
 } from './api';
 export function Schedule({
   a,
+  canSchedule,
   refresh,
 }: {
   a: Assignment;
+  canSchedule: boolean;
   refresh: () => Promise<void>;
 }) {
   const { t } = useLanguage();
@@ -48,6 +50,7 @@ export function Schedule({
         .map((k) => (
           <Button
             key={k}
+            disabled={k === 'schedule' && !canSchedule}
             title={t(
               k === 'schedule' ? 'Schedule publication' : 'Cancel schedule',
             )}

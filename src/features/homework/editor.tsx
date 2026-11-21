@@ -112,6 +112,7 @@ export function AssignmentEditor({
   const [targets, setTargets] = useState<string[]>(
     copy ? [] : (initial?.targets ?? []),
   );
+  const [settings, setSettings] = useState(false);
   const action = useHomeworkAction();
   const save = () =>
     action.run(async () => {
@@ -153,55 +154,6 @@ export function AssignmentEditor({
   return (
     <>
       <Card>
-        <SectionTitle icon="homework">{t('Assignment details')}</SectionTitle>
-        <Field
-          label={t('Title')}
-          value={title}
-          maxLength={160}
-          onChangeText={setTitle}
-        />
-        <Field
-          label={t('Instructions')}
-          multiline
-          value={instructions}
-          maxLength={20000}
-          onChangeText={setInstructions}
-        />
-        <Field
-          label={t('Deadline (Malaysia time)')}
-          value={due}
-          onChangeText={setDue}
-          hint="YYYY-MM-DD HH:mm"
-          autoCapitalize="none"
-        />
-        <Field
-          label={t('Maximum points')}
-          value={max}
-          onChangeText={setMax}
-          keyboardType="decimal-pad"
-          hint={t('Leave blank for ungraded work.')}
-        />
-        <Body>{t('Accepted submissions')}</Body>
-        <Choices
-          items={[
-            ['both', t('Text and link')],
-            ['text', t('Text only')],
-            ['link', t('Link only')],
-            ...(a?.file_limit ? [['files', t('Files only')] as const] : []),
-          ]}
-          value={type}
-          onChange={setType}
-        />
-        <Choices
-          items={[
-            ['yes', t('Accept late work')],
-            ['no', t('On time only')],
-          ]}
-          value={late ? 'yes' : 'no'}
-          onChange={(v) => setLate(v === 'yes')}
-        />
-      </Card>
-      <Card>
         <SectionTitle icon="members">{t('Recipients')}</SectionTitle>
         {scopes.length > 0 && (
           <Choices
@@ -219,7 +171,7 @@ export function AssignmentEditor({
         )}
         <Choices
           items={[
-            ['all', t(groupId ? 'All group students' : 'All active members')],
+            ['all', t(groupId ? 'All group students' : 'All club students')],
             ['selected', t('Select members')],
           ]}
           value={audience}
@@ -232,6 +184,74 @@ export function AssignmentEditor({
             setTargets={setTargets}
           />
         )}
+      </Card>
+      <Card>
+        <SectionTitle icon="homework">{t('Assignment details')}</SectionTitle>
+        <Field
+          label={t('Title')}
+          value={title}
+          maxLength={160}
+          onChangeText={setTitle}
+        />
+        <Field
+          label={t('Instructions')}
+          multiline
+          value={instructions}
+          maxLength={20000}
+          onChangeText={setInstructions}
+        />
+        <Button
+          title={t('Save draft to add reference files')}
+          variant="secondary"
+          onPress={save}
+          busy={action.busy}
+        />
+        <Field
+          label={t('Deadline (Malaysia time)')}
+          value={due}
+          onChangeText={setDue}
+          hint="YYYY-MM-DD HH:mm"
+          autoCapitalize="none"
+        />
+        <Field
+          label={t('Maximum points')}
+          value={max}
+          onChangeText={setMax}
+          keyboardType="decimal-pad"
+          hint={t('Leave blank for ungraded work.')}
+        />
+        <Button
+          title={t(
+            settings ? 'Hide submission settings' : 'Submission settings',
+          )}
+          variant="secondary"
+          onPress={() => setSettings(!settings)}
+        />
+        {settings && (
+          <>
+            <Body>{t('Accepted submissions')}</Body>
+            <Choices
+              items={[
+                ['both', t('Text and link')],
+                ['text', t('Text only')],
+                ['link', t('Link only')],
+                ...(a?.file_limit ? [['files', t('Files only')] as const] : []),
+              ]}
+              value={type}
+              onChange={setType}
+            />
+            <Choices
+              items={[
+                ['yes', t('Accept late work')],
+                ['no', t('On time only')],
+              ]}
+              value={late ? 'yes' : 'no'}
+              onChange={(v) => setLate(v === 'yes')}
+            />
+          </>
+        )}
+      </Card>
+      <Card>
         <Messages action={action} />
         <Button
           title={t('Save draft and preview')}

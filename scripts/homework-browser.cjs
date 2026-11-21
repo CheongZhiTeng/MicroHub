@@ -149,13 +149,16 @@ async function run() {
     await click(staff, 'Homework Alice · ' + alice.studentId);
     await click(staff, 'Save draft and preview');
     await see(staff, 'Student preview');
+    await staff.getByText(/1 student · Individual submissions/).waitFor();
+    if (process.env.HOMEWORK_FILES_URL)
+      await require('./homework-full-browser.cjs').referencePdf(staff);
     const id = new URL(staff.url()).searchParams.get('id');
     assert(id);
     const link = origin + '/assignment/?id=' + id + '&mode=mine';
     await login(phone, alice, link);
     await see(phone, 'This assignment is unavailable to your account.');
     const publish = staff.getByRole('button', {
-      name: 'Publish assignment',
+      name: 'Publish to Whole club (selected students)',
       exact: true,
     });
     await publish.focus();
@@ -273,7 +276,7 @@ async function run() {
       'Copy of ' + title,
     );
     await see(staff, '0 selected');
-    await click(staff, 'All active members');
+    await click(staff, 'All club students');
     await click(staff, 'Save draft and preview');
     await see(staff, 'Student preview');
     const copyId = new URL(staff.url()).searchParams.get('id');

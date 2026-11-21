@@ -63,6 +63,7 @@ export function FilePanel({
 }) {
   const { t } = useLanguage();
   const action = useHomeworkAction();
+  const [settings, setSettings] = useState(false);
   const [retry, setRetry] = useState<{
     id: string;
     file: Picker.DocumentPickerAsset;
@@ -146,7 +147,55 @@ export function FilePanel({
     <Card>
       <Heading>{t(reference ? 'Reference files' : 'Your files')}</Heading>
       <FileList files={files} />
+      {!reference && (
+        <Body>
+          {t('File limit')} · {a.file_limit} × {(a.file_bytes ?? 0) / 1048576}{' '}
+          MB · {t(a.file_mode ?? 'any')}
+        </Body>
+      )}
+      {editable && (
+        <>
+          {files.map((f) => (
+            <Button
+              variant="ghost"
+              key={f.id}
+              title={t('Remove file') + ' · ' + f.filename}
+              onPress={() =>
+                action.run(async () => {
+                  await homework('hw_file_remove', { p_file: f.id });
+                  await refresh();
+                })
+              }
+            />
+          ))}
+          <Button
+            title={t(reference ? 'Add reference file' : 'Choose file or photo')}
+            busy={action.busy}
+            onPress={() => action.run(() => upload(false))}
+          />
+          {progress !== null && (
+            <Body>
+              {t('Upload progress')} · {progress}%
+            </Body>
+          )}
+          {Boolean(action.error) && retry && (
+            <Button
+              title={t('Retry upload')}
+              onPress={() => action.run(() => upload(true))}
+            />
+          )}
+        </>
+      )}
       {reference && editable && (
+        <Button
+          title={t(
+            settings ? 'Hide submission settings' : 'Student file settings',
+          )}
+          variant="ghost"
+          onPress={() => setSettings(!settings)}
+        />
+      )}
+      {settings && reference && editable && (
         <>
           {a.joint !== undefined && !!a.file_limit && (
             <Button
@@ -211,45 +260,6 @@ export function FilePanel({
               })
             }
           />
-        </>
-      )}
-      {!reference && (
-        <Body>
-          {t('File limit')} · {a.file_limit} × {(a.file_bytes ?? 0) / 1048576}{' '}
-          MB · {t(a.file_mode ?? 'any')}
-        </Body>
-      )}
-      {editable && (
-        <>
-          {files.map((f) => (
-            <Button
-              variant="ghost"
-              key={f.id}
-              title={t('Remove file') + ' · ' + f.filename}
-              onPress={() =>
-                action.run(async () => {
-                  await homework('hw_file_remove', { p_file: f.id });
-                  await refresh();
-                })
-              }
-            />
-          ))}
-          <Button
-            title={t('Choose file or photo')}
-            busy={action.busy}
-            onPress={() => action.run(() => upload(false))}
-          />
-          {progress !== null && (
-            <Body>
-              {t('Upload progress')} · {progress}%
-            </Body>
-          )}
-          {Boolean(action.error) && retry && (
-            <Button
-              title={t('Retry upload')}
-              onPress={() => action.run(() => upload(true))}
-            />
-          )}
         </>
       )}
       <Messages action={action} />

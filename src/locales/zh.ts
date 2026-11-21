@@ -1,5 +1,17 @@
 // Handwritten Simplified Chinese copy for MicroHub.
 export const zh: Readonly<Record<string, string>> = {
+  'Publish to': '发布给',
+  '(selected students)': '（指定学生）',
+  'All club students': '全会学生',
+  'Save draft to add reference files': '保存草稿并添加参考资料',
+  'Student file settings': '学生提交附件设置',
+  'Add reference file': '添加老师的参考资料',
+  'Submission settings': '提交设置',
+  'Hide submission settings': '收起提交设置',
+  'Individual submissions': '个人提交',
+  'Recipient count unavailable': '暂时无法获取应交人数',
+  student: '名学生',
+  students: '名学生',
   'Grade corrected': '成绩已更正',
   'Assignment history': '作业变更记录',
   'Whole club': '全学会',

@@ -7,7 +7,7 @@ export const [admin, alice, bob, secondAdmin] = [1, 2, 3, 4].map(
 
 // Test-only Supabase-owned roles and JWT subject. Every homework query uses the
 // shipped migrations and authenticated role, including in the browser rehearsal.
-export async function homeworkBackend() {
+export async function homeworkBackend({ beforeMigration } = {}) {
   const db = new PGlite();
   await db.exec(`create role anon; create role service_role; create role authenticated; create schema auth;
     create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
@@ -16,7 +16,9 @@ export async function homeworkBackend() {
     create schema storage; create table storage.objects(bucket_id text,name text); create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`);
   const directory = new URL('../supabase/migrations/', import.meta.url);
   for (const file of (await readdir(directory))
-    .filter((f) => f.endsWith('.sql'))
+    .filter(
+      (f) => f.endsWith('.sql') && (!beforeMigration || f < beforeMigration),
+    )
     .sort())
     await db.exec(await readFile(new URL(file, directory), 'utf8'));
   for (const [index, id] of [admin, alice, bob, secondAdmin].entries()) {

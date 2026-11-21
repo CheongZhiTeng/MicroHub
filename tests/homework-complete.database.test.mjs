@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import {
   homeworkBackend,
@@ -414,4 +415,58 @@ test('club and group recipient counts exclude staff, retain leaders and preserve
   assert.equal(old.versions.length, 1);
   assert.equal(old.counts.eligible, 1);
   assert.equal(old.status.excused, true);
+});
+
+test('upgrading an existing roster removes teacher obligations while retaining graded receipts', async (t) => {
+  const file = '202611210002_student_audience.sql';
+  const { db, as } = await homeworkBackend({ beforeMigration: file });
+  t.after(() => db.close());
+  const task = randomUUID();
+  const rpc = async (who, sql, args) =>
+    (await as(who, 'select ' + sql + ' v', args))[0].v;
+  await db.query(
+    "update platform_roles set role='super_admin' where user_id=$1",
+    [admin],
+  );
+  await db.query(
+    "insert into club_groups(id,name,state,teacher_id) values($1,'Blue','active',$2)",
+    [randomUUID(), secondAdmin],
+  );
+  await rpc(
+    admin,
+    "hw_save_assignment($1,0,'Old','',now()-interval '1 day',10,true,false,true,'all','{}')",
+    [task],
+  );
+  assert.equal(await rpc(admin, 'hw_publish($1,1)', [task]), 4);
+  await rpc(secondAdmin, "hw_save_draft($1,0,0,'Historical response','')", [
+    task,
+  ]);
+  const v = await rpc(secondAdmin, 'to_jsonb(hw_submit($1,0,1,$2))', [
+    task,
+    randomUUID(),
+  ]);
+  await rpc(admin, "hw_review($1,0,'release',8,'Old feedback',true,null,$2)", [
+    v.id,
+    randomUUID(),
+  ]);
+  await db.exec(
+    await readFile(
+      new URL('../supabase/migrations/' + file, import.meta.url),
+      'utf8',
+    ),
+  );
+  const detail = await rpc(admin, 'hw_detail($1)', [task]);
+  assert.equal(detail.status, null);
+  assert.equal(detail.counts.eligible, 2);
+  assert.equal(detail.counts.missing, 2);
+  const saved = await rpc(secondAdmin, 'hw_detail($1)', [task]);
+  assert.equal(saved.versions[0].id, v.id);
+  assert.equal(Number(saved.versions[0].events[0].score), 8);
+  assert.equal((await rpc(admin, "hw_list(false,'todo','',0)", [])).length, 0);
+  assert.equal(
+    (await rpc(admin, 'hw_inbox(0)', [])).items.some(
+      (row) => row.mode === 'mine',
+    ),
+    false,
+  );
 });

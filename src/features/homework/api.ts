@@ -126,6 +126,7 @@ export type ReportRow = {
   submitted_at: string | null;
 };
 type Responses = {
+  hw_preview_count: number | null;
   hw_report_snapshot: ReportRow[];
   hw_changes: {
     id: string;
@@ -198,6 +199,7 @@ export async function homework<K extends keyof Responses>(
   return data as Responses[K];
 }
 type ReadName =
+  | 'hw_preview_count'
   | 'hw_changes'
   | 'hw_report'
   | 'hw_schedule_info'
