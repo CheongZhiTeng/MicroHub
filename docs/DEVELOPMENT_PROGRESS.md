@@ -1,5 +1,9 @@
 # Development progress
 
+## Student assignment audiences · 2026-11-21
+
+On `codex/homework-student-audience`, migration `202611210002` aligns candidate search, preview, scheduled and immediate publication, and late additions. Super admins and appointed teachers are excluded, including historical assignments and later appointments. Receipts and grades are retained. Verified the isolated ledger at `202611210001`, applied locally and passed 32 database tests. The operator confirmed the hosted ledger through `202611210001` and the homework-files deployment; the new migration is pending there.
+
 ## Shared draft labels · 2026-11-21
 
 Chinese and English saving indicators and actions distinguish the shared group draft from a private response. The full project checks passed (108 tests). Desktop and phone-size browser sessions against the isolated Supabase stack verified the group label, explicit grading approval and successful batch return. Both fixes ship on the shared Pages branch; hosted migration remains pending.

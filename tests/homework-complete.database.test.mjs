@@ -367,3 +367,51 @@ test('team draft collisions, one shared hand-in, individual review and transfer 
   );
   assert.equal(await q(bob, 'hw_joint_draft($1)', [task]), null);
 });
+
+test('club and group recipient counts exclude staff, retain leaders and preserve earlier receipts', async (t) => {
+  const { db, as } = await homeworkBackend();
+  t.after(() => db.close());
+  const group = randomUUID(),
+    club = randomUUID(),
+    small = randomUUID();
+  const rpc = async (who, sql, args) =>
+    (await as(who, 'select ' + sql + ' v', args))[0].v;
+  await db.query(
+    "update platform_roles set role='super_admin' where user_id=$1",
+    [admin],
+  );
+  await db.query(
+    "insert into club_groups(id,name,state,teacher_id) values($1,'Team','active',$2)",
+    [group, secondAdmin],
+  );
+  await db.query('insert into group_students values($1,$2,true)', [
+    alice,
+    group,
+  ]);
+  for (const [id, scope, count] of [
+    [club, null, 2],
+    [small, group, 1],
+  ]) {
+    await rpc(
+      admin,
+      "hw_save_scoped($1,0,'Work','',now()+interval '1 day',10,true,true,true,'all','{}',$2)",
+      [id, scope],
+    );
+    assert.equal(await rpc(admin, 'hw_preview_count($1)', [id]), count);
+    assert.equal(await rpc(admin, 'hw_publish($1,1)', [id]), count);
+    await assert.rejects(rpc(admin, 'hw_add_recipients($1,$2)', [id, [admin]]));
+    assert.equal((await rpc(admin, 'hw_detail($1)', [id])).status, null);
+    assert.equal((await rpc(secondAdmin, 'hw_detail($1)', [id])).status, null);
+    assert.ok((await rpc(alice, 'hw_detail($1)', [id])).status);
+  }
+  await rpc(bob, "hw_save_draft($1,0,0,'Done','')", [club]);
+  await rpc(bob, 'hw_submit($1,0,1,$2)', [club, randomUUID()]);
+  await db.query(
+    "update platform_roles set role='super_admin' where user_id=$1",
+    [bob],
+  );
+  const old = await rpc(bob, 'hw_detail($1)', [club]);
+  assert.equal(old.versions.length, 1);
+  assert.equal(old.counts.eligible, 1);
+  assert.equal(old.status.excused, true);
+});
