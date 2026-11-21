@@ -1,5 +1,29 @@
 # Development progress
 
+## Homework release verification · 2026-11-20
+
+Branch `codex/homework-complete`. Migrations `202611200008`–`010` complete snapshot reporting, archive filters, assignment audit history, detached receipt privacy, tracked grade corrections and scheduled file cleanup. Each migration batch was compared with the isolated Supabase ledger before application. Its latest version is `202611200010`. The local scheduler has publishing, expiry and object-cleanup jobs.
+
+The full Pages browser rehearsal used real local Auth, PostgreSQL, the homework Edge handler and private Supabase Storage. A leader published group work, a phone-size browser submitted text and an attachment, the teacher saved a private grade and bulk-returned it, and the member saw the returned feedback. Analytics, the CSV download and the signed file download were exercised. Two independent signed-in teammates raced their saves and submissions; one draft edit won and each received exactly one receipt for the same team batch. The student submission, membership and concurrency regressions passed. The Expo iOS, Android and web bundles exported successfully. The [acceptance guide](HOMEWORK_ACCEPTANCE.md) records the remaining hosted and physical-device checks.
+
+No hosted Supabase project is linked in this environment. Hosted migration history, Edge deployment, hosted file delivery and physical iOS/Android acceptance remain unverified. The code release uses the existing GitHub Pages workflow.
+
+## Shared group submissions · 2026-11-20
+
+Migrations `202611200006` and `202611200007` are applied to the isolated local Supabase ledger. Assigned students can edit one revision-checked group draft and submit it once for the eligible group snapshot. Each member receives a separate immutable receipt. Shared files map to each member's version; feedback and subsequent revisions are private. Group participants cannot grade the team's shared submission. Draft settings also support file-only intake and copying submission rules. PostgreSQL tests exercised conflicting edits, deduplicated hand-ins, private revision, file access and departure history. Hosted databases remain unmodified.
+
+## Homework operations checkpoint · 2026-11-20
+
+Migration `202611200005` adds scheduled publication with publisher reauthorization, assignment discussions, in-app deadline/return/grading reminders with per-user preferences, private reusable grading tools, per-version bulk return and a scoped grades report. The UI supports rubric scoring, comment reuse, batch preview/result details, completion analysis and CSV export. The isolated Supabase ledger was checked and migrations 002–005 applied in order. Production rollout and native device acceptance remain pending.
+
+## Private homework attachments · local implementation
+
+Migration `202611200004` introduces per-assignment limits, draft and reference metadata, immutable version binding and a Storage deletion queue. The Edge function authenticates uploads, inspects bytes, restricts types and size, and issues 60-second private download links under caller RLS. Mobile/web clients support picking files, progress and retry. The database suite covers pending upload denial, file-only receipts, private reads and privileged finalization. Hosted Storage/Edge rollout is pending.
+
+## Homework scope and lifecycle checkpoint · 2026-11-20
+
+Branch `codex/homework-complete`. Migrations `202611200002` and `202611200003` add group-scoped publishing, recipient snapshots, cross-group and self-grading restrictions, transfer history, audited published edits, close/reopen/archive, individual deadlines and excusal. The grading overview uses eligible recipients as the completion denominator. Local isolated PostgreSQL exercises these operations. Hosted migrations remain unverified. Attachment and daily-operation acceptance follow.
+
 ## Group foundation · 2026-11-20
 
 Branch `codex/group-foundations`. The [confirmed group plan](GROUP_SYSTEM_PLAN.md) is the scope reference. **More → My group** supports bilingual lookup, roster and change history, teacher and leader appointments, transfers, activation and archival. Global Super Admins appoint teachers and transfer students. A teacher can manage their own roster using a regular member account. Students see the roster after activation. Group changes retain an audit trail and use transactional authorization and revision checks.
@@ -212,19 +236,3 @@ Implemented on `codex/modern-campus-v2` from `536cb51`, pending user visual acce
 The user has reported successful hosted verification-email delivery, login and first Super Admin bootstrap. Those are user-reported checks; this environment's browser tests still use fixtures. Ordinary-member real-device acceptance and full hosted end-to-end testing remain pending.
 
 Validation for this branch: TypeScript/ESLint/formatting, 77 application tests, 14 PostgreSQL authorization scenarios, all three platform exports, and 150 browser screen checks across five widths and light/dark appearance passed. Browser flows use isolated fixtures. Live theme switching, unsaved form retention across breakpoints, and keyboard confirmation behavior are included. Rendered screenshots and reproduction steps are linked in the v2 design document.
-
-## Homework scope and lifecycle checkpoint · 2026-11-20
-
-Branch `codex/homework-complete`. Migrations `202611200002` and `202611200003` add group-scoped publishing, recipient snapshots, cross-group and self-grading restrictions, transfer history, audited published edits, close/reopen/archive, individual deadlines and excusal. The grading overview uses eligible recipients as the completion denominator. Local isolated PostgreSQL exercises these operations. Hosted migrations remain unverified. Attachment and daily-operation acceptance follow.
-
-## Private homework attachments · local implementation
-
-Migration `202611200004` introduces per-assignment limits, draft and reference metadata, immutable version binding and a Storage deletion queue. The Edge function authenticates uploads, inspects bytes, restricts types and size, and issues 60-second private download links under caller RLS. Mobile/web clients support picking files, progress and retry. The database suite covers pending upload denial, file-only receipts, private reads and privileged finalization. Hosted Storage/Edge rollout is pending.
-
-## Homework operations checkpoint · 2026-11-20
-
-Migration `202611200005` adds scheduled publication with publisher reauthorization, assignment discussions, in-app deadline/return/grading reminders with per-user preferences, private reusable grading tools, per-version bulk return and a scoped grades report. The UI supports rubric scoring, comment reuse, batch preview/result details, completion analysis and CSV export. The isolated Supabase ledger was checked and migrations 002–005 applied in order. Production rollout and native device acceptance remain pending.
-
-## Shared group submissions · 2026-11-20
-
-Migrations `202611200006` and `202611200007` are applied to the isolated local Supabase ledger. Assigned students can edit one revision-checked group draft and submit it once for the eligible group snapshot. Each member receives a separate immutable receipt. Shared files map to each member's version; feedback and subsequent revisions are private. Group participants cannot grade the team's shared submission. Draft settings also support file-only intake and copying submission rules. PostgreSQL tests exercised conflicting edits, deduplicated hand-ins, private revision, file access and departure history. Hosted databases remain unmodified.

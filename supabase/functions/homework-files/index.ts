@@ -43,8 +43,14 @@ Deno.serve(async (req) => {
   }
   try {
     if (mode === 'cleanup') {
-      if (authorization !== 'Bearer ' + serviceKey)
-        return json({ error: 'Access denied' }, 403);
+      if (authorization !== 'Bearer ' + serviceKey) {
+        const token = req.headers.get('x-maintenance-token');
+        if (
+          !token ||
+          !(await admin.rpc('hw_storage_worker', { p_token: token })).data
+        )
+          return json({ error: 'Access denied' }, 403);
+      }
       await sweep();
       return json({ ok: true });
     }
@@ -128,6 +134,7 @@ Deno.serve(async (req) => {
       });
       if (finished.error) throw finished.error;
     }
+    await admin.rpc('hw_storage_origin', { p_origin: url });
     await sweep().catch(() => console.error('Attachment cleanup deferred'));
     return json({ id });
   } catch {

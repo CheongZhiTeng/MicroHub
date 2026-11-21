@@ -214,8 +214,11 @@ export function StudentWork({
                     : local
                       ? t('Unsaved edits')
                       : draft
-                        ? t('Private draft saved · ') +
-                          dueLabel(draft.updated_at)
+                        ? t(
+                            data.joint_open
+                              ? 'Group draft saved · '
+                              : 'Private draft saved · ',
+                          ) + dueLabel(draft.updated_at)
                         : latest
                           ? t('Start your revision from the previous version.')
                           : t(

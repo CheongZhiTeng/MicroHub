@@ -92,7 +92,9 @@ export default function Notifications() {
   const { t } = useLanguage();
   return (
     <Screen title={t('Notifications')}>
-      <Access member>{(user) => <Inbox key={user.profile.id} />}</Access>
+      <Access member signInParams={{ next: 'notifications' }}>
+        {(user) => <Inbox key={user.profile.id} />}
+      </Access>
       <Button
         title={t('Back to home')}
         onPress={() => router.replace('/(tabs)')}

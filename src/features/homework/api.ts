@@ -55,6 +55,7 @@ export type Draft = {
   updated_at: string;
 };
 export type Feedback = {
+  supersedes?: string | null;
   id: string;
   kind: 'release' | 'revision';
   includes_grade: boolean;
@@ -109,6 +110,7 @@ export type Summary = {
   pending: number | null;
 };
 export type ReportRow = {
+  ready?: boolean;
   member_id: string;
   student_id: string;
   member_name: string;
@@ -123,6 +125,14 @@ export type ReportRow = {
   submitted_at: string | null;
 };
 type Responses = {
+  hw_report_snapshot: ReportRow[];
+  hw_changes: {
+    id: string;
+    action: string;
+    created_at: string;
+    actor_id: string;
+    details: { reason?: string; old_due?: string; new_due?: string };
+  }[];
   hw_work_mode: null;
   hw_media_only: null;
   hw_copy_assignment: number;
@@ -186,6 +196,7 @@ export async function homework<K extends keyof Responses>(
   return data as Responses[K];
 }
 type ReadName =
+  | 'hw_changes'
   | 'hw_report'
   | 'hw_schedule_info'
   | 'hw_comments'

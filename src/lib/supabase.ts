@@ -6,14 +6,14 @@ import { createSessionStorage } from './session-storage';
 
 import { readPublicConfig } from './config';
 import { createTimedFetch } from './network';
-const config = readPublicConfig(
+export const publicConfig = readPublicConfig(
   process.env.EXPO_PUBLIC_SUPABASE_URL,
   process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 );
-export const configError = config.error;
-export const configured = !config.error;
+export const configError = publicConfig.error;
+export const configured = !publicConfig.error;
 export const supabase = configured
-  ? createClient(config.url!, config.key!, {
+  ? createClient(publicConfig.url!, publicConfig.key!, {
       global: { fetch: createTimedFetch(fetch) },
       auth: {
         storage:

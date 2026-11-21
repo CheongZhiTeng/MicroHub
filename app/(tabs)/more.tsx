@@ -110,11 +110,7 @@ export default function More() {
       <Card>
         <SectionTitle icon="code">{t('Made for your community')}</SectionTitle>
         <Body>Foundation build · 0.1.0</Body>
-        <Body>
-          {t(
-            'Announcements and notifications arrive in V1. Learning resources arrive in V2.',
-          )}
-        </Body>
+        <Body>{t('Homework reminders are available in Notifications.')}</Body>
         <Body>
           {t(
             'For privacy or account concerns, contact your school club administrator.        ',

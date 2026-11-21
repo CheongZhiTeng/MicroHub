@@ -69,7 +69,7 @@ jobs:
             fi
             sleep 5
           done
-          for route in '' 'sign-in/' 'groups/'; do
+          for route in '' 'sign-in/' 'groups/' 'homework/' 'assignment/' 'notifications/'; do
             url="${PAGES_URL%/}/${route}"
             matched=false
             for attempt in {1..12}; do

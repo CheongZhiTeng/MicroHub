@@ -24,6 +24,7 @@ import {
   Schedule,
   Reports,
   Discussion,
+  ChangeHistory,
 } from '../src/features/homework/operations';
 function Workspace({
   id,
@@ -132,7 +133,10 @@ function Workspace({
             <Schedule a={a} refresh={result.refresh} />
           )}
           {manage && a.lifecycle !== 'draft' && (
-            <Reports a={a} refresh={result.refresh} />
+            <>
+              <Reports a={a} refresh={result.refresh} />
+              <ChangeHistory id={a.id} />
+            </>
           )}
           {a.lifecycle !== 'draft' && !data.status?.detached && (
             <Discussion a={a} />

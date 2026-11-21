@@ -180,9 +180,11 @@ export function Receipt({ version: v }: { version: Version }) {
       {v.events.map((e) => (
         <View key={e.id} style={{ gap: 6 }}>
           <Heading>
-            {e.kind === 'revision'
-              ? t('Revision requested')
-              : t('Feedback returned')}
+            {e.supersedes && e.kind === 'release'
+              ? t('Grade corrected')
+              : e.kind === 'revision'
+                ? t('Revision requested')
+                : t('Feedback returned')}
           </Heading>
           <Body>{dueLabel(e.created_at)}</Body>
           {e.includes_grade && e.score !== null && (

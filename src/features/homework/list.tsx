@@ -73,6 +73,8 @@ export function AssignmentList({
                   ['all', t('All')],
                   ['draft', t('Drafts')],
                   ['published', t('Published')],
+                  ['closed', t('Closed assignments')],
+                  ['archived', t('Archived assignments')],
                 ]
               : submissions
                 ? [
@@ -81,6 +83,7 @@ export function AssignmentList({
                   ]
                 : [
                     ['todo', t('To do')],
+                    ['archived', t('Archived assignments')],
                     ['all', t('All')],
                     ['submitted', t('Submitted')],
                     ['returned', t('Returned')],

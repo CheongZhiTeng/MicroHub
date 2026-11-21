@@ -129,13 +129,8 @@ export function Discussion({ a }: { a: Assignment }) {
     </Card>
   );
 }
-async function report(id: string) {
-  const all: ReportRow[] = [];
-  for (let page = 0; ; page++) {
-    const rows = await homework('hw_report', { p_id: id, p_page: page });
-    all.push(...rows.slice(0, 100));
-    if (rows.length <= 100) return all;
-  }
+function report(id: string) {
+  return homework('hw_report_snapshot', { p_id: id });
 }
 function csvField(value: unknown) {
   let s = String(value ?? '');
@@ -215,6 +210,7 @@ export function Reports({
     <Card>
       <Heading>{t('Grading tools')}</Heading>
       <Button
+        disabled={act.busy}
         title={t('Completion analysis')}
         onPress={() =>
           act.run(async () => {
@@ -255,6 +251,7 @@ export function Reports({
       />
       {Boolean(stats) && <Body>{stats}</Body>}
       <Button
+        disabled={act.busy}
         title={t('Export grades (CSV)')}
         variant="secondary"
         onPress={() =>
@@ -264,13 +261,14 @@ export function Reports({
         }
       />
       <Button
+        disabled={act.busy}
         title={t('Preview bulk return')}
         variant="secondary"
         onPress={() =>
           act.run(async () => {
             const rows = (await report(a.id)).filter(
               (r) =>
-                r.grading === 'Grading draft' &&
+                (r.ready ?? r.grading === 'Grading draft') &&
                 r.review_revision !== null &&
                 r.submission !== 'Excused',
             );
@@ -441,5 +439,36 @@ export function GradingLibrary({
         </>
       )}
     </>
+  );
+}
+
+export function ChangeHistory({ id }: { id: string }) {
+  const { t } = useLanguage(),
+    [page, setPage] = useState(0);
+  const log = useHomework('hw_changes', { p_id: id, p_page: page });
+  return (
+    <Card>
+      <Heading>{t('Assignment history')}</Heading>
+      {log.data ? (
+        log.data.slice(0, 20).map((e) => (
+          <Body key={e.id}>
+            {t(e.action)} · {dueLabel(e.created_at)} · {e.actor_id}
+            {e.details.reason ? ' · ' + e.details.reason : ''}
+            {e.details.old_due &&
+            e.details.new_due &&
+            e.details.old_due !== e.details.new_due
+              ? ' · ' +
+                dueLabel(e.details.old_due) +
+                ' → ' +
+                dueLabel(e.details.new_due)
+              : ''}
+          </Body>
+        ))
+      ) : (
+        <FetchState retry={log.refresh} error={log.error} />
+      )}
+      <Paging page={page} count={log.data?.length ?? 0} onChange={setPage} />
+      <Button title={t('Refresh')} variant="ghost" onPress={log.refresh} />
+    </Card>
   );
 }

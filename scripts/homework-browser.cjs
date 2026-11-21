@@ -12,6 +12,14 @@ assert(
   api && ['localhost', '127.0.0.1'].includes(new URL(api).hostname),
   'Use a disposable loopback Supabase stack.',
 );
+if (process.env.HOMEWORK_FILES_URL) {
+  const endpoint = new URL(process.env.HOMEWORK_FILES_URL);
+  assert(
+    ['localhost', '127.0.0.1'].includes(endpoint.hostname) &&
+      ['http:', 'https:'].includes(endpoint.protocol),
+    'Use a local Edge endpoint for test identities.',
+  );
+}
 const service = createClient(api, process.env.SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });

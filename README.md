@@ -2,7 +2,7 @@
 
 A private web, Android and iOS application for **one school club**, built with Expo, React Native, TypeScript, Expo Router and Supabase. Designed for development from an iPad through GitHub Codespaces.
 
-**Feature branch status.** Homework MVP A connects assignment publishing, private text/link drafts, submission history, grading and revisions to the existing authentication and membership flows. See [homework acceptance](docs/HOMEWORK_ACCEPTANCE.md) for migration and test scope. File uploads and attendance remain upcoming MVP modules.
+**Homework.** Teachers and student leaders can publish group assignments, accept individual or shared hand-ins, mark specific versions and return private feedback. The web and Expo clients share drafts, receipts, attachments, deadlines, discussions and grades. See [homework acceptance and deployment](docs/HOMEWORK_ACCEPTANCE.md) for tested flows and hosted setup.
 
 ## Start
 

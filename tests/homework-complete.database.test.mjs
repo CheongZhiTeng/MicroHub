@@ -66,6 +66,12 @@ test('group homework uses scoped duties, immutable history and a private self-re
   await db.query('delete from group_students where user_id=$1', [bob]);
   const past = await call(bob, 'hw_detail($1)', [id]);
   assert.equal(past.versions[0].events[0].score, 9);
+  assert.deepEqual(
+    await as(bob, 'select * from assignments where id=$1', [id]),
+    [],
+  );
+  assert.equal(past.assignment.instructions, '');
+  assert.equal((await call(bob, "hw_list(false,'submitted','',0)"))[0].id, id);
   assert.match(past.status.blocked, /left/);
   assert.deepEqual(await call(bob, "hw_list(false,'todo','',0)"), []);
   await assert.rejects(
@@ -224,6 +230,8 @@ test('scheduled publication, scoped discussion, reminders, CSV rows and retried 
   assert.equal(row.review_revision, 1);
   assert.equal(row.released_score, null);
   assert.deepEqual(await as(alice, 'select * from hw_report($1,0)', [id]), []);
+  const snap = () => q(admin, 'hw_report_snapshot($1)', [id]);
+  assert.equal((await snap())[0].ready, true);
   const key = randomUUID();
   await assert.rejects(
     q(admin, 'hw_release_saved($1,$2,0,$3)', [id, v, key]),
@@ -239,6 +247,15 @@ test('scheduled publication, scoped discussion, reminders, CSV rows and retried 
     ),
     7,
   );
+  assert.equal((await snap())[0].ready, false);
+  await q(admin, "hw_review($1,2,'save',8,'Corrected',false,null,$2)", [
+    v,
+    randomUUID(),
+  ]);
+  assert.equal((await snap())[0].ready, true);
+  await q(admin, 'hw_release_saved($1,$2,3,$3)', [id, v, randomUUID()]);
+  const history = (await q(alice, 'hw_detail($1)', [id])).versions[0].events;
+  assert.equal(history[1].supersedes, history[0].id);
   await as(
     admin,
     "insert into homework_grading_tools values($1,$2,'rubric','Logic','Reasoning | 5')",

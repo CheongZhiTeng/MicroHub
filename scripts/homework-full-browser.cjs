@@ -1,5 +1,7 @@
 // Called with newly created, isolated Supabase identities from the browser rehearsal.
 const assert = require('node:assert/strict');
+const { randomUUID } = require('node:crypto');
+const { Buffer } = require('node:buffer');
 module.exports = async function homeworkFull({
   user,
   device,
@@ -48,7 +50,7 @@ module.exports = async function homeworkFull({
   await phone
     .getByLabel('Your response')
     .fill('A shared answer from the phone.');
-  await phone.getByText(/Private draft saved ·/).waitFor();
+  await phone.getByText(/Group draft saved ·/).waitFor();
   if (process.env.HOMEWORK_FILES_URL) {
     const fileInput = phone.waitForEvent('filechooser');
     await click(phone, 'Choose file or photo');
@@ -96,6 +98,9 @@ module.exports = async function homeworkFull({
   if (process.env.HOMEWORK_FILES_URL) {
     const endpoint = new URL(process.env.HOMEWORK_FILES_URL);
     assert.ok(['localhost', '127.0.0.1'].includes(endpoint.hostname));
+    const browserFile = phone.waitForEvent('download');
+    await click(phone, 'solution.txt · 1 KB');
+    assert.equal((await browserFile).suggestedFilename(), 'solution.txt');
     const f = info.data.files[0];
     assert.ok(f.version_id);
     const access = (await c.auth.getSession()).data.session.access_token;
@@ -111,6 +116,68 @@ module.exports = async function homeworkFull({
     const signed = await res.json();
     assert.equal(await (await fetch(signed.url)).text(), 'Shared attachment');
   }
+  const leaderSession = await session(student),
+    learnerSession = await session(learner);
+  const raceId = randomUUID();
+  const save = await a.rpc('hw_save_scoped', {
+    p_id: raceId,
+    p_revision: 0,
+    p_group: group,
+    p_title: 'Concurrent team',
+    p_instructions: 'Test',
+    p_due: new Date(Date.now() + 86400000).toISOString(),
+    p_points: 10,
+    p_text: true,
+    p_link: true,
+    p_late: true,
+    p_audience: 'selected',
+    p_targets: [student.id, learner.id],
+  });
+  assert.ifError(save.error);
+  assert.ifError(
+    (
+      await a.rpc('hw_work_mode', {
+        p_id: raceId,
+        p_revision: 1,
+        p_joint: true,
+      })
+    ).error,
+  );
+  assert.ifError(
+    (await a.rpc('hw_publish', { p_id: raceId, p_revision: 2 })).error,
+  );
+  const clients = [leaderSession, learnerSession];
+  const drafts = await Promise.all(
+    clients.map((x, i) =>
+      x.rpc('hw_save_draft', {
+        p_id: raceId,
+        p_base: 0,
+        p_revision: 0,
+        p_body: 'Team answer ' + i,
+        p_link: '',
+      }),
+    ),
+  );
+  assert.equal(drafts.filter((r) => !r.error).length, 1);
+  const submissions = await Promise.all(
+    clients.map((x) =>
+      x.rpc('hw_submit', {
+        p_id: raceId,
+        p_base: 0,
+        p_revision: 1,
+        p_request: randomUUID(),
+      }),
+    ),
+  );
+  for (const submission of submissions) assert.ifError(submission.error);
+  const receipts = await Promise.all(
+    clients.map((x) => x.rpc('hw_detail', { p_id: raceId })),
+  );
+  assert.ok(receipts.every((r) => r.data.versions.length === 1));
+  assert.equal(
+    receipts[0].data.versions[0].team_batch,
+    receipts[1].data.versions[0].team_batch,
+  );
   console.log(
     'Group homework passed: leader publication, shared phone draft and receipt, discussion, teacher grading, batch return, analytics and CSV.' +
       (process.env.HOMEWORK_FILES_URL

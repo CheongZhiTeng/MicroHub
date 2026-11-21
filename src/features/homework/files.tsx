@@ -3,7 +3,7 @@ import { Linking, Platform } from 'react-native';
 import * as Picker from 'expo-document-picker';
 import { uuid } from 'expo';
 import { Body, Button, Card, Field, Heading } from '../../components/ui';
-import { client } from '../../lib/supabase';
+import { client, publicConfig } from '../../lib/supabase';
 import { useLanguage } from '../../locales/provider';
 import {
   homework,
@@ -13,7 +13,6 @@ import {
 } from './api';
 import { Choices, Messages } from './controls';
 export function FileList({ files }: { files: Attachment[] }) {
-  const { t } = useLanguage();
   const action = useHomeworkAction();
   return (
     <>
@@ -32,7 +31,13 @@ export function FileList({ files }: { files: Attachment[] }) {
                 );
                 if (error || typeof data?.url !== 'string')
                   throw Error('File unavailable');
-                await Linking.openURL(data.url);
+                if (Platform.OS === 'web') {
+                  const link = document.createElement('a');
+                  link.href = data.url;
+                  link.download = f.filename;
+                  link.rel = 'noreferrer';
+                  link.click();
+                } else await Linking.openURL(data.url);
               })
             }
           />
@@ -109,18 +114,12 @@ export function FilePanel({
         const xhr = new XMLHttpRequest();
         xhr.open(
           'POST',
-          process.env.EXPO_PUBLIC_SUPABASE_URL +
-            '/functions/v1/homework-files?mode=upload',
+          new URL('/functions/v1/homework-files?mode=upload', publicConfig.url)
+            .href,
         );
         xhr.timeout = 120000;
         xhr.setRequestHeader('Authorization', 'Bearer ' + session.access_token);
-        xhr.setRequestHeader(
-          'apikey',
-          String(
-            process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-              process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-          ),
-        );
+        xhr.setRequestHeader('apikey', publicConfig.key!);
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable)
             setProgress(Math.round((e.loaded / e.total) * 100));
