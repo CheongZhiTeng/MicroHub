@@ -1,0 +1,50 @@
+import { useCallback } from 'react';
+import { client } from '../lib/supabase';
+import { useFocusedQuery } from './focused-query';
+
+export const announcementsUnavailable =
+  'Announcements are awaiting a database update.';
+export const announcementsPageSize = 20;
+
+export type Announcement = {
+  id: string;
+  title: string;
+  body: string | null;
+  published_at: string;
+  group_name: string | null;
+};
+
+type AnnouncementFeed = {
+  items: Announcement[];
+  groups: { id: string; name: string }[];
+  can_publish_club: boolean;
+};
+
+export function useAnnouncements(page = 0, preview = false) {
+  const load = useCallback(async () => {
+    const { data, error } = await client().rpc('announcement_feed', {
+      p_page: page,
+      p_preview: preview,
+    });
+    if (error?.code === 'PGRST202' || error?.code === '42883')
+      throw Error(announcementsUnavailable);
+    if (error) throw error;
+    return data as AnnouncementFeed;
+  }, [page, preview]);
+  return useFocusedQuery(load);
+}
+
+export async function publishAnnouncement(
+  id: string,
+  group: string,
+  title: string,
+  body: string,
+) {
+  const { error } = await client().rpc('announcement_publish', {
+    p_id: id,
+    p_group: group || null,
+    p_title: title,
+    p_body: body,
+  });
+  if (error) throw error;
+}

@@ -162,6 +162,8 @@ async function main() {
             } else if (url.pathname === '/auth/v1/user') body = user;
             else if (url.pathname.endsWith('rpc/hw_summary'))
               body = { todo: 0, next: null, submitted: null, pending: null };
+            else if (url.pathname.endsWith('/rpc/announcement_feed'))
+              body = { items: [], groups: [], can_publish_club: false };
             else if (url.pathname.endsWith('/rpc/hw_inbox'))
               body = {
                 items: [],
@@ -583,7 +585,7 @@ async function main() {
         await click('Back to home');
         for (const [button, heading] of [
           ['Attendance', 'See you at the next meeting'],
-          ['Club announcements', 'A home for club updates'],
+          ['Club announcements', 'No announcements on this page.'],
           ['Your club calendar', 'Good things are on the calendar'],
           [
             'Notifications',

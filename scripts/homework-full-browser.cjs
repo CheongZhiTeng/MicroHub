@@ -71,11 +71,31 @@ module.exports = async function homeworkFull({
     '1',
   );
   await leader.getByLabel('Files per submission (0–10)').fill('2');
+  const publish = leader.getByRole('button', { name: /^Publish to / });
+  let finishSaving;
+  const saveReleased = new Promise((resolve) => {
+    finishSaving = resolve;
+  });
+  await leader.route(
+    '**/rest/v1/rpc/hw_file_settings',
+    async (route) => {
+      await saveReleased;
+      await route.continue();
+    },
+    { times: 1 },
+  );
   await click(leader, 'Save file rules');
-  await see(leader, 'Require files only');
+  try {
+    assert.ok(
+      await publish.isDisabled(),
+      'Publish waits for file rules to save',
+    );
+  } finally {
+    finishSaving();
+  }
   const id = new URL(leader.url()).searchParams.get('id');
   assert.ok(id);
-  await leader.getByRole('button', { name: /^Publish to / }).click();
+  await publish.click();
   await see(leader, 'Submission overview');
   const link = origin + '/assignment/?id=' + id + '&mode=mine';
   await login(phone, learner, link);

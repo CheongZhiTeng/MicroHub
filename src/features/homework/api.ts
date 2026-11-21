@@ -1,6 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
-import { AppState } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { useFocusedQuery } from '../focused-query';
 import { client } from '../../lib/supabase';
 import { errorMessage } from '../../lib/validation';
 import { useBusy } from '../busy';
@@ -215,39 +214,8 @@ type ReadName =
   | 'hw_candidates';
 export function useHomework<K extends ReadName>(name: K, params: Params = {}) {
   const key = JSON.stringify(params);
-  const generation = useRef(0);
-  const [result, setResult] = useState<{
-    key: string;
-    data?: Responses[K];
-    error?: string;
-  }>();
-  const refresh = useCallback(async () => {
-    const current = ++generation.current;
-    try {
-      const data = await homework(name, JSON.parse(key));
-      if (current === generation.current) setResult({ key, data });
-    } catch (e) {
-      if (current === generation.current)
-        setResult({ key, error: errorMessage(e) });
-    }
-  }, [key, name]);
-  useFocusEffect(
-    useCallback(() => {
-      void refresh();
-      const sub = AppState.addEventListener('change', (state) => {
-        if (state === 'active') void refresh();
-      });
-      return () => {
-        generation.current++;
-        sub.remove();
-      };
-    }, [refresh]),
-  );
-  return {
-    data: result?.key === key ? result.data : undefined,
-    error: result?.key === key ? result.error : undefined,
-    refresh,
-  };
+  const load = useCallback(() => homework(name, JSON.parse(key)), [name, key]);
+  return useFocusedQuery(load);
 }
 export function useHomeworkAction() {
   const { start, finish, busy } = useBusy();

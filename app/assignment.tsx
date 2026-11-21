@@ -33,11 +33,13 @@ function DraftPreview({
   action,
   a,
   waitingForFile,
+  fileBusy,
   refresh,
 }: {
   action: ReturnType<typeof useHomeworkAction>;
   a: Assignment;
   waitingForFile: boolean;
+  fileBusy: boolean;
   refresh: () => Promise<void>;
 }) {
   const { t } = useLanguage();
@@ -56,6 +58,7 @@ function DraftPreview({
                 : 'Use one shared group submission',
             )}
             busy={action.busy}
+            disabled={fileBusy}
             onPress={() =>
               action.run(async () => {
                 await homework('hw_work_mode', {
@@ -102,7 +105,7 @@ function DraftPreview({
             (a.group_name || t('Whole club')) +
             (a.audience === 'selected' ? t(' (selected students)') : '')
           }
-          disabled={!audience.data || waitingForFile}
+          disabled={!audience.data || waitingForFile || fileBusy}
           busy={action.busy}
           onPress={() =>
             action.run(async () => {
@@ -121,7 +124,7 @@ function DraftPreview({
         <Schedule
           a={a}
           refresh={refresh}
-          canSchedule={!!audience.data && !waitingForFile}
+          canSchedule={!!audience.data && !waitingForFile && !fileBusy}
         />
       )}
     </>
@@ -138,7 +141,7 @@ function Workspace({
 }) {
   const { t } = useLanguage();
   const action = useHomeworkAction();
-  const [uploading, setUploading] = useState(false);
+  const [fileBusy, setFileBusy] = useState(false);
   const result = useHomework('hw_detail', { p_id: id });
   if (result.data === undefined)
     return <FetchState error={result.error} retry={result.refresh} />;
@@ -166,7 +169,7 @@ function Workspace({
             assignment={a}
             files={(data.files ?? []).filter((f) => f.reference)}
             reference
-            onUploading={setUploading}
+            onBusyChange={setFileBusy}
             editable={manage && a.lifecycle === 'draft'}
             refresh={result.refresh}
           />
@@ -174,8 +177,8 @@ function Workspace({
       {a.lifecycle === 'draft' ? (
         <DraftPreview
           action={action}
+          fileBusy={fileBusy}
           waitingForFile={
-            uploading ||
             !!data.files?.some((f) => f.reference && f.state === 'pending')
           }
           key={'preview-' + a.revision}

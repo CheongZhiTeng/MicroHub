@@ -1,5 +1,20 @@
 // Handwritten Simplified Chinese copy for MicroHub.
 export const zh: Readonly<Record<string, string>> = {
+  'Announcements are awaiting a database update.': '公告将在数据库更新后启用。',
+  'Announcements could not load.': '暂时无法加载公告。',
+  'Loading announcements…': '正在加载公告…',
+  'No announcements yet.': '暂无公告。',
+  'No announcements on this page.': '本页暂无公告。',
+  'New announcement': '新建公告',
+  'Announcement message': '公告内容',
+  'Review announcement': '确认公告内容',
+  'Publish announcement': '发布公告',
+  'Publish this announcement to {audience}?':
+    '将这则公告发布给「{audience}」？',
+  'Announcement published.': '公告已发布。',
+  'Refresh announcements': '刷新公告',
+  'You cannot publish to this audience.': '你没有权限向该范围发布公告。',
+
   Deadline: '截止时间',
   'Feedback and receipt': '反馈与提交回执',
   'Submission receipt': '提交回执',

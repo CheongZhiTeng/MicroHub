@@ -40,6 +40,7 @@ export default function SignIn() {
       typeof value === 'string' &&
       /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
     if (next === 'notifications') return <Redirect href="/notifications" />;
+    if (next === 'announcements') return <Redirect href="/announcements" />;
     if (next === 'groups') return <Redirect href="/groups" />;
     if (next === 'assignment-editor')
       return (

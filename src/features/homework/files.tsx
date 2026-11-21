@@ -197,10 +197,10 @@ export function FilePanel({
   editable,
   refresh,
   embedded = false,
-  onUploading,
+  onBusyChange,
 }: {
   embedded?: boolean;
-  onUploading?: (busy: boolean) => void;
+  onBusyChange?: (busy: boolean) => void;
   assignment: Assignment;
   files: Attachment[];
   reference?: boolean;
@@ -210,6 +210,16 @@ export function FilePanel({
 }) {
   const { t } = useLanguage();
   const action = useHomeworkAction();
+  const [uploading, setUploading] = useState(false);
+  const run = (update: () => Promise<void>) =>
+    action.run(async () => {
+      onBusyChange?.(true);
+      try {
+        await update();
+      } finally {
+        onBusyChange?.(false);
+      }
+    });
   const [settings, setSettings] = useState(false);
   const [limit, setLimit] = useState(String(a.file_limit ?? 0)),
     [mb, setMb] = useState(String((a.file_bytes ?? 5242880) / 1048576)),
@@ -230,10 +240,11 @@ export function FilePanel({
           {files.map((f) => (
             <Button
               variant="ghost"
+              disabled={uploading || action.busy}
               key={f.id}
               title={t('Remove file') + ' · ' + f.filename}
               onPress={() =>
-                action.run(async () => {
+                run(async () => {
                   await homework('hw_file_remove', { p_file: f.id });
                   await refresh();
                 })
@@ -246,7 +257,11 @@ export function FilePanel({
             base={base}
             maxBytes={a.file_bytes}
             refresh={refresh}
-            onBusy={onUploading}
+            disabled={action.busy}
+            onBusy={(busy) => {
+              setUploading(busy);
+              onBusyChange?.(busy);
+            }}
           />
         </>
       )}
@@ -269,8 +284,9 @@ export function FilePanel({
                   : 'Allow text and links too',
               )}
               variant="secondary"
+              disabled={uploading || action.busy}
               onPress={() =>
-                action.run(async () => {
+                run(async () => {
                   await homework('hw_media_only', {
                     p_id: a.id,
                     p_revision: a.revision,
@@ -292,8 +308,9 @@ export function FilePanel({
           <Button
             title={t('Save file rules')}
             busy={action.busy}
+            disabled={uploading}
             onPress={() =>
-              action.run(async () => {
+              run(async () => {
                 if (
                   !/^\d+$/.test(limit) ||
                   Number(limit) > 10 ||

@@ -26,15 +26,6 @@ export const modules = {
     description:
       'The calendar, event registration and recurring meetings will be available after the MVP review. Event listings are not available yet.',
   },
-  announcements: {
-    title: 'Announcements',
-    subtitle: 'Stay close to your club.',
-    icon: 'announcement',
-    phase: 'V1',
-    heading: 'A home for club updates',
-    description:
-      'Publishing announcements, discussions and reactions will be available in V1. There is no announcement feed in this version.',
-  },
   notifications: {
     title: 'Notifications',
     subtitle: 'The updates that matter to you.',

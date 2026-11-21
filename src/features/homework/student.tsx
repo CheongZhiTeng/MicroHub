@@ -36,7 +36,7 @@ export function StudentWork({
   const [preview, setPreview] = useState<(Edit & { request: string }) | null>(
     null,
   );
-  const [uploading, setUploading] = useState(false);
+  const [fileBusy, setFileBusy] = useState(false);
   const [history, setHistory] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -164,7 +164,7 @@ export function StudentWork({
             {!!a.file_limit && (
               <FilePanel
                 embedded
-                onUploading={setUploading}
+                onBusyChange={setFileBusy}
                 assignment={a}
                 base={source.base}
                 files={files}
@@ -247,7 +247,7 @@ export function StudentWork({
                       title={t('Review submission')}
                       disabled={
                         saving ||
-                        uploading ||
+                        fileBusy ||
                         Boolean(local) ||
                         !draft ||
                         files.some((f) => f.state === 'pending') ||

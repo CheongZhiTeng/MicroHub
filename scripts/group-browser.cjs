@@ -110,6 +110,41 @@ module.exports = async function groupBrowser({
     claims.find((r) => r.error).error.message,
     /already assigned|Roster changed/,
   );
+  const posts = origin + '/announcements/';
+  const groupPost = 'Group practice ' + title;
+  const clubPost = 'Club briefing ' + title;
+  await login(tablet, teacher, posts);
+  const publish = async (audience, heading) => {
+    await click(tablet, 'New announcement');
+    await click(tablet, audience);
+    await tablet.getByLabel('Title', { exact: true }).fill(heading);
+    await tablet
+      .getByLabel('Announcement message')
+      .fill('Bring your notes to the meeting.');
+    await click(tablet, 'Review announcement');
+    await see(tablet, 'Publish this announcement to ' + audience + '?');
+    await click(tablet, 'Publish announcement');
+    await see(tablet, heading);
+  };
+  await publish(title, groupPost);
+  await publish('Whole club', clubPost);
+  await login(phone, student, posts);
+  await see(phone, groupPost);
+  await see(phone, clubPost);
+  assert.equal(
+    await phone.getByRole('button', { name: 'New announcement' }).count(),
+    0,
+  );
+  await click(phone, 'Back to home');
+  await see(phone, groupPost);
+  await see(phone, clubPost);
+  const outside = await device(390);
+  await login(outside, other, posts);
+  await see(outside, clubPost);
+  assert.equal(await outside.getByText(groupPost, { exact: true }).count(), 0);
+  console.log(
+    'Announcements passed: tablet publish, phone feed and home preview, and cross-group privacy.',
+  );
   await require('./homework-full-browser.cjs')({
     user,
     device,

@@ -42,10 +42,25 @@ function identity(value: Identity) {
 }
 beforeEach(() => {
   jest.mocked(client).mockReturnValue({
-    rpc: jest.fn().mockResolvedValue({
-      data: { todo: 0, next: null, pending: null, submitted: null },
+    rpc: jest.fn(async (name: string) => ({
+      data:
+        name === 'announcement_feed'
+          ? {
+              items: [
+                {
+                  id: 'post',
+                  title: 'Group practice',
+                  body: null,
+                  group_name: 'Falcons',
+                  published_at: '2026-11-21T00:00:00Z',
+                },
+              ],
+              groups: [],
+              can_publish_club: false,
+            }
+          : { todo: 0, next: null, pending: null, submitted: null },
       error: null,
-    }),
+    })),
   } as unknown as ReturnType<typeof client>);
   identity(member);
   jest.mocked(useSession).mockReturnValue({
@@ -61,6 +76,7 @@ test('home shows actual member identity and routes assignment card without fabri
   await render(<Home />);
   expect(screen.getByText('Welcome back, Alex!')).toBeTruthy();
   expect(screen.getByText('S2')).toBeTruthy();
+  expect(await screen.findByText('Group practice')).toBeTruthy();
   expect(screen.queryByText('56')).toBeNull();
   expect(
     screen.queryByRole('button', { name: 'Review membership applications' }),

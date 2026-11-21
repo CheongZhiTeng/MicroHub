@@ -1,3 +1,7 @@
+import {
+  announcementsUnavailable,
+  useAnnouncements,
+} from '../features/announcements';
 import { profileName } from '../lib/profile-name';
 import { useLanguage } from '../locales/provider';
 import {
@@ -151,6 +155,7 @@ function OverviewLink({
 export function ClubOverview() {
   const { t } = useLanguage();
   const work = useHomework('hw_summary');
+  const announcements = useAnnouncements(0, true);
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
@@ -213,15 +218,32 @@ export function ClubOverview() {
         icon="announcement"
         onPress={() => router.push('/announcements')}
       >
-        <View style={styles.highlight}>
-          <Icon name="announcement" size={20} />
-          <View style={styles.copy}>
-            <Text style={styles.cardSubtitle}>
-              {t('Stay connected to your club')}
-            </Text>
-            <Text style={styles.detail}>{t('Club updates arrive in V1.')}</Text>
-          </View>
-        </View>
+        {announcements.data?.items.length ? (
+          announcements.data.items.map((item) => (
+            <View key={item.id} style={styles.highlight}>
+              <View style={styles.copy}>
+                <Text style={styles.cardSubtitle} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <Text style={styles.detail}>
+                  {item.group_name ?? t('Whole club')}
+                </Text>
+              </View>
+            </View>
+          ))
+        ) : (
+          <Body>
+            {t(
+              announcements.error
+                ? announcements.error === announcementsUnavailable
+                  ? announcementsUnavailable
+                  : 'Announcements could not load.'
+                : announcements.data
+                  ? 'No announcements yet.'
+                  : 'Loading announcements…',
+            )}
+          </Body>
+        )}
       </OverviewLink>
       <OverviewLink
         label={t('Your club calendar')}
