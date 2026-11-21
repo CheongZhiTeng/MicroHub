@@ -121,7 +121,10 @@ async function run() {
     return page;
   }
   const click = (p, name) =>
-    p.getByRole('button', { name, exact: true }).click();
+    p
+      .getByRole('button', { name, exact: true })
+      .or(p.getByRole('radio', { name, exact: true }))
+      .click();
   const see = (p, text) => p.getByText(text, { exact: true }).first().waitFor();
   async function login(p, account, url = origin + '/') {
     await p.goto(url);

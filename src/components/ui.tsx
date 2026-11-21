@@ -112,11 +112,6 @@ export function Screen({
                 ]}
               >
                 <View style={styles.heroCopy}>
-                  <Text style={styles.eyebrow}>
-                    {auth
-                      ? t('YOUR NEXT CHAPTER STARTS HERE')
-                      : t('LEARN. CONNECT. BELONG.')}
-                  </Text>
                   <Text
                     accessibilityRole="header"
                     style={[
@@ -388,7 +383,8 @@ export function Button({
         style={[
           styles.buttonText,
           variant === 'danger' && { color: theme.color.error },
-          (secondary || quiet) && { color: theme.color.primary },
+          secondary && { color: theme.color.text },
+          quiet && { color: theme.color.primaryDark },
         ]}
       >
         {busy ? t('Please wait…') : title}
@@ -667,13 +663,6 @@ const makeStyles = (theme: Theme) =>
     dashboardHero: { backgroundColor: theme.color.subtle },
     heroCopy: { flex: 1, minWidth: 0, gap: 8 },
     campus: { width: 96, alignItems: 'center', justifyContent: 'center' },
-    eyebrow: {
-      fontFamily: theme.font,
-      fontSize: 12,
-      letterSpacing: 0.7,
-      fontWeight: '800',
-      color: theme.color.primaryDark,
-    },
     title: {
       fontFamily: theme.font,
       fontSize: theme.type.title,
@@ -762,13 +751,17 @@ const makeStyles = (theme: Theme) =>
       flexDirection: 'row',
       gap: 8,
       borderRadius: theme.radii.control,
-      paddingVertical: 12,
+      paddingVertical: 10,
       paddingHorizontal: 16,
       backgroundColor: theme.color.primary,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    secondary: { backgroundColor: theme.color.subtle },
+    secondary: {
+      backgroundColor: theme.color.surface,
+      borderWidth: 1,
+      borderColor: theme.color.border,
+    },
     quiet: {
       backgroundColor: 'transparent',
       minHeight: 44,

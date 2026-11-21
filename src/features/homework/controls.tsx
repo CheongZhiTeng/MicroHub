@@ -1,6 +1,8 @@
+import { MotionPressable } from '../../components/motion';
+import { useTheme } from '../../theme/provider';
 import { useLanguage } from '../../locales/provider';
 import { useState } from 'react';
-import { Linking, View } from 'react-native';
+import { Linking, View, Text } from 'react-native';
 import {
   Button,
   Body,
@@ -21,18 +23,61 @@ export function Choices({
   onChange: (id: string) => void;
   disabled?: boolean;
 }) {
+  const { theme } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-      {items.map(([id, label]) => (
-        <Button
-          key={id}
-          title={label}
-          variant={value === id ? 'primary' : 'secondary'}
-          icon={value === id ? 'check' : undefined}
-          disabled={disabled}
-          onPress={() => onChange(id)}
-        />
-      ))}
+    <View
+      accessibilityRole="radiogroup"
+      style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}
+    >
+      {items.map(([id, label]) => {
+        const checked = value === id;
+        return (
+          <MotionPressable
+            key={id}
+            accessibilityRole="radio"
+            accessibilityLabel={label}
+            accessibilityState={{ checked, disabled }}
+            disabled={disabled}
+            onPress={() => onChange(id)}
+            style={({ pressed, hovered }) => ({
+              minHeight: 44,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: theme.radii.sm,
+              borderWidth: 1,
+              borderColor: checked ? theme.color.primary : theme.color.border,
+              backgroundColor:
+                checked || hovered ? theme.color.subtle : theme.color.surface,
+              opacity: disabled || pressed ? 0.7 : 1,
+              maxWidth: '100%',
+            })}
+          >
+            <View
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: 8,
+                borderWidth: checked ? 5 : 1.5,
+                borderColor: checked ? theme.color.primary : theme.color.muted,
+              }}
+            />
+            <Text
+              style={{
+                fontFamily: theme.font,
+                color: checked ? theme.color.primaryDark : theme.color.text,
+                fontSize: 14,
+                fontWeight: checked ? '700' : '500',
+                flexShrink: 1,
+              }}
+            >
+              {label}
+            </Text>
+          </MotionPressable>
+        );
+      })}
     </View>
   );
 }

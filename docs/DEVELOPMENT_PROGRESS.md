@@ -252,3 +252,7 @@ Implemented on `codex/modern-campus-v2` from `536cb51`, pending user visual acce
 The user has reported successful hosted verification-email delivery, login and first Super Admin bootstrap. Those are user-reported checks; this environment's browser tests still use fixtures. Ordinary-member real-device acceptance and full hosted end-to-end testing remain pending.
 
 Validation for this branch: TypeScript/ESLint/formatting, 77 application tests, 14 PostgreSQL authorization scenarios, all three platform exports, and 150 browser screen checks across five widths and light/dark appearance passed. Browser flows use isolated fixtures. Live theme switching, unsaved form retention across breakpoints, and keyboard confirmation behavior are included. Rendered screenshots and reproduction steps are linked in the v2 design document.
+
+### Campus homework controls · codex/campus-homework-ui
+
+Shared secondary actions use a quiet outline. Homework filters and single-choice fields expose a checked radio state in both themes. Existing motion, focus rings and 44-point targets remain active. Removed the decorative slogan above page titles. TypeScript and 10 focused UI/regression tests passed. Captured the previous editor at 390, 820 and 1280 pixels. Editor, student flow, grading, full checks and Pages verification follow. No database migration.
