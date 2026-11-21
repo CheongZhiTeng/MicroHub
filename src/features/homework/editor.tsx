@@ -216,7 +216,7 @@ export function AssignmentEditor({
       });
     });
   const scopeName =
-    scopes.find((scope) => scope.id === groupId)?.name || t('Whole club');
+    scopes.find((scope) => scope.id === groupId)?.name || t('Big class');
   return (
     <View
       style={{
@@ -231,7 +231,7 @@ export function AssignmentEditor({
           {scopes.length > 0 && (
             <Choices
               items={[
-                ...(club ? [['', t('Whole club')] as const] : []),
+                ...(club ? [['', t('Big class')] as const] : []),
                 ...scopes.map((s) => [s.id, s.name] as const),
               ]}
               value={groupId}

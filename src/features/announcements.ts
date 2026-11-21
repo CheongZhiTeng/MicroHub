@@ -20,17 +20,21 @@ type AnnouncementFeed = {
   can_publish_club: boolean;
 };
 
-export function useAnnouncements(page = 0, preview = false) {
+export function useAnnouncements(page = 0, preview = false, scope = 'all') {
   const load = useCallback(async () => {
-    const { data, error } = await client().rpc('announcement_feed', {
-      p_page: page,
-      p_preview: preview,
-    });
+    const { data, error } = await client().rpc(
+      scope === 'all' ? 'announcement_feed' : 'class_announcements',
+      {
+        ...(scope === 'all' ? {} : { p_scope: scope }),
+        p_page: page,
+        p_preview: preview,
+      },
+    );
     if (error?.code === 'PGRST202' || error?.code === '42883')
       throw Error(announcementsUnavailable);
     if (error) throw error;
     return data as AnnouncementFeed;
-  }, [page, preview]);
+  }, [page, preview, scope]);
   return useFocusedQuery(load);
 }
 

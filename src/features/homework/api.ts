@@ -173,6 +173,8 @@ type Responses = {
   hw_maintain: null;
   hw_exception: null;
   hw_list: Item[];
+  class_homework_list: Item[];
+  class_homework_summary: Summary;
   hw_detail: Detail | null;
   hw_roster: Recipient[];
   hw_summary: Summary;
@@ -208,6 +210,8 @@ type ReadName =
   | 'hw_scopes'
   | 'hw_group_candidates'
   | 'hw_list'
+  | 'class_homework_list'
+  | 'class_homework_summary'
   | 'hw_detail'
   | 'hw_roster'
   | 'hw_summary'

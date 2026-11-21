@@ -42,6 +42,15 @@ test('group homework uses scoped duties, immutable history and a private self-re
   await call(alice, 'hw_publish($1,1)', [id]);
   assert.equal(await call(admin, 'hw_detail($1)', [id]), null);
   assert.equal(await call(outsider, 'hw_detail($1)', [id]), null);
+  const todo = (who, scope) =>
+    call(who, "class_homework_list(false,'todo','',0,$1)", [scope]);
+  assert.deepEqual(
+    (await todo(bob, 'mine')).map((row) => row.id),
+    [id],
+  );
+  assert.deepEqual(await todo(bob, 'big'), []);
+  assert.deepEqual(await todo(outsider, 'all'), []);
+  assert.equal((await call(bob, "class_homework_summary('mine')")).todo, 1);
   const submit = async (user) => {
     await call(user, "hw_save_draft($1,0,0,'sample','')", [id]);
     return (

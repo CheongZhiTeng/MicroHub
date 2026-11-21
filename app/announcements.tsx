@@ -12,6 +12,7 @@ import {
   Screen,
   SectionTitle,
 } from '../src/components/ui';
+import { ClassScope } from '../src/features/class-scope';
 import { Access } from '../src/features/access';
 import {
   announcementsPageSize,
@@ -126,20 +127,43 @@ function Compose({
   );
 }
 function Feed() {
+  const [scope, setScope] = useState('all');
   const { t } = useLanguage();
   const [page, setPage] = useState(0);
   const [compose, setCompose] = useState(false);
   const [published, setPublished] = useState(false);
-  const feed = useAnnouncements(page);
-  if (!feed.data) return <FetchState error={feed.error} retry={feed.refresh} />;
+  const feed = useAnnouncements(page, false, scope);
+  if (!feed.data)
+    return (
+      <>
+        <ClassScope
+          value={scope}
+          change={(s) => {
+            setScope(s);
+            setPage(0);
+          }}
+        />
+        <FetchState error={feed.error} retry={feed.refresh} />
+      </>
+    );
   const { items, groups, can_publish_club } = feed.data;
   const audiences: [string, string][] = groups.map(({ id, name }) => [
     id,
     name,
   ]);
-  if (can_publish_club) audiences.unshift(['', t('Whole club')]);
+  if (can_publish_club) audiences.unshift(['', t('Big class')]);
   return (
     <>
+      {!compose && (
+        <ClassScope
+          value={scope}
+          change={(s) => {
+            setScope(s);
+            setPage(0);
+          }}
+          groups={groups}
+        />
+      )}
       {published && <Notice text={t('Announcement published.')} />}
       {audiences.length > 0 &&
         (compose ? (
@@ -170,7 +194,7 @@ function Feed() {
       )}
       {items.slice(0, announcementsPageSize).map((item) => (
         <Card key={item.id}>
-          <Badge label={item.group_name ?? t('Whole club')} />
+          <Badge label={item.group_name ?? t('Big class')} />
           <Heading>{item.title}</Heading>
           <Body>{item.body}</Body>
           <Body>{dueLabel(item.published_at)}</Body>

@@ -12,8 +12,11 @@ assert(
   api && ['localhost', '127.0.0.1'].includes(new URL(api).hostname),
   'Use a disposable loopback Supabase stack.',
 );
-if (process.env.HOMEWORK_FILES_URL) {
-  const endpoint = new URL(process.env.HOMEWORK_FILES_URL);
+for (const url of [
+  process.env.HOMEWORK_FILES_URL,
+  process.env.DELETE_GROUP_URL,
+].filter(Boolean)) {
+  const endpoint = new URL(url);
   assert(
     ['localhost', '127.0.0.1'].includes(endpoint.hostname) &&
       ['http:', 'https:'].includes(endpoint.protocol),
@@ -100,7 +103,10 @@ async function run() {
               process.env.HOMEWORK_FILES_URL &&
               url.pathname === '/functions/v1/homework-files'
                 ? process.env.HOMEWORK_FILES_URL + url.search
-                : api + url.pathname + url.search,
+                : process.env.DELETE_GROUP_URL &&
+                    url.pathname === '/functions/v1/delete-group'
+                  ? process.env.DELETE_GROUP_URL
+                  : api + url.pathname + url.search,
           });
           await route.fulfill({ response });
         } catch (e) {
@@ -201,7 +207,7 @@ async function run() {
     await login(phone, alice, link);
     await see(phone, 'This assignment is unavailable to your account.');
     const publish = staff.getByRole('button', {
-      name: 'Publish to Whole club (selected students)',
+      name: 'Publish to Big class (selected students)',
       exact: true,
     });
     await publish.focus();

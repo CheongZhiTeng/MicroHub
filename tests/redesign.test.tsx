@@ -58,7 +58,9 @@ beforeEach(() => {
               groups: [],
               can_publish_club: false,
             }
-          : { todo: 0, next: null, pending: null, submitted: null },
+          : name === 'hw_summary'
+            ? { todo: 0, next: null, pending: null, submitted: null }
+            : [],
       error: null,
     })),
   } as unknown as ReturnType<typeof client>);

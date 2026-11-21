@@ -19,16 +19,18 @@ export default function TabsLayout() {
         <Loading />
       </Screen>
     );
-  if (!session)
+  if (!session) {
+    const tab = pathname.split('/').filter(Boolean).at(-1);
     return (
       <Redirect
         href={
-          pathname.replace(/\/$/, '').endsWith('/homework')
-            ? { pathname: '/sign-in', params: { next: 'homework' } }
+          tab === 'homework' || tab === 'events'
+            ? { pathname: '/sign-in', params: { next: tab } }
             : '/sign-in'
         }
       />
     );
+  }
   if (recovery) return <Redirect href="/recover" />;
   return (
     <Tabs

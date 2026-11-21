@@ -73,7 +73,7 @@ function DraftPreview({
         )}
         <Body>
           {[
-            a.group_name || t('Whole club'),
+            a.group_name || t('Big class'),
             typeof audience.data === 'number'
               ? audience.data +
                 t(audience.data === 1 ? ' student' : ' students')
@@ -102,7 +102,7 @@ function DraftPreview({
         <Button
           title={
             t('Publish to ') +
-            (a.group_name || t('Whole club')) +
+            (a.group_name || t('Big class')) +
             (a.audience === 'selected' ? t(' (selected students)') : '')
           }
           disabled={!audience.data || waitingForFile || fileBusy}

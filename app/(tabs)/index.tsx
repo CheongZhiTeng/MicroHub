@@ -121,7 +121,7 @@ export default function Home() {
               </Card>
             ) : (
               <>
-                <ClubOverview />
+                <ClubOverview teach={identity.role === 'super_admin'} />
                 <Card>
                   <Heading>{t('Your community')}</Heading>
                   <NavigationRow

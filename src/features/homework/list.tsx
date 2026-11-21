@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Body, Button, Card, Field, NavigationRow } from '../../components/ui';
 import { type Identity } from '../identity';
 import { useHomework, dueLabel, pageSize } from './api';
+import { ClassScope } from '../class-scope';
 import { Choices, FetchState, Paging } from './controls';
 
 export function AssignmentList({
@@ -23,12 +24,17 @@ export function AssignmentList({
   );
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
-  const rows = useHomework('hw_list', {
-    p_staff: staff,
-    p_filter: filter,
-    p_search: search.trim(),
-    p_page: page,
-  });
+  const [scope, setScope] = useState('all');
+  const rows = useHomework(
+    scope === 'all' ? 'hw_list' : 'class_homework_list',
+    {
+      ...(scope === 'all' ? {} : { p_scope: scope }),
+      p_staff: staff,
+      p_filter: filter,
+      p_search: search.trim(),
+      p_page: page,
+    },
+  );
   const change = (filter: string) => {
     setFilter(filter);
     setPage(0);
@@ -57,6 +63,14 @@ export function AssignmentList({
             onPress={() => router.push('/assignment-editor')}
           />
         )}
+        <ClassScope
+          value={scope}
+          change={(s) => {
+            setScope(s);
+            setPage(0);
+          }}
+          groups={identity.role === 'super_admin' ? scopes.data : []}
+        />
         <Field
           label={t('Search assignments')}
           value={search}
@@ -121,7 +135,8 @@ export function AssignmentList({
                 icon="homework"
                 title={row.title}
                 subtitle={
-                  (row.group_name ? row.group_name + ' · ' : '') +
+                  (row.group_name ?? t('Big class')) +
+                  ' · ' +
                   t('Due ') +
                   dueLabel(row.due_at) +
                   ' · ' +

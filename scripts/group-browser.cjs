@@ -31,10 +31,13 @@ module.exports = async function groupBrowser({
   const search = (p, q) => p.getByLabel('Search name or student ID').fill(q);
   await search(desk, teacher.studentId);
   await click(desk, 'Group tutor · ' + teacher.studentId);
-  await click(desk, 'Appoint teacher');
+  await click(desk, 'Appoint teach');
   await click(desk, 'Confirm change');
-  await see(desk, 'Group tutor · ' + teacher.studentId + ' · Group teacher');
+  await see(desk, 'Group tutor · ' + teacher.studentId + ' · Group teach');
   await login(tablet, teacher, url);
+  await tablet.getByText('Create group', { exact: true }).first().waitFor();
+  if (await tablet.getByRole('button', { name: title, exact: true }).count())
+    await click(tablet, title);
   await search(tablet, student.studentId);
   await click(tablet, 'Group student · ' + student.studentId);
   await click(tablet, 'Assign student');
@@ -74,7 +77,7 @@ module.exports = async function groupBrowser({
   const [coord, a, b] = await Promise.all([root, teacher, other].map(session));
   const workspace = await a.rpc('group_workspace');
   assert.ifError(workspace.error);
-  const first = workspace.data.groups[0];
+  const first = workspace.data.groups.find((g) => g.name === title);
   const second = await coord.rpc('group_change', {
     p_action: 'create',
     p_name: title + ' B',
@@ -85,7 +88,7 @@ module.exports = async function groupBrowser({
   assert.ifError(
     (
       await coord.rpc('group_change', {
-        p_action: 'teacher',
+        p_action: 'appoint_teach',
         p_group: second.data,
         p_revision: 1,
         p_person: other.id,
@@ -108,7 +111,7 @@ module.exports = async function groupBrowser({
   assert.equal(claims.filter((r) => !r.error).length, 1);
   assert.match(
     claims.find((r) => r.error).error.message,
-    /already assigned|Roster changed/,
+    /current group first|Roster changed/,
   );
   const posts = origin + '/announcements/';
   const groupPost = 'Group practice ' + title;
@@ -127,7 +130,7 @@ module.exports = async function groupBrowser({
     await see(tablet, heading);
   };
   await publish(title, groupPost);
-  await publish('Whole club', clubPost);
+  await publish('Big class', clubPost);
   await login(phone, student, posts);
   await see(phone, groupPost);
   await see(phone, clubPost);
@@ -139,7 +142,7 @@ module.exports = async function groupBrowser({
   await see(phone, groupPost);
   await see(phone, clubPost);
   const outside = await device(390);
-  await login(outside, other, posts);
+  await login(outside, await user('Outside student', 'member'), posts);
   await see(outside, clubPost);
   assert.equal(await outside.getByText(groupPost, { exact: true }).count(), 0);
   console.log(
@@ -158,6 +161,53 @@ module.exports = async function groupBrowser({
     group: first.id,
     a,
   });
+  const eventsUrl = origin + '/events/';
+  await login(tablet, teacher, eventsUrl);
+  await click(tablet, 'New event');
+  await click(tablet, title);
+  const eventTitle = 'Workshop ' + title;
+  await tablet.getByLabel('Title', { exact: true }).fill(eventTitle);
+  await click(tablet, 'Save event');
+  await see(tablet, eventTitle);
+  await login(phone, student, eventsUrl);
+  await click(phone, 'My group');
+  await see(phone, eventTitle);
+  await click(phone, 'Big class');
+  await see(phone, 'No events in this view.');
+  if (process.env.DELETE_GROUP_URL) {
+    await login(tablet, teacher, url);
+    await tablet.getByLabel('Group name', { exact: true }).waitFor();
+    await click(tablet, title);
+    const remove = async (value) => {
+      await click(tablet, 'Delete group');
+      await tablet
+        .getByLabel('Your current password', { exact: true })
+        .fill(value);
+      await click(tablet, 'Confirm deletion');
+    };
+    await remove('Incorrect-Pass-12345');
+    await see(tablet, 'Password confirmation failed');
+    const [deleted] = await Promise.all([
+      tablet.waitForResponse(
+        (response) =>
+          response.url().endsWith('/functions/v1/delete-group') &&
+          response.request().method() === 'POST',
+      ),
+      remove(password),
+    ]);
+    assert.equal(deleted.status(), 200);
+    await see(tablet, 'Show archived groups');
+    const result = await a.rpc('group_workspace');
+    assert.ifError(result.error);
+    assert.equal(
+      result.data.groups.find((g) => g.id === first.id).state,
+      'archived',
+    );
+    assert.equal(
+      result.data.candidates.find((p) => p.id === student.id).group_id,
+      null,
+    );
+  }
   console.log(
     'Groups passed: desktop coordinator, tablet teacher, phone leader, login return and simultaneous placement.',
   );

@@ -586,7 +586,7 @@ async function main() {
         for (const [button, heading] of [
           ['Attendance', 'See you at the next meeting'],
           ['Club announcements', 'No announcements on this page.'],
-          ['Your club calendar', 'Good things are on the calendar'],
+          ['Your club calendar', 'Club events'],
           [
             'Notifications',
             legacyProfile

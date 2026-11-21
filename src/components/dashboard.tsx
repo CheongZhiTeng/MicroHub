@@ -2,6 +2,8 @@ import {
   announcementsUnavailable,
   useAnnouncements,
 } from '../features/announcements';
+import { useState } from 'react';
+import { ClassScope, useEvents } from '../features/class-scope';
 import { profileName } from '../lib/profile-name';
 import { useLanguage } from '../locales/provider';
 import {
@@ -74,7 +76,7 @@ export function IdentityStats({ identity }: { identity: Identity }) {
       icon: 'members' as const,
       value:
         identity.role === 'super_admin'
-          ? t('Super admin')
+          ? t('teach')
           : identity.role === 'admin'
             ? t('Admin')
             : t('Member'),
@@ -152,120 +154,141 @@ function OverviewLink({
     </MotionPressable>
   );
 }
-export function ClubOverview() {
+export function ClubOverview({ teach = false }: { teach?: boolean }) {
+  const [scope, setScope] = useState('all');
+  const groups = useHomework('hw_scopes');
+  const events = useEvents(scope, '', 0, true);
   const { t } = useLanguage();
-  const work = useHomework('hw_summary');
-  const announcements = useAnnouncements(0, true);
+  const work = useHomework(
+    scope === 'all' ? 'hw_summary' : 'class_homework_summary',
+    scope === 'all' ? {} : { p_scope: scope },
+  );
+  const announcements = useAnnouncements(0, true, scope);
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   return (
-    <ContentGrid>
-      <OverviewLink
-        label={t('Assignment workspace')}
-        title={t('Your assignments')}
-        icon="homework"
-        onPress={() => router.push('/(tabs)/homework')}
-      >
-        <View style={styles.assignment}>
-          <View style={styles.copy}>
-            <Text style={styles.cardSubtitle}>
-              {work.error
-                ? t(
-                    work.error === homeworkUnavailable
-                      ? homeworkUnavailable
-                      : 'Assignments could not load',
-                  )
-                : !work.data
-                  ? t('Loading assignments…')
-                  : (work.data.next?.title ?? t('You’re all caught up'))}
-            </Text>
-            {work.data && (
-              <Body>
-                {work.data.todo}
-                {t(' to do                ')}
-                {work.data.next
-                  ? t(' · Due ') + dueLabel(work.data.next.due_at)
-                  : ''}
-              </Body>
-            )}
-            {work.data?.pending != null && (
-              <Body>
-                {work.data.submitted}
-                {t(' submitted · ')}
-                {work.data.pending}
-                {t(' awaiting review              ')}
-              </Body>
-            )}
-          </View>
-          <StudyArt />
-        </View>
-      </OverviewLink>
-      <OverviewLink
-        label={t('Attendance')}
-        title={t('Attendance check-in')}
-        icon="attendance"
-        onPress={() => router.push('/(tabs)/attendance')}
-      >
-        <Body>
-          {t(
-            'Secure check-in is coming in MVP. Attendance is not collected yet.        ',
-          )}
-        </Body>
-      </OverviewLink>
-      <OverviewLink
-        label={t('Club announcements')}
-        title={t('Announcements')}
-        icon="announcement"
-        onPress={() => router.push('/announcements')}
-      >
-        {announcements.data?.items.length ? (
-          announcements.data.items.map((item) => (
-            <View key={item.id} style={styles.highlight}>
-              <View style={styles.copy}>
-                <Text style={styles.cardSubtitle} numberOfLines={2}>
-                  {item.title}
-                </Text>
-                <Text style={styles.detail}>
-                  {item.group_name ?? t('Whole club')}
-                </Text>
-              </View>
+    <>
+      <ClassScope
+        value={scope}
+        change={setScope}
+        groups={teach ? groups.data : []}
+      />
+      <ContentGrid>
+        <OverviewLink
+          label={t('Assignment workspace')}
+          title={t('Your assignments')}
+          icon="homework"
+          onPress={() => router.push('/(tabs)/homework')}
+        >
+          <View style={styles.assignment}>
+            <View style={styles.copy}>
+              <Text style={styles.cardSubtitle}>
+                {work.error
+                  ? t(
+                      work.error === homeworkUnavailable
+                        ? homeworkUnavailable
+                        : 'Assignments could not load',
+                    )
+                  : !work.data
+                    ? t('Loading assignments…')
+                    : (work.data.next?.title ?? t('You’re all caught up'))}
+              </Text>
+              {work.data && (
+                <Body>
+                  {work.data.todo}
+                  {t(' to do                ')}
+                  {work.data.next
+                    ? t(' · Due ') + dueLabel(work.data.next.due_at)
+                    : ''}
+                </Body>
+              )}
+              {work.data?.pending != null && (
+                <Body>
+                  {work.data.submitted}
+                  {t(' submitted · ')}
+                  {work.data.pending}
+                  {t(' awaiting review              ')}
+                </Body>
+              )}
             </View>
-          ))
-        ) : (
+            <StudyArt />
+          </View>
+        </OverviewLink>
+        <OverviewLink
+          label={t('Attendance')}
+          title={t('Attendance check-in')}
+          icon="attendance"
+          onPress={() => router.push('/(tabs)/attendance')}
+        >
           <Body>
             {t(
-              announcements.error
-                ? announcements.error === announcementsUnavailable
-                  ? announcementsUnavailable
-                  : 'Announcements could not load.'
-                : announcements.data
-                  ? 'No announcements yet.'
-                  : 'Loading announcements…',
+              'Secure check-in is coming in MVP. Attendance is not collected yet.        ',
             )}
           </Body>
-        )}
-      </OverviewLink>
-      <OverviewLink
-        label={t('Your club calendar')}
-        title={t('Upcoming club events')}
-        icon="calendar"
-        onPress={() => router.push('/(tabs)/events')}
-      >
-        <View style={styles.eventRow}>
-          <View style={styles.eventIcon}>
-            <Icon name="calendar" />
-          </View>
-          <View style={styles.copy}>
-            <Text style={styles.cardSubtitle}>
-              {t('Make time for your community            ')}
-            </Text>
-            <Text style={styles.detail}>
-              {t('Calendar and registration arrive in V1.            ')}
-            </Text>
-          </View>
-        </View>
-      </OverviewLink>
-    </ContentGrid>
+        </OverviewLink>
+        <OverviewLink
+          label={t('Club announcements')}
+          title={t('Announcements')}
+          icon="announcement"
+          onPress={() => router.push('/announcements')}
+        >
+          {announcements.data?.items.length ? (
+            announcements.data.items.map((item) => (
+              <View key={item.id} style={styles.highlight}>
+                <View style={styles.copy}>
+                  <Text style={styles.cardSubtitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={styles.detail}>
+                    {item.group_name ?? t('Big class')}
+                  </Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Body>
+              {t(
+                announcements.error
+                  ? announcements.error === announcementsUnavailable
+                    ? announcementsUnavailable
+                    : 'Announcements could not load.'
+                  : announcements.data
+                    ? 'No announcements yet.'
+                    : 'Loading announcements…',
+              )}
+            </Body>
+          )}
+        </OverviewLink>
+        <OverviewLink
+          label={t('Your club calendar')}
+          title={t('Upcoming club events')}
+          icon="calendar"
+          onPress={() => router.push('/(tabs)/events')}
+        >
+          {events.data?.length ? (
+            events.data.map((e) => (
+              <View key={e.id} style={styles.highlight}>
+                <View style={styles.copy}>
+                  <Text style={styles.cardSubtitle}>{e.title}</Text>
+                  <Body>
+                    {(e.group_name ?? t('Big class')) +
+                      ' · ' +
+                      dueLabel(e.starts_at)}
+                  </Body>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Body>
+              {t(
+                events.error ??
+                  (events.data ? 'No events in this view.' : 'Loading events…'),
+              )}
+            </Body>
+          )}
+        </OverviewLink>
+      </ContentGrid>
+    </>
   );
 }
 const makeStyles = (theme: Theme) =>
