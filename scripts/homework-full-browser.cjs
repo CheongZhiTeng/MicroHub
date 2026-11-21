@@ -52,7 +52,9 @@ module.exports = async function homeworkFull({
   const title = 'Team lab ' + Date.now();
   await leader.getByLabel('Title', { exact: true }).fill(title);
   await leader.getByLabel('Deadline (Malaysia time)').fill('2030-10-04 12:00');
+  await click(leader, 'Submission settings');
   await leader.getByLabel('Maximum points', { exact: true }).fill('10');
+  await leader.getByLabel('Files per submission (0–10)').fill('1');
   await click(leader, 'Save draft and preview');
   await see(leader, 'Student preview');
   await leader
@@ -64,6 +66,10 @@ module.exports = async function homeworkFull({
   await click(leader, 'Use one shared group submission');
   await see(leader, 'Switch to individual submissions');
   await click(leader, 'Student file settings');
+  assert.equal(
+    await leader.getByLabel('Files per submission (0–10)').inputValue(),
+    '1',
+  );
   await leader.getByLabel('Files per submission (0–10)').fill('2');
   await click(leader, 'Save file rules');
   await see(leader, 'Require files only');

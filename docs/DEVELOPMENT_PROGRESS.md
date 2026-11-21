@@ -1,5 +1,11 @@
 # Development progress
 
+## Responsive homework workspace · 2026-11-21
+
+Branch `codex/campus-homework-ui`, following shared-control checkpoint `7227a2a`. The teacher editor saves a private draft when attaching a reference, keeps subsequent edits in place and preserves revision checks. Desktop has a live summary alongside the form. Deadline, points, upload limits and late rules feed the same preview. Publication and scheduling wait for pending reference files. Students see their status, instructions, own work and latest receipt in order, with earlier submissions available on demand. Grading opens on awaiting review, with a split desktop roster and a return to the same mobile list. Choices support keyboard navigation and checked-state announcements; common actions retain touch targets, language switching and reduced motion.
+
+Verification on the local Supabase stack covered desktop-to-phone handoff, uploading a real reference before preview, editing after upload, private draft/feedback, conflicting edits, returning and revising, group submissions, private downloads, and the file limit set in the editor. Compared 390, 820 and 1280 pixel screenshots against the preceding build. TypeScript, lint, formatting, all 110 automated checks and iOS/Android/web exports passed. The visual fixture for the notification inbox now uses the current RPC response and heading. Publish this commit to main and Pages, then check the live commit marker. Physical devices and the production audience migration `202611210002` remain unverified. This release introduces no migrations.
+
 ## Teacher authoring and release verification · 2026-11-21
 
 Audience selection comes first, with separate reference uploads, collapsed submission rules and a bilingual recipient count before publication. Browsers at desktop and phone widths uploaded reference PDFs and published individual/selected and group assignments against local Auth, PostgreSQL, Edge and private Storage. All 110 automated tests passed, including an upgrade from the old schema with a previously graded teacher submission. Android, iOS and web exports succeeded. Production needs only migration `202611210002`; the existing homework-files deployment is sufficient.
@@ -252,7 +258,3 @@ Implemented on `codex/modern-campus-v2` from `536cb51`, pending user visual acce
 The user has reported successful hosted verification-email delivery, login and first Super Admin bootstrap. Those are user-reported checks; this environment's browser tests still use fixtures. Ordinary-member real-device acceptance and full hosted end-to-end testing remain pending.
 
 Validation for this branch: TypeScript/ESLint/formatting, 77 application tests, 14 PostgreSQL authorization scenarios, all three platform exports, and 150 browser screen checks across five widths and light/dark appearance passed. Browser flows use isolated fixtures. Live theme switching, unsaved form retention across breakpoints, and keyboard confirmation behavior are included. Rendered screenshots and reproduction steps are linked in the v2 design document.
-
-### Campus homework controls · codex/campus-homework-ui
-
-Shared secondary actions use a quiet outline. Homework filters and single-choice fields expose a checked radio state in both themes. Existing motion, focus rings and 44-point targets remain active. Removed the decorative slogan above page titles. TypeScript and 10 focused UI/regression tests passed. Captured the previous editor at 390, 820 and 1280 pixels. Editor, student flow, grading, full checks and Pages verification follow. No database migration.

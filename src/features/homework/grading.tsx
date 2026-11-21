@@ -1,6 +1,6 @@
 import { useLanguage } from '../../locales/provider';
 import { useState, useRef } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View, ScrollView, useWindowDimensions } from 'react-native';
 import { uuid } from 'expo';
 import {
   Button,
@@ -312,12 +312,15 @@ export function Grading({
   refresh: () => Promise<void>;
 }) {
   const { t } = useLanguage();
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('pending');
+  const [explain, setExplain] = useState(false);
+  const scroll = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const offset = useRef(0);
   const [sort, setSort] = useState('student');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [member, setMember] = useState('');
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const roster = useHomework('hw_roster', {
     p_id: data.assignment.id,
     p_filter: filter,
@@ -325,6 +328,11 @@ export function Grading({
     p_search: search.trim(),
     p_page: page,
   });
+  const goToPage = (next: number) => {
+    offset.current = 0;
+    scroll.current?.scrollTo({ y: 0, animated: false });
+    setPage(next);
+  };
   const counts = data.counts;
   return (
     <>
@@ -350,11 +358,20 @@ export function Grading({
             {t(' awaiting review          ')}
           </Body>
         )}
-        <Body>
-          {t(
-            'Counts use the published roster. Submitted includes late work. Awaiting review counts each latest submission awaiting feedback, excluding open revision requests and excused members.        ',
+        <Button
+          variant="ghost"
+          title={t(
+            explain ? 'Hide calculation details' : 'How counts are calculated',
           )}
-        </Body>
+          onPress={() => setExplain(!explain)}
+        />
+        {explain && (
+          <Body>
+            {t(
+              'Counts use the published roster. Submitted includes late work. Awaiting review counts each latest submission awaiting feedback, excluding open revision requests and excused members.        ',
+            )}
+          </Body>
+        )}
       </Card>
       <View
         style={{
@@ -372,7 +389,7 @@ export function Grading({
                 value={search}
                 onChangeText={(s) => {
                   setSearch(s);
-                  setPage(0);
+                  goToPage(0);
                 }}
               />
               <Choices
@@ -389,7 +406,7 @@ export function Grading({
                 value={filter}
                 onChange={(f) => {
                   setFilter(f);
-                  setPage(0);
+                  goToPage(0);
                 }}
               />
               <Body>{t('Sort recipients')}</Body>
@@ -402,7 +419,7 @@ export function Grading({
                 value={sort}
                 onChange={(value) => {
                   setSort(value);
-                  setPage(0);
+                  goToPage(0);
                 }}
               />
               <Button
@@ -420,26 +437,46 @@ export function Grading({
                   {roster.data.length === 0 && (
                     <Body>{t('No matching recipients.')}</Body>
                   )}
-                  {roster.data.slice(0, pageSize).map((r) => (
-                    <NavigationRow
-                      key={r.member_id}
-                      title={(r.member_name || 'Member') + ' · ' + r.student_id}
-                      icon="user"
-                      subtitle={[
-                        r.submission,
-                        r.late && 'Late',
-                        r.grading,
-                        r.modification,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                      onPress={() => setMember(r.member_id)}
-                    />
-                  ))}
+                  <ScrollView
+                    ref={scroll}
+                    nestedScrollEnabled
+                    style={{ maxHeight: Math.max(240, height * 0.55) }}
+                    keyboardShouldPersistTaps="handled"
+                    scrollEventThrottle={32}
+                    onScroll={(event) => {
+                      offset.current = event.nativeEvent.contentOffset.y;
+                    }}
+                    onContentSizeChange={() => {
+                      if (offset.current > 0)
+                        scroll.current?.scrollTo({
+                          y: offset.current,
+                          animated: false,
+                        });
+                    }}
+                  >
+                    {roster.data.slice(0, pageSize).map((r) => (
+                      <NavigationRow
+                        key={r.member_id}
+                        title={
+                          (r.member_name || 'Member') + ' · ' + r.student_id
+                        }
+                        icon="user"
+                        subtitle={[
+                          r.submission,
+                          r.late && 'Late',
+                          r.grading,
+                          r.modification,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                        onPress={() => setMember(r.member_id)}
+                      />
+                    ))}
+                  </ScrollView>
                   <Paging
                     page={page}
                     count={roster.data.length}
-                    onChange={setPage}
+                    onChange={goToPage}
                   />
                 </>
               )}

@@ -2,8 +2,9 @@ import { MotionPressable } from '../../components/motion';
 import { useTheme } from '../../theme/provider';
 import { useLanguage } from '../../locales/provider';
 import { useState } from 'react';
-import { Linking, View, Text } from 'react-native';
+import { Linking, View, Text, Platform, type ViewProps } from 'react-native';
 import {
+  Badge,
   Button,
   Body,
   Card,
@@ -11,7 +12,13 @@ import {
   Loading,
   Notice,
 } from '../../components/ui';
-import { dueLabel, pageSize, type Assignment, type Version } from './api';
+import {
+  dueLabel,
+  pageSize,
+  type Assignment,
+  type Recipient,
+  type Version,
+} from './api';
 export function Choices({
   items,
   value,
@@ -24,8 +31,50 @@ export function Choices({
   disabled?: boolean;
 }) {
   const { theme } = useTheme();
+  const keyboard =
+    Platform.OS === 'web' && !disabled
+      ? {
+          onKeyDown(
+            event:
+              | React.KeyboardEvent<HTMLElement>
+              | Parameters<NonNullable<ViewProps['onKeyDown']>>[0],
+          ) {
+            if (!('key' in event)) return;
+            const radios = Array.from(
+              event.currentTarget.querySelectorAll<HTMLElement>(
+                '[role="radio"]',
+              ),
+            );
+            const index = radios.indexOf(event.target as HTMLElement);
+            if (index < 0) return;
+            let next: number;
+            switch (event.key) {
+              case 'ArrowRight':
+              case 'ArrowDown':
+                next = (index + 1) % items.length;
+                break;
+              case 'ArrowLeft':
+              case 'ArrowUp':
+                next = (index + items.length - 1) % items.length;
+                break;
+              case 'Home':
+                next = 0;
+                break;
+              case 'End':
+                next = items.length - 1;
+                break;
+              default:
+                return;
+            }
+            event.preventDefault();
+            radios[next]?.focus();
+            onChange(items[next]![0]);
+          },
+        }
+      : {};
   return (
     <View
+      {...keyboard}
       accessibilityRole="radiogroup"
       style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}
     >
@@ -35,7 +84,13 @@ export function Choices({
           <MotionPressable
             key={id}
             accessibilityRole="radio"
+            tabIndex={
+              disabled || (!checked && items.some(([key]) => key === value))
+                ? -1
+                : 0
+            }
             accessibilityLabel={label}
+            aria-checked={checked}
             accessibilityState={{ checked, disabled }}
             disabled={disabled}
             onPress={() => onChange(id)}
@@ -152,17 +207,26 @@ export function Messages({
 export function Brief({
   assignment: a,
   due,
+  status,
 }: {
   assignment: Assignment;
   due?: string;
+  status?: Recipient | null;
 }) {
   const { t } = useLanguage();
   return (
     <Card>
+      {status && (
+        <Badge
+          label={[status.submission, status.modification, status.grading]
+            .filter((v): v is string => !!v)
+            .map(t)
+            .join(' · ')}
+        />
+      )}
       <Heading>{a.title}</Heading>
       {a.joint && <Body>{t('Shared group submission')}</Body>}
       {a.group_name && <Body>{a.group_name}</Body>}
-      {Boolean(a.instructions) && <Body>{a.instructions}</Body>}
       <Body>
         {t('Due ')}
         {dueLabel(due ?? a.due_at)}
@@ -181,6 +245,12 @@ export function Brief({
           ? t('Late submissions accepted')
           : t('On-time submissions only')}
       </Body>
+      {Boolean(a.instructions) && (
+        <>
+          <Heading>{t('Instructions')}</Heading>
+          <Body>{a.instructions}</Body>
+        </>
+      )}
     </Card>
   );
 }

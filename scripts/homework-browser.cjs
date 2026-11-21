@@ -126,6 +126,15 @@ async function run() {
       .or(p.getByRole('radio', { name, exact: true }))
       .click();
   const see = (p, text) => p.getByText(text, { exact: true }).first().waitFor();
+  async function capture(page, name) {
+    if (!process.env.HOMEWORK_SCREENSHOTS) return;
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.evaluate(() => document.fonts.ready);
+    fs.mkdirSync(process.env.HOMEWORK_SCREENSHOTS, { recursive: true });
+    await page.screenshot({
+      path: path.join(process.env.HOMEWORK_SCREENSHOTS, name + '.png'),
+    });
+  }
   async function login(p, account, url = origin + '/') {
     await p.goto(url);
     await p.getByLabel('School email', { exact: true }).fill(account.email);
@@ -144,17 +153,48 @@ async function run() {
     await staff
       .getByLabel('Instructions', { exact: true })
       .fill('Explain how a loop terminates.');
+    for (const width of [1280, 820, 390]) {
+      await staff.setViewportSize({ width, height: 850 });
+      await staff.getByLabel('Title', { exact: true }).scrollIntoViewIfNeeded();
+      assert(
+        await staff.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      );
+      await capture(staff, 'after-' + width);
+    }
+    await staff.setViewportSize({ width: 1280, height: 850 });
+    await click(staff, 'Submission settings');
     await staff.getByLabel('Maximum points', { exact: true }).fill('10');
-    await click(staff, 'Select members');
+    const recipients = staff.getByRole('radio', {
+      name: 'All club students',
+      exact: true,
+    });
+    await recipients.focus();
+    await recipients.press('ArrowRight');
+    await staff
+      .getByRole('radio', {
+        name: 'Select members',
+        exact: true,
+        checked: true,
+      })
+      .waitFor();
     await staff
       .getByLabel('Find recipients by name or student ID')
       .fill(alice.studentId);
     await click(staff, 'Homework Alice · ' + alice.studentId);
+    if (process.env.HOMEWORK_FILES_URL) {
+      await require('./homework-full-browser.cjs').referencePdf(staff);
+      assert(new URL(staff.url()).pathname.includes('/assignment-editor'));
+      await staff
+        .getByLabel('Instructions', { exact: true })
+        .fill('Explain how a loop terminates. Include an example.');
+    }
     await click(staff, 'Save draft and preview');
     await see(staff, 'Student preview');
     await staff.getByText(/1 student · Individual submissions/).waitFor();
     if (process.env.HOMEWORK_FILES_URL)
-      await require('./homework-full-browser.cjs').referencePdf(staff);
+      await see(staff, 'worksheet.pdf · 1 KB');
     const id = new URL(staff.url()).searchParams.get('id');
     assert(id);
     const link = origin + '/assignment/?id=' + id + '&mode=mine';
@@ -169,6 +209,7 @@ async function run() {
     await see(staff, 'Published to 1 members.');
     await click(phone, 'Refresh assignment');
     await phone.getByLabel('Your response').fill('First device draft');
+    await capture(phone, 'student-dark');
     await phone.getByText(/Private draft saved ·/).waitFor();
     await login(desk, alice, link);
     assert.equal(
@@ -213,6 +254,7 @@ async function run() {
     await click(staff, 'Refresh roster');
     await click(staff, 'Homework Alice · ' + alice.studentId);
     await staff.getByLabel('Score (out of 10)').fill('8');
+    await capture(staff, 'grading-desktop');
     await staff.getByLabel('Private feedback').fill('Private grading draft');
     await click(staff, 'Save grading draft');
     await see(staff, 'Grading draft saved privately.');
@@ -239,6 +281,7 @@ async function run() {
     await click(phone, 'Review submission');
     await click(phone, 'Confirm submission');
     await phone.getByText(/Last receipt · Version 2/).waitFor();
+    await click(phone, 'Show previous submissions');
     await see(phone, 'Score · 8');
     await see(phone, 'Final text from desktop');
     assert(

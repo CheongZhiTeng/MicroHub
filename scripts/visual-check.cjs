@@ -162,6 +162,11 @@ async function main() {
             } else if (url.pathname === '/auth/v1/user') body = user;
             else if (url.pathname.endsWith('rpc/hw_summary'))
               body = { todo: 0, next: null, submitted: null, pending: null };
+            else if (url.pathname.endsWith('/rpc/hw_inbox'))
+              body = {
+                items: [],
+                preferences: { due: true, feedback: true, grading: true },
+              };
             else if (url.pathname.includes('rpc/review_membership')) {
               approved = true;
               body = null;
@@ -582,10 +587,20 @@ async function main() {
           ['Attendance', 'See you at the next meeting'],
           ['Club announcements', 'A home for club updates'],
           ['Your club calendar', 'Good things are on the calendar'],
-          ['Notifications', 'Keep up, without the noise'],
+          [
+            'Notifications',
+            legacyProfile
+              ? 'Homework is not available yet.'
+              : 'Homework reminders',
+          ],
         ]) {
           await click(button);
-          await page.getByText(heading, { exact: true }).waitFor();
+          if (legacyProfile && button === 'Notifications')
+            await page
+              .getByRole('alert')
+              .filter({ hasText: heading })
+              .waitFor();
+          else await page.getByText(heading, { exact: true }).waitFor();
           await snapshot(button.toLowerCase().replaceAll(' ', '-'));
           await click('Back to home');
         }

@@ -1,8 +1,15 @@
-import { useState } from 'react';
-import { Linking, Platform } from 'react-native';
+import { useRef, useState } from 'react';
+import { Linking, Platform, View } from 'react-native';
 import * as Picker from 'expo-document-picker';
 import { uuid } from 'expo';
-import { Body, Button, Card, Field, Heading } from '../../components/ui';
+import {
+  Body,
+  Button,
+  Card,
+  Field,
+  Heading,
+  NavigationRow,
+} from '../../components/ui';
 import { client, publicConfig } from '../../lib/supabase';
 import { useLanguage } from '../../locales/provider';
 import {
@@ -19,9 +26,9 @@ export function FileList({ files }: { files: Attachment[] }) {
       {files
         .filter((f) => f.state === 'ready')
         .map((f) => (
-          <Button
+          <NavigationRow
             key={f.id}
-            variant="secondary"
+            icon="book"
             title={f.filename + ' · ' + Math.ceil(f.size_bytes / 1024) + ' KB'}
             onPress={() =>
               action.run(async () => {
@@ -46,32 +53,33 @@ export function FileList({ files }: { files: Attachment[] }) {
     </>
   );
 }
-export function FilePanel({
-  assignment: a,
-  files,
+export function UploadButton({
+  assignmentId,
   reference = false,
   base = 0,
-  editable,
+  maxBytes,
   refresh,
+  prepare,
+  onBusy,
+  disabled = false,
 }: {
-  assignment: Assignment;
-  files: Attachment[];
+  assignmentId: string;
   reference?: boolean;
   base?: number;
-  editable: boolean;
-  refresh: () => Promise<void>;
+  maxBytes?: number;
+  refresh: (fileId: string) => Promise<void>;
+  prepare?: () => Promise<void>;
+  onBusy?: (busy: boolean) => void;
+  disabled?: boolean;
 }) {
   const { t } = useLanguage();
   const action = useHomeworkAction();
-  const [settings, setSettings] = useState(false);
   const [retry, setRetry] = useState<{
     id: string;
     file: Picker.DocumentPickerAsset;
   } | null>(null);
+  const prepared = useRef('');
   const [progress, setProgress] = useState<number | null>(null);
-  const [limit, setLimit] = useState(String(a.file_limit ?? 0)),
-    [mb, setMb] = useState(String((a.file_bytes ?? 5242880) / 1048576)),
-    [mode, setMode] = useState(a.file_mode ?? 'any');
   async function upload(repeat: boolean) {
     let entry = retry;
     if (!repeat) {
@@ -88,13 +96,17 @@ export function FilePanel({
     const { file, id } = entry;
     if (
       file.size !== undefined &&
-      file.size > (reference ? 10485760 : (a.file_bytes ?? 0))
+      file.size > (reference ? 10485760 : (maxBytes ?? 0))
     )
       throw Error('File exceeds assignment limits');
+    if (prepared.current !== id) {
+      await prepare?.();
+      prepared.current = id;
+    }
     const form = new FormData();
     for (const [k, v] of Object.entries({
       id,
-      assignment: a.id,
+      assignment: assignmentId,
       reference: String(reference),
       base: String(base),
     }))
@@ -137,14 +149,74 @@ export function FilePanel({
         };
         xhr.send(form);
       });
-      setRetry(null);
     } finally {
       setProgress(null);
-      await refresh();
+      await refresh(id);
     }
+    setRetry(null);
   }
+  const run = (repeat: boolean) =>
+    action.run(async () => {
+      onBusy?.(true);
+      try {
+        await upload(repeat);
+      } finally {
+        onBusy?.(false);
+      }
+    });
   return (
-    <Card>
+    <>
+      <Button
+        title={t(reference ? 'Add reference file' : 'Choose file or photo')}
+        variant="secondary"
+        busy={action.busy}
+        disabled={disabled}
+        onPress={() => run(false)}
+      />
+      {progress !== null && (
+        <Body>
+          {t('Upload progress')} · {progress}%
+        </Body>
+      )}
+      {Boolean(action.error) && retry && (
+        <Button
+          title={t('Retry upload')}
+          disabled={disabled}
+          onPress={() => run(true)}
+        />
+      )}
+      <Messages action={action} />
+    </>
+  );
+}
+export function FilePanel({
+  assignment: a,
+  files,
+  reference = false,
+  base = 0,
+  editable,
+  refresh,
+  embedded = false,
+  onUploading,
+}: {
+  embedded?: boolean;
+  onUploading?: (busy: boolean) => void;
+  assignment: Assignment;
+  files: Attachment[];
+  reference?: boolean;
+  base?: number;
+  editable: boolean;
+  refresh: () => Promise<void>;
+}) {
+  const { t } = useLanguage();
+  const action = useHomeworkAction();
+  const [settings, setSettings] = useState(false);
+  const [limit, setLimit] = useState(String(a.file_limit ?? 0)),
+    [mb, setMb] = useState(String((a.file_bytes ?? 5242880) / 1048576)),
+    [mode, setMode] = useState(a.file_mode ?? 'any');
+  const Panel = embedded ? View : Card;
+  return (
+    <Panel style={{ gap: 12 }}>
       <Heading>{t(reference ? 'Reference files' : 'Your files')}</Heading>
       <FileList files={files} />
       {!reference && (
@@ -168,22 +240,14 @@ export function FilePanel({
               }
             />
           ))}
-          <Button
-            title={t(reference ? 'Add reference file' : 'Choose file or photo')}
-            busy={action.busy}
-            onPress={() => action.run(() => upload(false))}
+          <UploadButton
+            assignmentId={a.id}
+            reference={reference}
+            base={base}
+            maxBytes={a.file_bytes}
+            refresh={refresh}
+            onBusy={onUploading}
           />
-          {progress !== null && (
-            <Body>
-              {t('Upload progress')} · {progress}%
-            </Body>
-          )}
-          {Boolean(action.error) && retry && (
-            <Button
-              title={t('Retry upload')}
-              onPress={() => action.run(() => upload(true))}
-            />
-          )}
         </>
       )}
       {reference && editable && (
@@ -217,26 +281,13 @@ export function FilePanel({
               }
             />
           )}
-          <Field
-            label={t('Files per submission (0–10)')}
-            value={limit}
-            keyboardType="number-pad"
-            onChangeText={setLimit}
-          />
-          <Field
-            label={t('Maximum MB per file (up to 10)')}
-            value={mb}
-            keyboardType="decimal-pad"
-            onChangeText={setMb}
-          />
-          <Choices
-            value={mode}
-            items={[
-              ['any', t('Documents and photos')],
-              ['document', t('Documents')],
-              ['photo', t('Photos')],
-            ]}
-            onChange={setMode}
+          <FileRuleFields
+            limit={limit}
+            mb={mb}
+            mode={mode}
+            setLimit={setLimit}
+            setMb={setMb}
+            setMode={setMode}
           />
           <Button
             title={t('Save file rules')}
@@ -263,6 +314,49 @@ export function FilePanel({
         </>
       )}
       <Messages action={action} />
-    </Card>
+    </Panel>
+  );
+}
+
+export function FileRuleFields({
+  limit,
+  mb,
+  mode,
+  setLimit,
+  setMb,
+  setMode,
+}: {
+  limit: string;
+  mb: string;
+  mode: string;
+  setLimit: (s: string) => void;
+  setMb: (s: string) => void;
+  setMode: (s: string) => void;
+}) {
+  const { t } = useLanguage();
+  return (
+    <>
+      <Field
+        label={t('Files per submission (0–10)')}
+        value={limit}
+        keyboardType="number-pad"
+        onChangeText={setLimit}
+      />
+      <Field
+        label={t('Maximum MB per file (up to 10)')}
+        value={mb}
+        keyboardType="decimal-pad"
+        onChangeText={setMb}
+      />
+      <Choices
+        value={mode}
+        items={[
+          ['any', t('Documents and photos')],
+          ['document', t('Documents')],
+          ['photo', t('Photos')],
+        ]}
+        onChange={setMode}
+      />
+    </>
   );
 }

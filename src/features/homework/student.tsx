@@ -36,6 +36,8 @@ export function StudentWork({
   const [preview, setPreview] = useState<(Edit & { request: string }) | null>(
     null,
   );
+  const [uploading, setUploading] = useState(false);
+  const [history, setHistory] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const saveLock = useRef(false);
@@ -117,29 +119,15 @@ export function StudentWork({
   if (!status) return <Notice text={t('You were not assigned this work.')} />;
   return (
     <>
-      {data.joint_open && (
-        <Notice
-          text={t(
-            'Your group shares this draft. Submitting gives each eligible teammate a receipt. Grades and later revisions are private.',
-          )}
-        />
-      )}
-      {!!a.file_limit && (
-        <FilePanel
-          assignment={a}
-          base={source.base}
-          files={files}
-          editable={!blocked && !preview && !local && !saving}
-          refresh={refresh}
-        />
-      )}
       <Card>
         <SectionTitle icon="homework">{t('Your work')}</SectionTitle>
-        <Body>
-          {[status.submission, status.modification, status.grading]
-            .flatMap((value) => (value ? [t(value)] : []))
-            .join(' · ')}
-        </Body>
+        {data.joint_open && (
+          <Notice
+            text={t(
+              'Your group shares this draft. Submitting gives each eligible teammate a receipt. Grades and later revisions are private.',
+            )}
+          />
+        )}
         {latest && (
           <Body>
             {t('Last receipt · Version ')}
@@ -171,6 +159,17 @@ export function StudentWork({
                 editable={!preview && !action.busy && !blocked}
                 onChangeText={(v) => change('link', v)}
                 placeholder="https://…"
+              />
+            )}
+            {!!a.file_limit && (
+              <FilePanel
+                embedded
+                onUploading={setUploading}
+                assignment={a}
+                base={source.base}
+                files={files}
+                editable={!blocked && !preview && !local && !saving}
+                refresh={refresh}
               />
             )}
             {conflict ? (
@@ -248,6 +247,7 @@ export function StudentWork({
                       title={t('Review submission')}
                       disabled={
                         saving ||
+                        uploading ||
                         Boolean(local) ||
                         !draft ||
                         files.some((f) => f.state === 'pending') ||
@@ -297,8 +297,25 @@ export function StudentWork({
         )}
         <Messages action={action} />
       </Card>
-      {versions.length > 0 && <Heading>{t('Submission history')}</Heading>}
-      {versions.map((v) => (
+      {latest && (
+        <Heading>
+          {t(
+            latest.events.length
+              ? 'Feedback and receipt'
+              : 'Submission receipt',
+          )}
+        </Heading>
+      )}
+      {versions.length > 1 && (
+        <Button
+          variant="ghost"
+          title={t(
+            history ? 'Hide previous submissions' : 'Show previous submissions',
+          )}
+          onPress={() => setHistory(!history)}
+        />
+      )}
+      {(history ? versions : versions.slice(0, 1)).map((v) => (
         <View key={v.id}>
           <Receipt version={v} />
           <FileList

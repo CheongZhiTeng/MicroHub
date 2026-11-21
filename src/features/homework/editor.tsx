@@ -1,8 +1,19 @@
 import { useLanguage } from '../../locales/provider';
 import { uuid } from 'expo';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Field, Button, Body, Card, SectionTitle } from '../../components/ui';
+import { useRef, useState } from 'react';
+import { View, useWindowDimensions } from 'react-native';
+import { FileList, FileRuleFields, UploadButton } from './files';
+import { Reveal } from '../../components/motion';
+import {
+  Field,
+  Button,
+  Body,
+  Card,
+  SectionTitle,
+  Badge,
+  Heading,
+} from '../../components/ui';
 import {
   useHomework,
   homework,
@@ -89,7 +100,7 @@ export function AssignmentEditor({
     a?.group_id ?? (club ? '' : (scopes[0]?.id ?? '')),
   );
   const [id] = useState(() => (!copy && a?.id) || uuid.v4());
-  const [baseRevision] = useState(copy ? 0 : (a?.revision ?? 0));
+  const [revision, setRevision] = useState(copy ? 0 : (a?.revision ?? 0));
   const [title, setTitle] = useState(
     copy && a ? (t('Copy of ') + a.title).slice(0, 160) : (a?.title ?? ''),
   );
@@ -113,164 +124,279 @@ export function AssignmentEditor({
     copy ? [] : (initial?.targets ?? []),
   );
   const [settings, setSettings] = useState(false);
+  const desktop = useWindowDimensions().width >= 1024;
+  const [files, setFiles] = useState(
+    copy ? [] : (initial?.files ?? []).filter((f) => f.reference),
+  );
+  const accountedFiles = useRef(new Set<string>());
+  const [uploading, setUploading] = useState(false);
+  const [limit, setLimit] = useState(String(a?.file_limit ?? 0));
+  const [mb, setMb] = useState(String((a?.file_bytes ?? 5242880) / 1048576));
+  const [mode, setMode] = useState(a?.file_mode ?? 'any');
+  const savedRules = useRef({
+    limit: a?.file_limit ?? 0,
+    bytes: a?.file_bytes ?? 5242880,
+    mode: a?.file_mode ?? 'any',
+  });
   const action = useHomeworkAction();
+  async function persist() {
+    const bytes = Math.round(Number(mb) * 1048576);
+    if (
+      !/^\d+$/.test(limit) ||
+      Number(limit) > 10 ||
+      !Number.isFinite(bytes) ||
+      bytes < 1 ||
+      bytes > 10485760 ||
+      (type === 'files' && Number(limit) === 0)
+    )
+      throw Error('Check file limits.');
+    if (!title.trim()) throw Error('Give your assignment a title.');
+    const deadline = parseDate(due),
+      maxPoints = points(max);
+    if (maxPoints !== null && (maxPoints <= 0 || maxPoints > 100000))
+      throw Error('Enter a maximum above zero and at most 100,000.');
+    if (audience === 'selected' && !targets.length)
+      throw Error('Select at least one recipient.');
+    const copying = copy && revision === 0 && a?.joint !== undefined;
+    const enableFilesFirst = type === 'files' && savedRules.current.limit === 0;
+    let nextRevision = await homework(
+      copying
+        ? 'hw_copy_assignment'
+        : groupId
+          ? 'hw_save_scoped'
+          : 'hw_save_assignment',
+      {
+        ...(groupId ? { p_group: groupId } : {}),
+        p_id: id,
+        ...(copying
+          ? { p_source: a.id, p_group: groupId || null }
+          : { p_revision: revision }),
+        p_title: title.trim(),
+        p_instructions: instructions,
+        p_due: deadline,
+        p_points: maxPoints,
+        p_text: enableFilesFirst || type === 'text' || type === 'both',
+        p_link: type === 'link' || type === 'both',
+        p_late: late,
+        p_audience: audience,
+        p_targets: audience === 'selected' ? targets : [],
+      },
+    );
+    setRevision(nextRevision);
+    if (
+      Number(limit) !== savedRules.current.limit ||
+      bytes !== savedRules.current.bytes ||
+      mode !== savedRules.current.mode
+    ) {
+      await homework('hw_file_settings', {
+        p_id: id,
+        p_revision: nextRevision,
+        p_limit: Number(limit),
+        p_bytes: bytes,
+        p_mode: mode,
+      });
+      savedRules.current = { limit: Number(limit), bytes, mode };
+      setRevision(++nextRevision);
+    }
+    if (enableFilesFirst) {
+      await homework('hw_media_only', {
+        p_id: id,
+        p_revision: nextRevision,
+        p_only: true,
+      });
+      setRevision(nextRevision + 1);
+    }
+  }
   const save = () =>
     action.run(async () => {
-      if (!title.trim()) throw Error('Give your assignment a title.');
-      const deadline = parseDate(due),
-        maxPoints = points(max);
-      if (maxPoints !== null && (maxPoints <= 0 || maxPoints > 100000))
-        throw Error('Enter a maximum above zero and at most 100,000.');
-      if (audience === 'selected' && !targets.length)
-        throw Error('Select at least one recipient.');
-      await homework(
-        copy && a?.joint !== undefined
-          ? 'hw_copy_assignment'
-          : groupId
-            ? 'hw_save_scoped'
-            : 'hw_save_assignment',
-        {
-          ...(groupId ? { p_group: groupId } : {}),
-          p_id: id,
-          ...(copy && a?.joint !== undefined
-            ? { p_source: a.id, p_group: groupId || null }
-            : { p_revision: baseRevision }),
-          p_title: title.trim(),
-          p_instructions: instructions,
-          p_due: deadline,
-          p_points: maxPoints,
-          p_text: type === 'text' || type === 'both',
-          p_link: type === 'link' || type === 'both',
-          p_late: late,
-          p_audience: audience,
-          p_targets: audience === 'selected' ? targets : [],
-        },
-      );
+      await persist();
       router.replace({
         pathname: '/assignment',
         params: { id, mode: 'manage' },
       });
     });
+  const scopeName =
+    scopes.find((scope) => scope.id === groupId)?.name || t('Whole club');
   return (
-    <>
-      <Card>
-        <SectionTitle icon="members">{t('Recipients')}</SectionTitle>
-        {scopes.length > 0 && (
+    <View
+      style={{
+        flexDirection: desktop ? 'row' : 'column',
+        alignItems: 'stretch',
+        gap: 20,
+      }}
+    >
+      <View style={{ flex: desktop ? 2 : undefined, minWidth: 0, gap: 16 }}>
+        <Card>
+          <SectionTitle icon="members">{t('Recipients')}</SectionTitle>
+          {scopes.length > 0 && (
+            <Choices
+              items={[
+                ...(club ? [['', t('Whole club')] as const] : []),
+                ...scopes.map((s) => [s.id, s.name] as const),
+              ]}
+              value={groupId}
+              disabled={!!revision || uploading || action.busy}
+              onChange={(v) => {
+                setGroupId(v);
+                setTargets([]);
+              }}
+            />
+          )}
           <Choices
             items={[
-              ...(club ? [['', t('Whole club')] as const] : []),
-              ...scopes.map((s) => [s.id, s.name] as const),
+              ['all', t(groupId ? 'All group students' : 'All club students')],
+              ['selected', t('Select members')],
             ]}
-            value={groupId}
-            disabled={!!initial && !copy}
-            onChange={(v) => {
-              setGroupId(v);
-              setTargets([]);
+            value={audience}
+            onChange={setAudience}
+          />
+          {audience === 'selected' && (
+            <Audience
+              groupId={groupId}
+              targets={targets}
+              setTargets={setTargets}
+            />
+          )}
+        </Card>
+        <Card>
+          <SectionTitle icon="homework">{t('Assignment details')}</SectionTitle>
+          <Field
+            label={t('Title')}
+            value={title}
+            maxLength={160}
+            onChangeText={setTitle}
+          />
+          <Field
+            label={t('Instructions')}
+            multiline
+            value={instructions}
+            maxLength={20000}
+            onChangeText={setInstructions}
+          />
+          <FileList files={files} />
+          <UploadButton
+            assignmentId={id}
+            reference
+            prepare={persist}
+            onBusy={setUploading}
+            disabled={action.busy}
+            refresh={async (fileId) => {
+              const detail = await homework('hw_detail', { p_id: id });
+              const references = (detail?.files ?? []).filter(
+                (f) => f.reference,
+              );
+              setFiles(references);
+              // Count only this upload. An unrelated edit must still cause a revision conflict.
+              if (
+                references.some(
+                  (f) => f.id === fileId && f.state === 'ready',
+                ) &&
+                !accountedFiles.current.has(fileId)
+              ) {
+                accountedFiles.current.add(fileId);
+                setRevision((current) => current + 1);
+              }
             }}
           />
-        )}
-        <Choices
-          items={[
-            ['all', t(groupId ? 'All group students' : 'All club students')],
-            ['selected', t('Select members')],
-          ]}
-          value={audience}
-          onChange={setAudience}
-        />
-        {audience === 'selected' && (
-          <Audience
-            groupId={groupId}
-            targets={targets}
-            setTargets={setTargets}
+        </Card>
+        <Card>
+          <SectionTitle icon="calendar">{t('Deadline')}</SectionTitle>
+          <Field
+            label={t('Deadline (Malaysia time)')}
+            value={due}
+            onChangeText={setDue}
+            hint="YYYY-MM-DD HH:mm"
+            autoCapitalize="none"
           />
-        )}
-      </Card>
-      <Card>
-        <SectionTitle icon="homework">{t('Assignment details')}</SectionTitle>
-        <Field
-          label={t('Title')}
-          value={title}
-          maxLength={160}
-          onChangeText={setTitle}
-        />
-        <Field
-          label={t('Instructions')}
-          multiline
-          value={instructions}
-          maxLength={20000}
-          onChangeText={setInstructions}
-        />
-        <Button
-          title={t('Save draft to add reference files')}
-          variant="secondary"
-          onPress={save}
-          busy={action.busy}
-        />
-        <Field
-          label={t('Deadline (Malaysia time)')}
-          value={due}
-          onChangeText={setDue}
-          hint="YYYY-MM-DD HH:mm"
-          autoCapitalize="none"
-        />
-        <Field
-          label={t('Maximum points')}
-          value={max}
-          onChangeText={setMax}
-          keyboardType="decimal-pad"
-          hint={t('Leave blank for ungraded work.')}
-        />
-        <Button
-          title={t(
-            settings ? 'Hide submission settings' : 'Submission settings',
-          )}
-          variant="secondary"
-          onPress={() => setSettings(!settings)}
-        />
-        {settings && (
-          <>
-            <Body>{t('Accepted submissions')}</Body>
-            <Choices
-              items={[
-                ['both', t('Text and link')],
-                ['text', t('Text only')],
-                ['link', t('Link only')],
-                ...(a?.file_limit ? [['files', t('Files only')] as const] : []),
-              ]}
-              value={type}
-              onChange={setType}
-            />
-            <Choices
-              items={[
-                ['yes', t('Accept late work')],
-                ['no', t('On time only')],
-              ]}
-              value={late ? 'yes' : 'no'}
-              onChange={(v) => setLate(v === 'yes')}
-            />
-          </>
-        )}
-      </Card>
-      <Card>
-        <Messages action={action} />
-        <Button
-          title={t('Save draft and preview')}
-          busy={action.busy}
-          onPress={save}
-        />
-        {Boolean(action.error) && (
           <Button
-            title={t('Check saved assignment')}
+            title={t(
+              settings ? 'Hide submission settings' : 'Submission settings',
+            )}
             variant="secondary"
-            onPress={() =>
-              router.push({
-                pathname: '/assignment',
-                params: { id, mode: 'manage' },
-              })
-            }
+            onPress={() => setSettings(!settings)}
           />
-        )}
-      </Card>
-    </>
+          {settings && (
+            <Reveal style={{ gap: 12 }}>
+              <Field
+                label={t('Maximum points')}
+                value={max}
+                onChangeText={setMax}
+                keyboardType="decimal-pad"
+                hint={t('Leave blank for ungraded work.')}
+              />
+              <Body>{t('Accepted submissions')}</Body>
+              <Choices
+                items={[
+                  ['both', t('Text and link')],
+                  ['text', t('Text only')],
+                  ['link', t('Link only')],
+                  ...(Number(limit) > 0 || type === 'files'
+                    ? [['files', t('Files only')] as const]
+                    : []),
+                ]}
+                value={type}
+                onChange={setType}
+              />
+              <Choices
+                items={[
+                  ['yes', t('Accept late work')],
+                  ['no', t('On time only')],
+                ]}
+                value={late ? 'yes' : 'no'}
+                onChange={(v) => setLate(v === 'yes')}
+              />
+              <Body>{t('Student file settings')}</Body>
+              <FileRuleFields
+                limit={limit}
+                mb={mb}
+                mode={mode}
+                setLimit={setLimit}
+                setMb={setMb}
+                setMode={setMode}
+              />
+            </Reveal>
+          )}
+        </Card>
+      </View>
+      <View style={{ flex: desktop ? 1 : undefined, minWidth: 0 }}>
+        <Card>
+          <Badge label={t('Draft')} />
+          <Heading>{title.trim() || t('Assignment details')}</Heading>
+          <Body>
+            {scopeName} ·{' '}
+            {audience === 'selected'
+              ? targets.length + t(' selected')
+              : t(groupId ? 'All group students' : 'All club students')}
+          </Body>
+          <Body>
+            {t('Due ')}
+            {due} MYT
+          </Body>
+          <Body>
+            {max.trim() ? max + t(' points') : t('Ungraded')} ·{' '}
+            {t(late ? 'Late submissions accepted' : 'On-time submissions only')}
+          </Body>
+          <Messages action={action} />
+          <Button
+            title={t('Save draft and preview')}
+            busy={action.busy}
+            disabled={uploading}
+            onPress={save}
+          />
+          {Boolean(action.error) && (
+            <Button
+              title={t('Check saved assignment')}
+              variant="secondary"
+              onPress={() =>
+                router.push({
+                  pathname: '/assignment',
+                  params: { id, mode: 'manage' },
+                })
+              }
+            />
+          )}
+        </Card>
+      </View>
+    </View>
   );
 }

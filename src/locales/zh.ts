@@ -1,5 +1,14 @@
 // Handwritten Simplified Chinese copy for MicroHub.
 export const zh: Readonly<Record<string, string>> = {
+  Deadline: '截止时间',
+  'Feedback and receipt': '反馈与提交回执',
+  'Submission receipt': '提交回执',
+  'Hide previous submissions': '收起历史提交',
+  'Show previous submissions': '查看历史提交',
+  'Finish or remove pending reference files before publishing.':
+    '请等待参考资料上传完成，或移除未完成的文件后再发布。',
+  'How counts are calculated': '查看统计口径',
+  'Hide calculation details': '收起统计口径',
   'Publish to': '发布给',
   '(selected students)': '（指定学生）',
   'All club students': '全会学生',

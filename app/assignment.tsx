@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLanguage } from '../src/locales/provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -11,6 +12,7 @@ import {
 import { Access } from '../src/features/access';
 import {
   type Assignment,
+  dueLabel,
   homework,
   useHomework,
   useHomeworkAction,
@@ -30,10 +32,12 @@ import {
 function DraftPreview({
   action,
   a,
+  waitingForFile,
   refresh,
 }: {
   action: ReturnType<typeof useHomeworkAction>;
   a: Assignment;
+  waitingForFile: boolean;
   refresh: () => Promise<void>;
 }) {
   const { t } = useLanguage();
@@ -74,6 +78,17 @@ function DraftPreview({
             t(a.joint ? 'Shared group submission' : 'Individual submissions'),
           ].join(' · ')}
         </Body>
+        <Body>
+          {t('Effective deadline · ')}
+          {dueLabel(a.due_at)}
+        </Body>
+        {waitingForFile && (
+          <Notice
+            text={t(
+              'Finish or remove pending reference files before publishing.',
+            )}
+          />
+        )}
         <Button
           title={t('Edit draft')}
           variant="secondary"
@@ -87,7 +102,7 @@ function DraftPreview({
             (a.group_name || t('Whole club')) +
             (a.audience === 'selected' ? t(' (selected students)') : '')
           }
-          disabled={!audience.data}
+          disabled={!audience.data || waitingForFile}
           busy={action.busy}
           onPress={() =>
             action.run(async () => {
@@ -103,7 +118,11 @@ function DraftPreview({
       </Card>
       {audience.error && <Notice error text={audience.error} />}
       {a.file_limit !== undefined && (
-        <Schedule a={a} refresh={refresh} canSchedule={!!audience.data} />
+        <Schedule
+          a={a}
+          refresh={refresh}
+          canSchedule={!!audience.data && !waitingForFile}
+        />
       )}
     </>
   );
@@ -119,6 +138,7 @@ function Workspace({
 }) {
   const { t } = useLanguage();
   const action = useHomeworkAction();
+  const [uploading, setUploading] = useState(false);
   const result = useHomework('hw_detail', { p_id: id });
   if (result.data === undefined)
     return <FetchState error={result.error} retry={result.refresh} />;
@@ -136,6 +156,7 @@ function Workspace({
     <>
       <Brief
         assignment={a}
+        status={!manage ? data.status : undefined}
         due={manage ? undefined : data.status?.effective_due_at}
       />
       {a.file_limit !== undefined &&
@@ -145,6 +166,7 @@ function Workspace({
             assignment={a}
             files={(data.files ?? []).filter((f) => f.reference)}
             reference
+            onUploading={setUploading}
             editable={manage && a.lifecycle === 'draft'}
             refresh={result.refresh}
           />
@@ -152,6 +174,10 @@ function Workspace({
       {a.lifecycle === 'draft' ? (
         <DraftPreview
           action={action}
+          waitingForFile={
+            uploading ||
+            !!data.files?.some((f) => f.reference && f.state === 'pending')
+          }
           key={'preview-' + a.revision}
           a={a}
           refresh={result.refresh}
