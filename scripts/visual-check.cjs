@@ -360,27 +360,25 @@ async function main() {
           name: 'Show password',
           exact: true,
         });
-        // Measure both in one frame: focus can scroll the page after a resize.
-        const { eyeBox, fieldBox } = await page.evaluate(
-          ({ toggle, field }) => ({
-            eyeBox: toggle.getBoundingClientRect().toJSON(),
-            fieldBox: field.getBoundingClientRect().toJSON(),
-          }),
+        // The web viewport resizes before React Native commits the new breakpoint.
+        // Check both rectangles in the same frame after that responsive layout lands.
+        await page.waitForFunction(
+          ({ toggle, field }) => {
+            const eye = toggle.getBoundingClientRect(),
+              input = field.getBoundingClientRect();
+            return (
+              eye.width >= 44 &&
+              eye.height >= 44 &&
+              eye.left >= input.left &&
+              eye.right <= input.right + 1 &&
+              eye.top >= input.top &&
+              eye.bottom <= input.bottom + 1
+            );
+          },
           {
             toggle: await eye.elementHandle(),
             field: await passwordInput.elementHandle(),
           },
-        );
-        assert(
-          eyeBox.x >= fieldBox.x &&
-            eyeBox.x + eyeBox.width <= fieldBox.x + fieldBox.width + 1 &&
-            eyeBox.y >= fieldBox.y &&
-            eyeBox.y + eyeBox.height <= fieldBox.y + fieldBox.height + 1,
-          `eye target fits inside password field: ${JSON.stringify({ eyeBox, fieldBox })}`,
-        );
-        assert(
-          eyeBox.width >= 44 && eyeBox.height >= 44,
-          'accessible eye target',
         );
         const holdEye = async (reduced) => {
           await page.emulateMedia({
