@@ -82,6 +82,8 @@ module.exports = async function homeworkFull({
   await staff.getByLabel('Private feedback').fill('Clear evidence');
   await click(staff, 'Save grading draft');
   await see(staff, 'Grading draft saved privately.');
+  await click(staff, 'Mark saved grade for bulk return');
+  await see(staff, 'Saved grade marked for bulk return.');
   await click(staff, 'Preview bulk return');
   await click(staff, 'Return listed versions');
   await click(staff, 'Completion analysis');

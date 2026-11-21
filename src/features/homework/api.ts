@@ -111,6 +111,7 @@ export type Summary = {
 };
 export type ReportRow = {
   ready?: boolean;
+  bulk_approved?: boolean;
   member_id: string;
   student_id: string;
   member_name: string;
@@ -138,6 +139,7 @@ type Responses = {
   hw_copy_assignment: number;
   hw_report: ReportRow[];
   hw_release_saved: null;
+  hw_mark_bulk_ready: null;
   hw_schedule: null;
   hw_schedule_info: { run_at: string; failure: string | null } | null;
   hw_comments: {

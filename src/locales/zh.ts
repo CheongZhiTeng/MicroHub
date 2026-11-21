@@ -62,6 +62,8 @@ export const zh: Readonly<Record<string, string>> = {
   'Completion analysis': '查看完成情况',
   'Mean released score': '已发还成绩平均分',
   'Export grades (CSV)': '导出成绩（CSV）',
+  'Mark saved grade for bulk return': '将已保存的评分加入批量发还名单',
+  'Saved grade marked for bulk return.': '已加入批量发还名单。',
   'Preview bulk return': '预览批量发还名单',
   'No saved grades to return.': '目前没有可批量发还的评分草稿。',
   'Return listed versions': '发还名单中的版本',

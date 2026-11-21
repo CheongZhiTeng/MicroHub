@@ -149,6 +149,27 @@ function GradeForm({
             onPress={() => review('save')}
           />
           <Button
+            title={t('Mark saved grade for bulk return')}
+            variant="secondary"
+            disabled={
+              stale ||
+              !current ||
+              !v.review ||
+              score !== (v.review.score?.toString() ?? '') ||
+              feedback !== v.review.feedback ||
+              action.busy
+            }
+            onPress={() =>
+              action.run(async () => {
+                await homework('hw_mark_bulk_ready', {
+                  p_version: v.id,
+                  p_revision: revision,
+                });
+                return t('Saved grade marked for bulk return.');
+              })
+            }
+          />
+          <Button
             title={t('Return grade and feedback')}
             disabled={stale || !current || action.busy}
             onPress={() => ask('release')}

@@ -231,6 +231,8 @@ test('scheduled publication, scoped discussion, reminders, CSV rows and retried 
   assert.equal(row.released_score, null);
   assert.deepEqual(await as(alice, 'select * from hw_report($1,0)', [id]), []);
   const snap = () => q(admin, 'hw_report_snapshot($1)', [id]);
+  assert.equal((await snap())[0].ready, false);
+  await q(admin, 'hw_mark_bulk_ready($1,$2)', [v, 1]);
   assert.equal((await snap())[0].ready, true);
   const key = randomUUID();
   await assert.rejects(
@@ -252,10 +254,30 @@ test('scheduled publication, scoped discussion, reminders, CSV rows and retried 
     v,
     randomUUID(),
   ]);
+  assert.equal((await snap())[0].ready, false);
+  await q(admin, 'hw_mark_bulk_ready($1,$2)', [v, 3]);
   assert.equal((await snap())[0].ready, true);
   await q(admin, 'hw_release_saved($1,$2,3,$3)', [id, v, randomUUID()]);
   const history = (await q(alice, 'hw_detail($1)', [id])).versions[0].events;
   assert.equal(history[1].supersedes, history[0].id);
+  await q(admin, 'hw_mark_bulk_ready($1,4)', [v]);
+  await q(admin, "hw_review($1,4,'revision',9,'Revise first',false,null,$2)", [
+    v,
+    randomUUID(),
+  ]);
+  assert.equal((await snap())[0].ready, false);
+  for (const revision of [4, 5]) {
+    await assert.rejects(
+      q(admin, 'hw_release_saved($1,$2,$3,$4)', [
+        id,
+        v,
+        revision,
+        randomUUID(),
+      ]),
+      /conflict/,
+    );
+  }
+  assert.equal(Number((await snap())[0].released_score), 8);
   await as(
     admin,
     "insert into homework_grading_tools values($1,$2,'rubric','Logic','Reasoning | 5')",

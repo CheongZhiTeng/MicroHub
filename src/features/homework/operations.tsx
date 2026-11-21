@@ -268,7 +268,7 @@ export function Reports({
           act.run(async () => {
             const rows = (await report(a.id)).filter(
               (r) =>
-                (r.ready ?? r.grading === 'Grading draft') &&
+                r.bulk_approved === true &&
                 r.review_revision !== null &&
                 r.submission !== 'Excused',
             );

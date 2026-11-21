@@ -1,5 +1,9 @@
 # Development progress
 
+## Bulk return consent · 2026-11-21
+
+Migration `202611210001` makes bulk return opt-in per saved review revision. Private saves, corrections and requests to revise invalidate prior approval. The preview and bulk RPC both enforce it. Verified the isolated ledger through `202611200010` before applying the migration there; all 31 database cases passed including withheld scores and stale previews. Hosted migration pending.
+
 ## Homework release verification · 2026-11-20
 
 Branch `codex/homework-complete`. Migrations `202611200008`–`010` complete snapshot reporting, archive filters, assignment audit history, detached receipt privacy, tracked grade corrections and scheduled file cleanup. Each migration batch was compared with the isolated Supabase ledger before application. Its latest version is `202611200010`. The local scheduler has publishing, expiry and object-cleanup jobs.
