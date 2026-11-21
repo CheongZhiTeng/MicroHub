@@ -1,5 +1,11 @@
 # Development progress
 
+## 分组管理与删除保护 · 2026-11-21
+
+在 `codex/class-workspaces` 上完成研教任命、分组管理和删除确认。新任命需明确确认全会管理权限；每位研教最多带一组，学生须先移出原组。删除会归档小组、解除组员关系并保留历史作业。仅服务端可在验证当前账户密码后执行归档，客户端旧归档入口已封闭。已有跨组带领记录保留，管理页列出冲突供研教处理。
+
+迁移 `202611210004_class_groups.sql` 已应用到本地隔离的 Supabase，并核对迁移记录。PostgreSQL 测试验证组长人数、成员资格、跨组并发修订、普通账户不能归档和密码验证过期。Deno 类型检查通过。线上数据库及 `delete-group` Edge Function 尚待部署；浏览器验收在下一检查点记录。
+
 ## Club and group announcements · 2026-11-21
 
 Branch `codex/club-announcements`. Active teachers can publish club-wide announcements and announcements for their own groups. Platform administrators can publish club-wide and Super Admins can publish to any active group. Members, including group leaders, read club posts and posts for their current active group. Home shows up to two recent posts from each of the club-wide and group feeds. The full announcement page includes an audience confirmation, permission-aware composer, paging, and refresh. An identical publication retry is idempotent and writes one audit entry. Pinning, attachments, engagement, and read receipts remain separate backlog items.

@@ -65,14 +65,18 @@ test('group roster, scoped management, transfer and revocation', async (t) => {
   const h = await change(admin, 'create', null, null, null, null, null, 'Owls');
   await assert.rejects(
     change(secondAdmin, 'teacher', g, 1, alice),
-    /management/,
+    /teach access/,
   );
-  await change(admin, 'teacher', g, 1, alice);
-  await change(admin, 'teacher', h, 1, bob);
+  await assert.rejects(
+    change(admin, 'teacher', g, 1, alice),
+    /full teach access/,
+  );
+  await change(admin, 'appoint_teach', g, 1, alice);
+  await assert.rejects(change(admin, 'teacher', h, 1, alice), /another group/);
+  await change(admin, 'appoint_teach', h, 1, bob);
   await assert.rejects(change(alice, 'activate', g, 2), /teacher and leader/);
-  await assert.rejects(change(alice, 'assign', h, 2, one), /management/);
-  await assert.rejects(change(alice, 'teacher', g, 2, alice), /Super Admin/);
-  await change(alice, 'assign', g, 2, one);
+  assert.ok((await ws(alice)).groups.every((group) => group.manage));
+  await change(bob, 'assign', g, 2, one);
   await assert.rejects(change(alice, 'assign', g, 2, two), /Roster changed/);
   await change(alice, 'promote', g, 3, one);
   assert.equal((await ws(one)).groups.length, 0);
@@ -82,21 +86,25 @@ test('group roster, scoped management, transfer and revocation', async (t) => {
   await change(bob, 'activate', h, 4);
   await change(alice, 'assign', g, 5, two);
   await change(alice, 'assign', g, 6, three);
-  await assert.rejects(change(one, 'assign', g, 7, five), /management/);
+  await assert.rejects(change(one, 'assign', g, 7, five), /teach access/);
   await assert.rejects(
     change(bob, 'assign', h, 5, two, g, 7),
-    /already assigned/,
+    /current group first/,
   );
-  await assert.rejects(change(admin, 'assign', h, 5, one, g, 7), /last leader/);
+  await assert.rejects(
+    change(admin, 'assign', h, 5, one, g, 7),
+    /current group first/,
+  );
   await assert.rejects(change(alice, 'remove', g, 7, one), /last leader/);
   await change(alice, 'promote', g, 7, two);
   await assert.rejects(change(alice, 'promote', g, 8, three), /at most two/);
   await change(alice, 'promote', g, 8, three, null, null, null, one);
   await assert.rejects(
     change(admin, 'assign', h, 5, one, g, 8),
-    /Roster changed/,
+    /current group first/,
   );
-  await change(admin, 'assign', h, 5, one, g, 9);
+  await change(admin, 'remove', g, 9, one);
+  await change(admin, 'assign', h, 5, one);
   const studentView = await ws(one);
   assert.deepEqual(
     studentView.groups.map((g) => g.id),
@@ -107,9 +115,11 @@ test('group roster, scoped management, transfer and revocation', async (t) => {
   assert.ok(!(await ws(bob)).candidates.some((p) => p.id === two));
   assert.deepEqual((await ws(five)).groups, []);
   const teacherView = await ws(alice);
-  assert.equal(teacherView.groups.length, 1);
+  assert.equal(teacherView.groups.length, 2);
   assert.ok(
-    teacherView.groups[0].changes.some((c) => c.action === 'transfer_out'),
+    teacherView.groups
+      .find((x) => x.id === g)
+      .changes.some((c) => c.action === 'remove'),
   );
   await assert.rejects(
     as(one, 'select * from group_students'),
@@ -123,18 +133,31 @@ test('group roster, scoped management, transfer and revocation', async (t) => {
     alice,
   ]);
   assert.deepEqual(await ws(alice), { groups: [], candidates: [] });
-  await assert.rejects(
-    change(alice, 'assign', g, 10, five),
-    /Membership required/,
-  );
+  await assert.rejects(change(alice, 'assign', g, 10, five), /teach access/);
   assert.equal(
     (await ws(admin)).groups
       .find((row) => row.id === g)
       .roster.find((p) => p.id === alice).eligible,
     false,
   );
-  await change(admin, 'teacher', g, 10, secondAdmin);
-  await change(admin, 'archive', g, 11);
+  await change(admin, 'appoint_teach', g, 10, secondAdmin);
+  await assert.rejects(change(admin, 'archive', g, 11), /password/);
+  const verified =
+    'select public.group_delete_verified($1,$2,$3,clock_timestamp())';
+  await assert.rejects(
+    as(admin, verified, [admin, g, 11]),
+    /permission denied/,
+  );
+  await assert.rejects(db.query(verified, [one, g, 11]), /teach access/);
+  await assert.rejects(db.query(verified, [admin, g, 10]), /Roster changed/);
+  await assert.rejects(
+    db.query(
+      "select public.group_delete_verified($1,$2,11,now()-interval '2 minutes')",
+      [admin, g],
+    ),
+    /expired/,
+  );
+  await db.query(verified, [admin, g, 11]);
   assert.deepEqual((await ws(two)).groups, []);
   assert.equal(
     (await ws(bob)).candidates.find((p) => p.id === two).group_id,

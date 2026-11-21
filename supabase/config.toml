@@ -32,3 +32,7 @@ verify_jwt = false
 
 [functions.homework-files]
 verify_jwt = false
+
+[functions.delete-group]
+# Auth checks the caller's session and verifies the current password in the handler.
+verify_jwt = false

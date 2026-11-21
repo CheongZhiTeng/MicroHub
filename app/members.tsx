@@ -136,9 +136,13 @@ function Directory({ bilingual }: { bilingual: boolean }) {
                 {member.student_id} · {member.class_name}
               </Body>
               <Badge
-                label={
-                  member.platform_roles?.role.replace('_', ' ') ?? 'member'
-                }
+                label={t(
+                  member.platform_roles?.role === 'super_admin'
+                    ? 'teach'
+                    : member.platform_roles?.role === 'admin'
+                      ? 'Admin'
+                      : 'Member',
+                )}
               />
             </Card>
           ))}
