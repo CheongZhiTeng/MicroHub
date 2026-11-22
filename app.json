@@ -9,7 +9,19 @@
     "ios": {
       "supportsTablet": true
     },
-    "plugins": ["expo-router", "expo-secure-store", "expo-system-ui"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-system-ui",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose a photo for your MicroHub profile.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ],
     "web": {
       "bundler": "metro"
     }

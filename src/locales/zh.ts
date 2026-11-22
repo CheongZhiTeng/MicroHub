@@ -1,5 +1,16 @@
 // Handwritten Simplified Chinese copy for MicroHub.
 export const zh: Readonly<Record<string, string>> = {
+  'Change profile photo': '更换个人头像',
+  'Photo preview': '头像预览',
+  'Save photo': '保存头像',
+  'Remove your profile photo?': '确定移除当前头像？',
+  'Confirm removal': '确认移除',
+  'Remove photo': '移除头像',
+  'Invalid profile photo.': '无法读取这张照片，请重新选择。',
+  'Photo could not be saved.': '头像保存失败，请重试。',
+  'Photo changed. Open your profile again.':
+    '头像已在其他设备上更改，请重新打开个人资料。',
+  'Profile photos are not available yet.': '当前服务器尚未启用头像上传。',
   teach: '研教',
   'Group teach': '本组研教',
   'Appoint teach': '任命研教',

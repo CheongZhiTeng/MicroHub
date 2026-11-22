@@ -9,7 +9,10 @@ export function Access({
   admin = false,
   member = false,
 }: {
-  children: (identity: Identity) => React.ReactNode;
+  children: (
+    identity: Identity,
+    refresh: () => Promise<void>,
+  ) => React.ReactNode;
   signInParams?: { next: string; id?: string; mode?: string; copy?: string };
   admin?: boolean;
   member?: boolean;
@@ -50,5 +53,5 @@ export function Access({
     return <Notice text={t('An approved club membership is required.')} />;
   if (admin && identity.role === 'member')
     return <Notice error text={t('Administrator access is required.')} />;
-  return <>{children(identity)}</>;
+  return <>{children(identity, reload)}</>;
 }

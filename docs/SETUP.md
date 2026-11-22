@@ -52,3 +52,7 @@ Add a new timestamped migration for every schema/policy change; never edit a dep
 ## Before real student data
 
 Agree school authorization, privacy contact, minimal profile fields, retention schedule and incident owner. Configure SMTP, Auth rate limits, project backups and monitoring. The V2 deletion workflow is not implemented: handle requests through the school's documented process. There is no promise of legal compliance or a tested production restore. Account suspension blocks protected database access immediately; Supabase access JWTs may remain cryptographically valid until expiry, but cannot bypass the live database status check. Sign-out revokes refresh sessions; native persisted tokens are cleared locally.
+
+### Profile photos
+
+The profile editor uses migration `202611220001_profile_avatars.sql` and the `profile-avatar` Edge Function. In an authenticated release checkout, check the intended project and pending migration list before applying migrations. Deploy the function to the same project with `supabase functions deploy profile-avatar --project-ref <project-ref> --use-api`. The verified user's token is checked by the handler. Students' photos are private and existing accounts start with initials.

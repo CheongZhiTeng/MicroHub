@@ -1,8 +1,16 @@
 import { useLanguage } from '../locales/provider';
 import { passwordChecks } from '../lib/validation';
-import { useRef, useState, type PropsWithChildren, type Ref } from 'react';
+import { client } from '../lib/supabase';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PropsWithChildren,
+  type Ref,
+} from 'react';
 import {
   ActivityIndicator,
+  Image,
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
@@ -222,7 +230,58 @@ export function Badge({ label }: { label: string }) {
     </View>
   );
 }
-export function Avatar({ name, size = 44 }: { name: string; size?: number }) {
+export function Avatar({
+  name,
+  size = 44,
+  owner,
+  version,
+  preview,
+}: {
+  name: string;
+  size?: number;
+  owner?: string;
+  version?: string | null;
+  preview?: string;
+}) {
+  const path =
+    owner && version ? 'avatars/' + owner + '/' + version + '.jpg' : null;
+  const [photo, setPhoto] = useState<{ path: string; uri: string } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!path || preview) return;
+    let alive = true;
+    const renew = async () => {
+      try {
+        const { data, error } = await client().functions.invoke(
+          'profile-avatar?mode=read&path=' + encodeURIComponent(path),
+          { body: {} },
+        );
+        const signedPath = data?.path;
+        const base = process.env.EXPO_PUBLIC_SUPABASE_URL;
+        if (alive)
+          setPhoto(
+            !error &&
+              base &&
+              typeof signedPath === 'string' &&
+              signedPath.startsWith(
+                '/storage/v1/object/sign/club-private/avatars/',
+              )
+              ? { path, uri: new URL(signedPath, base).href }
+              : null,
+          );
+      } catch {
+        if (alive) setPhoto(null);
+      }
+    };
+    void renew();
+    const timer = setInterval(() => void renew(), 105000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [path, preview]);
+  const uri = preview || (photo?.path === path ? photo?.uri : null);
   const initials = name
     .trim()
     .split(/\s+/)
@@ -240,7 +299,16 @@ export function Avatar({ name, size = 44 }: { name: string; size?: number }) {
         { width: size, height: size, borderRadius: size / 2 },
       ]}
     >
-      <Text style={styles.initials}>{initials || 'M'}</Text>
+      {uri ? (
+        <Image
+          source={{ uri }}
+          accessibilityLabel={name}
+          style={{ width: size, height: size, borderRadius: size / 2 }}
+          onError={() => setPhoto(null)}
+        />
+      ) : (
+        <Text style={styles.initials}>{initials || 'M'}</Text>
+      )}
     </View>
   );
 }

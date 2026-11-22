@@ -38,6 +38,8 @@ export default function More() {
     <Screen title={t('Your space')}>
       <Card>
         <Avatar
+          owner={identity?.profile.id}
+          version={identity?.profile.avatar_id}
           name={identity ? profileName(identity.profile, language) : ''}
           size={56}
         />

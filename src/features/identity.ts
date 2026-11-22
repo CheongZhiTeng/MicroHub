@@ -7,6 +7,7 @@ import { useSession } from './session';
 export type Profile = {
   id: string;
   student_id: string;
+  avatar_id?: string | null;
   display_name: string;
   name_zh?: string | null;
   name_en?: string | null;

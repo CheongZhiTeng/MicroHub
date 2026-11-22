@@ -15,6 +15,7 @@ assert(
 for (const url of [
   process.env.HOMEWORK_FILES_URL,
   process.env.DELETE_GROUP_URL,
+  process.env.PROFILE_AVATAR_URL,
 ].filter(Boolean)) {
   const endpoint = new URL(url);
   assert(
@@ -33,23 +34,28 @@ async function checked(result) {
   if (error) throw Error(error.message);
   return data;
 }
-async function user(name, role) {
+async function user(name, role, attempt = 0) {
   const studentId = String(randomInt(100000, 1000000));
   const email = 'sa' + studentId + '@foonyewsa.edu.my';
-  const { user } = await checked(
-    service.auth.admin.createUser({ email, password, email_confirm: true }),
-  );
+  const result = await service.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (result.error?.code === 'email_exists' && attempt < 3)
+    return user(name, role, attempt + 1);
+  const { user: created } = await checked(result);
   await checked(
     service
       .from('profiles')
       .update({ display_name: name, class_name: 'Local test' })
-      .eq('id', user.id),
+      .eq('id', created.id),
   );
-  await checked(service.from('memberships').insert({ user_id: user.id }));
+  await checked(service.from('memberships').insert({ user_id: created.id }));
   await checked(
-    service.from('platform_roles').update({ role }).eq('user_id', user.id),
+    service.from('platform_roles').update({ role }).eq('user_id', created.id),
   );
-  return { email, id: user.id, studentId };
+  return { email, id: created.id, studentId };
 }
 async function run() {
   const teacher = await user('Homework Teacher', 'admin'),
@@ -106,7 +112,10 @@ async function run() {
                 : process.env.DELETE_GROUP_URL &&
                     url.pathname === '/functions/v1/delete-group'
                   ? process.env.DELETE_GROUP_URL
-                  : api + url.pathname + url.search,
+                  : process.env.PROFILE_AVATAR_URL &&
+                      url.pathname === '/functions/v1/profile-avatar'
+                    ? process.env.PROFILE_AVATAR_URL + url.search
+                    : api + url.pathname + url.search,
           });
           await route.fulfill({ response });
         } catch (e) {
@@ -148,6 +157,15 @@ async function run() {
     await click(p, 'Sign in');
   }
   try {
+    if (process.env.PROFILE_AVATAR_URL)
+      await require('./profile-browser.cjs')({
+        user,
+        device,
+        login,
+        click,
+        see,
+        origin,
+      });
     const staff = await device(1280),
       phone = await device(390, 'dark'),
       desk = await device(1024),

@@ -43,6 +43,8 @@ export function ClubHeader({ identity }: { identity: Identity | null }) {
         style={styles.profile}
       >
         <Avatar
+          owner={identity?.profile.id}
+          version={identity?.profile.avatar_id}
           name={identity ? profileName(identity.profile, language) : ''}
           size={40}
         />

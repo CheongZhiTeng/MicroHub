@@ -3,6 +3,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '../theme/provider';
 
 const paths = {
+  edit: 'm14 5 5 5M4 20l4-1 13-13-4-4L4 15Z',
   code: 'm8 5-7 7 7 7m8-14 7 7-7 7m-3-17-2 20',
   home: 'm3 10 9-8 9 8v11h-6v-7H9v7H3Z',
   homework: 'M9 4H5v18h14V4h-4M9 2h6v5H9ZM8 11h8m-8 4h8m-8 4h5',

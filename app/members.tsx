@@ -28,9 +28,16 @@ type Member = ProfileNames & {
   id: string;
   student_id: string;
   class_name: string;
+  avatar_id?: string | null;
   platform_roles: { role: string } | null;
 };
-function Directory({ bilingual }: { bilingual: boolean }) {
+function Directory({
+  bilingual,
+  photos,
+}: {
+  bilingual: boolean;
+  photos: boolean;
+}) {
   const { t, language } = useLanguage();
   const { width } = useWindowDimensions();
   const generation = useRef(0);
@@ -49,7 +56,8 @@ function Directory({ bilingual }: { bilingual: boolean }) {
         .from('profiles')
         .select(
           'id,display_name,student_id,class_name,platform_roles(role),memberships!inner(status)' +
-            (bilingual ? ',name_zh,name_en' : ''),
+            (bilingual ? ',name_zh,name_en' : '') +
+            (photos ? ',avatar_id' : ''),
         )
         .eq('memberships.status', 'active')
         .eq('status', 'active')
@@ -67,7 +75,7 @@ function Directory({ bilingual }: { bilingual: boolean }) {
     } finally {
       if (requestId === generation.current) setBusy(false);
     }
-  }, [search, page, bilingual]);
+  }, [search, page, bilingual, photos]);
   // Remote query loading state is synchronized with its network request.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -125,7 +133,11 @@ function Directory({ bilingual }: { bilingual: boolean }) {
               <View
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
               >
-                <Avatar name={profileName(member, language)} />
+                <Avatar
+                  owner={member.id}
+                  version={member.avatar_id}
+                  name={profileName(member, language)}
+                />
                 <View style={{ flex: 1 }}>
                   <Heading>
                     {profileName(member, language) || member.student_id}
@@ -171,7 +183,10 @@ export default function Members() {
     <Screen title={t('Member directory')} subtitle={t('Your club community')}>
       <Access member>
         {(identity) => (
-          <Directory bilingual={hasBilingualNames(identity.profile)} />
+          <Directory
+            photos={identity.profile.avatar_id !== undefined}
+            bilingual={hasBilingualNames(identity.profile)}
+          />
         )}
       </Access>
       <Button
