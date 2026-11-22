@@ -1,6 +1,12 @@
 import { useLanguage } from '../locales/provider';
 import { useEffect, useRef } from 'react';
-import { Modal, Platform, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  View,
+} from 'react-native';
 import { Reveal } from './motion';
 import { Button, Card, Heading, Body } from './ui';
 export function ConfirmDialog({
@@ -10,10 +16,20 @@ export function ConfirmDialog({
   onCancel,
   onConfirm,
   busy = false,
+  children,
+  confirmTitle,
+  cancelTitle,
+  danger = true,
+  disabled = false,
 }: {
   visible: boolean;
   title: string;
-  message: string;
+  message?: string;
+  children?: React.ReactNode;
+  confirmTitle?: string;
+  cancelTitle?: string;
+  danger?: boolean;
+  disabled?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   busy?: boolean;
@@ -27,7 +43,7 @@ export function ConfirmDialog({
     const buttons = () =>
       Array.from(
         container()?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), [role="button"][tabindex="0"]',
+          'input:not(:disabled),textarea:not(:disabled),button:not(:disabled), [role="button"][tabindex="0"]',
         ) ?? [],
       );
     const timer = requestAnimationFrame(() => {
@@ -64,7 +80,8 @@ export function ConfirmDialog({
         if (!busy) onCancel();
       }}
     >
-      <View
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{
           flex: 1,
           backgroundColor: '#00000088',
@@ -77,28 +94,32 @@ export function ConfirmDialog({
           ref={root}
           accessibilityViewIsModal
           accessibilityRole="alert"
-          style={{ width: '100%', maxWidth: 420 }}
+          style={{ width: '100%', maxWidth: 420, maxHeight: '100%' }}
         >
-          <Reveal key={visible ? 'open' : 'closed'}>
-            <Card>
-              <Heading>{title}</Heading>
-              <Body>{message}</Body>
-              <Button
-                title={t('Cancel')}
-                variant="ghost"
-                busy={busy}
-                onPress={onCancel}
-              />
-              <Button
-                title={t('Confirm')}
-                variant="danger"
-                busy={busy}
-                onPress={onConfirm}
-              />
-            </Card>
-          </Reveal>
+          <ScrollView keyboardShouldPersistTaps="handled">
+            <Reveal key={visible ? 'open' : 'closed'}>
+              <Card>
+                <Heading>{title}</Heading>
+                {message && <Body>{message}</Body>}
+                {children}
+                <Button
+                  title={cancelTitle ?? t('Cancel')}
+                  variant="ghost"
+                  busy={busy}
+                  onPress={onCancel}
+                />
+                <Button
+                  title={confirmTitle ?? t('Confirm')}
+                  disabled={disabled}
+                  variant={danger ? 'danger' : 'primary'}
+                  busy={busy}
+                  onPress={onConfirm}
+                />
+              </Card>
+            </Reveal>
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

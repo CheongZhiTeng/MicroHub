@@ -54,17 +54,41 @@ export function useEvents(scope: string, day = '', page = 0, preview = false) {
         after = new Date(time).toISOString();
         before = new Date(time + 86400000).toISOString();
       }
-      const { data, error } = await client().rpc('class_events_feed', {
-        p_scope: scope,
-        p_after: after,
-        p_before: before,
-        p_page: page,
-        p_preview: preview,
-      });
-      if (error?.code === 'PGRST202')
-        throw Error('Calendar is awaiting a database update.');
-      if (error) throw error;
-      return data as ClassEvent[];
+      return eventPage(scope, after, before, page, preview);
     }, [scope, day, page, preview]),
   );
+}
+
+async function eventPage(
+  scope: string,
+  after: string | null,
+  before: string | null,
+  page: number,
+  preview = false,
+) {
+  const { data, error } = await client().rpc('class_events_feed', {
+    p_scope: scope,
+    p_after: after,
+    p_before: before,
+    p_page: page,
+    p_preview: preview,
+  });
+  if (error?.code === 'PGRST202')
+    throw Error('Calendar is awaiting a database update.');
+  if (error) throw error;
+  return data as ClassEvent[];
+}
+// The feed returns 20 rows and one lookahead. Fetch the whole interval so the
+// calendar includes busy days and events spanning midnight.
+export async function eventsInRange(
+  scope: string,
+  after: string,
+  before: string,
+) {
+  const byId = new Map<string, ClassEvent>();
+  for (let page = 0; ; page++) {
+    const rows = await eventPage(scope, after, before, page);
+    for (const row of rows.slice(0, 20)) byId.set(row.id, row);
+    if (rows.length <= 20) return [...byId.values()];
+  }
 }

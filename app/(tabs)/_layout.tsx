@@ -24,7 +24,7 @@ export default function TabsLayout() {
     return (
       <Redirect
         href={
-          tab === 'homework' || tab === 'events'
+          tab === 'homework' || tab === 'groups' || tab === 'more'
             ? { pathname: '/sign-in', params: { next: tab } }
             : '/sign-in'
         }
@@ -90,7 +90,7 @@ export default function TabsLayout() {
           ['index', en.home, 'home'],
           ['homework', en.homework, 'homework'],
           ['attendance', en.attendance, 'attendance'],
-          ['events', en.events, 'calendar'],
+          ['groups', 'My group', 'members'],
           ['more', en.more, 'more'],
         ] as const
       ).map(([name, title, icon]) => (

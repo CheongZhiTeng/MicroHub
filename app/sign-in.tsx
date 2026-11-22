@@ -41,7 +41,19 @@ export default function SignIn() {
       /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
     if (next === 'notifications') return <Redirect href="/notifications" />;
     if (next === 'announcements') return <Redirect href="/announcements" />;
+    if (next === 'announcement-editor')
+      return <Redirect href="/announcement-editor" />;
+    if (next === 'event-editor')
+      return (
+        <Redirect
+          href={{
+            pathname: '/event-editor',
+            params: { ...(validId(id) ? { id, mode } : {}) },
+          }}
+        />
+      );
     if (next === 'profile') return <Redirect href="/profile" />;
+    if (next === 'more') return <Redirect href="/more" />;
     if (next === 'events') return <Redirect href="/events" />;
     if (next === 'groups') return <Redirect href="/groups" />;
     if (next === 'assignment-editor')

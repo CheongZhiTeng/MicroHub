@@ -1,9 +1,10 @@
+import { MonthCalendar } from './month-calendar';
 import {
   announcementsUnavailable,
   useAnnouncements,
 } from '../features/announcements';
 import { useState } from 'react';
-import { ClassScope, useEvents } from '../features/class-scope';
+import { ClassScope } from '../features/class-scope';
 import { profileName } from '../lib/profile-name';
 import { useLanguage } from '../locales/provider';
 import {
@@ -159,7 +160,7 @@ function OverviewLink({
 export function ClubOverview({ teach = false }: { teach?: boolean }) {
   const [scope, setScope] = useState('all');
   const groups = useHomework('hw_scopes');
-  const events = useEvents(scope, '', 0, true);
+
   const { t } = useLanguage();
   const work = useHomework(
     scope === 'all' ? 'hw_summary' : 'class_homework_summary',
@@ -175,6 +176,7 @@ export function ClubOverview({ teach = false }: { teach?: boolean }) {
         change={setScope}
         groups={teach ? groups.data : []}
       />
+      <MonthCalendar scope={scope} />
       <ContentGrid>
         <OverviewLink
           label={t('Assignment workspace')}
@@ -257,34 +259,6 @@ export function ClubOverview({ teach = false }: { teach?: boolean }) {
                   : announcements.data
                     ? 'No announcements yet.'
                     : 'Loading announcements…',
-              )}
-            </Body>
-          )}
-        </OverviewLink>
-        <OverviewLink
-          label={t('Your club calendar')}
-          title={t('Upcoming club events')}
-          icon="calendar"
-          onPress={() => router.push('/(tabs)/events')}
-        >
-          {events.data?.length ? (
-            events.data.map((e) => (
-              <View key={e.id} style={styles.highlight}>
-                <View style={styles.copy}>
-                  <Text style={styles.cardSubtitle}>{e.title}</Text>
-                  <Body>
-                    {(e.group_name ?? t('Big class')) +
-                      ' · ' +
-                      dueLabel(e.starts_at)}
-                  </Body>
-                </View>
-              </View>
-            ))
-          ) : (
-            <Body>
-              {t(
-                events.error ??
-                  (events.data ? 'No events in this view.' : 'Loading events…'),
               )}
             </Body>
           )}

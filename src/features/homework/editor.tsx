@@ -1,3 +1,4 @@
+import { useFormExit } from '../form-exit';
 import { useLanguage } from '../../locales/provider';
 import { uuid } from 'expo';
 import { router } from 'expo-router';
@@ -133,6 +134,22 @@ export function AssignmentEditor({
   const [limit, setLimit] = useState(String(a?.file_limit ?? 0));
   const [mb, setMb] = useState(String((a?.file_bytes ?? 5242880) / 1048576));
   const [mode, setMode] = useState(a?.file_mode ?? 'any');
+  const fingerprint = JSON.stringify([
+    groupId,
+    title,
+    instructions,
+    due,
+    max,
+    type,
+    late,
+    audience,
+    targets,
+    limit,
+    mb,
+    mode,
+  ]);
+  const [savedForm, setSavedForm] = useState(fingerprint);
+  const exit = useFormExit(fingerprint !== savedForm);
   const savedRules = useRef({
     limit: a?.file_limit ?? 0,
     bytes: a?.file_bytes ?? 5242880,
@@ -206,10 +223,12 @@ export function AssignmentEditor({
       });
       setRevision(nextRevision + 1);
     }
+    setSavedForm(fingerprint);
   }
   const save = () =>
     action.run(async () => {
       await persist();
+      exit.finish();
       router.replace({
         pathname: '/assignment',
         params: { id, mode: 'manage' },
@@ -225,6 +244,7 @@ export function AssignmentEditor({
         gap: 20,
       }}
     >
+      {exit.dialog}
       <View style={{ flex: desktop ? 2 : undefined, minWidth: 0, gap: 16 }}>
         <Card>
           <SectionTitle icon="members">{t('Recipients')}</SectionTitle>

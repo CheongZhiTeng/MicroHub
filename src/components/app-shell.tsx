@@ -20,7 +20,7 @@ function DesktopNavigation() {
     [t('Home'), '/', 'home'],
     [t('Homework'), '/homework', 'homework'],
     [t('Attendance'), '/attendance', 'attendance'],
-    [t('Events'), '/events', 'calendar'],
+    [t('My group'), '/groups', 'members'],
     [t('More'), '/more', 'more'],
     [t('Profile'), '/profile', 'user'],
     [t('Settings'), '/settings', 'settings'],

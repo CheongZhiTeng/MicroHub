@@ -73,11 +73,20 @@ export default function More() {
           )}
         {identity?.member && identity.profile.status === 'active' && (
           <>
-            <NavigationRow
-              icon="members"
-              title={t('My group')}
-              onPress={() => router.push('/groups')}
-            />
+            {identity.role === 'super_admin' && (
+              <>
+                <NavigationRow
+                  icon="calendar"
+                  title={t('New event')}
+                  onPress={() => router.push('/event-editor')}
+                />
+                <NavigationRow
+                  icon="calendar"
+                  title={t('Manage events')}
+                  onPress={() => router.push('/events')}
+                />
+              </>
+            )}
             <NavigationRow
               icon="announcement"
               title={t('Announcements')}

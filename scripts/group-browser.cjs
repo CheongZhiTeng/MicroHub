@@ -24,9 +24,12 @@ module.exports = async function groupBrowser({
   const title = 'Group ' + randomUUID().slice(0, 8);
   const url = origin + '/groups/';
   await login(desk, root, url);
+  await click(desk, 'Create group');
   await desk.getByLabel('Group name', { exact: true }).fill(title);
-  await click(desk, 'Preview new group');
-  await click(desk, 'Confirm change');
+  await desk
+    .getByRole('button', { name: 'Create group', exact: true })
+    .last()
+    .click();
   await see(desk, title);
   const search = (p, q) => p.getByLabel('Search name or student ID').fill(q);
   await search(desk, teacher.studentId);
@@ -119,8 +122,12 @@ module.exports = async function groupBrowser({
   await login(tablet, teacher, posts);
   const publish = async (audience, heading) => {
     await click(tablet, 'New announcement');
-    await click(tablet, audience);
     await tablet.getByLabel('Title', { exact: true }).fill(heading);
+    await tablet
+      .getByRole('radio', { name: audience, exact: true })
+      .filter({ visible: true })
+      .click();
+
     await tablet
       .getByLabel('Announcement message')
       .fill('Bring your notes to the meeting.');
@@ -162,11 +169,26 @@ module.exports = async function groupBrowser({
     a,
   });
   const eventsUrl = origin + '/events/';
-  await login(tablet, teacher, eventsUrl);
+  await login(tablet, teacher, origin + '/more/');
   await click(tablet, 'New event');
-  await click(tablet, title);
+  await tablet.getByLabel('Starts (MYT)').waitFor();
+  await tablet
+    .getByRole('radio', { name: title, exact: true })
+    .filter({ visible: true })
+    .click();
   const eventTitle = 'Workshop ' + title;
   await tablet.getByLabel('Title', { exact: true }).fill(eventTitle);
+  const nowDay = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+  await tablet.getByLabel('Starts (MYT)').fill(nowDay + ' 00:00');
+  await tablet.getByLabel('Ends (MYT)').fill(nowDay + ' 23:59');
+  await tablet.getByLabel('Location', { exact: true }).fill('Room A201');
+  await click(tablet, 'Back to calendar');
+  await see(tablet, 'Discard changes?');
+  await click(tablet, 'Keep editing');
+  assert.equal(
+    await tablet.getByLabel('Title', { exact: true }).inputValue(),
+    eventTitle,
+  );
   await click(tablet, 'Save event');
   await see(tablet, eventTitle);
   await login(phone, student, eventsUrl);
@@ -174,9 +196,26 @@ module.exports = async function groupBrowser({
   await see(phone, eventTitle);
   await click(phone, 'Big class');
   await see(phone, 'No events in this view.');
+  await click(phone, 'Back to home');
+  await see(phone, 'Club calendar');
+  await phone
+    .getByRole('button', { name: nowDay + ' · Has events', exact: true })
+    .click();
+  await see(phone, eventTitle);
+  await click(phone, 'Next month');
+  await click(phone, 'Previous month');
+  await phone
+    .getByRole('button', { name: nowDay + ' · Has events', exact: true })
+    .click();
+  await see(phone, eventTitle);
+  console.log(
+    'Home month calendar and event editor passed: group event, location, navigation and unsaved form.',
+  );
   if (process.env.DELETE_GROUP_URL) {
     await login(tablet, teacher, url);
-    await tablet.getByLabel('Group name', { exact: true }).waitFor();
+    await tablet
+      .getByRole('button', { name: 'Create group', exact: true })
+      .waitFor();
     await click(tablet, title);
     const remove = async (value) => {
       await click(tablet, 'Delete group');

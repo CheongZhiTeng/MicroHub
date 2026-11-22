@@ -1,8 +1,9 @@
+import { ConfirmDialog } from '../../src/components/confirm-dialog';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, View, useWindowDimensions } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { Access } from '../src/features/access';
-import { useBusy } from '../src/features/busy';
+import { Access } from '../../src/features/access';
+import { useBusy } from '../../src/features/busy';
 import {
   PasswordField,
   Body,
@@ -13,10 +14,10 @@ import {
   Loading,
   Notice,
   Screen,
-} from '../src/components/ui';
-import { useLanguage } from '../src/locales/provider';
-import { errorMessage } from '../src/lib/validation';
-import { profileName } from '../src/lib/profile-name';
+} from '../../src/components/ui';
+import { useLanguage } from '../../src/locales/provider';
+import { errorMessage } from '../../src/lib/validation';
+import { profileName } from '../../src/lib/profile-name';
 import {
   actions,
   changeGroup,
@@ -26,7 +27,7 @@ import {
   type Group,
   type Person,
   type Workspace,
-} from '../src/features/groups/api';
+} from '../../src/features/groups/api';
 
 type Preview = { args: Change; label: string };
 function GroupWorkspace({ root }: { root: boolean }) {
@@ -36,6 +37,9 @@ function GroupWorkspace({ root }: { root: boolean }) {
   const wide = useWindowDimensions().width >= 1024;
   const [password, setPassword] = useState('');
   const [archived, setArchived] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [discardGroup, setDiscardGroup] = useState(false);
+  const [createError, setCreateError] = useState('');
   const [groupName, setGroupName] = useState('');
   const [search, setSearch] = useState('');
   const [personId, setPersonId] = useState('');
@@ -171,33 +175,68 @@ function GroupWorkspace({ root }: { root: boolean }) {
       {data && (
         <>
           {root && (
-            <Card>
-              <Heading>{t('Create group')}</Heading>
-              <Field
-                label={t('Group name')}
-                value={groupName}
-                onChangeText={(v) => {
-                  setGroupName(v);
-                  setPreview(null);
-                }}
-                maxLength={80}
-              />
+            <>
               <Button
-                title={t('Preview new group')}
+                title={t('Create group')}
+                onPress={() => {
+                  setGroupName('');
+                  setCreateError('');
+                  setDiscardGroup(false);
+                  setCreating(true);
+                }}
+              />
+              <ConfirmDialog
+                visible={creating && !discardGroup}
+                title={t('Create group')}
+                confirmTitle={t('Create group')}
+                danger={false}
+                busy={busy}
                 disabled={!groupName.trim()}
-                onPress={() =>
-                  setPreview({
-                    args: {
+                onCancel={() =>
+                  groupName.trim() ? setDiscardGroup(true) : setCreating(false)
+                }
+                onConfirm={async () => {
+                  if (!groupName.trim() || !start()) return;
+                  try {
+                    const gid = await changeGroup({
                       p_action: 'create',
+                      p_name: groupName.trim(),
                       p_group: null,
                       p_revision: null,
-                      p_name: groupName.trim(),
-                    },
-                    label: t('Create group') + ' · ' + groupName.trim(),
-                  })
-                }
+                    });
+                    setId(gid);
+                    setArchived(false);
+                    setCreating(false);
+                    await reload();
+                  } catch (e) {
+                    setCreateError(errorMessage(e));
+                  } finally {
+                    finish();
+                  }
+                }}
+              >
+                <Field
+                  label={t('Group name')}
+                  value={groupName}
+                  onChangeText={setGroupName}
+                  maxLength={80}
+                  editable={!busy}
+                />
+                {!!createError && <Notice error text={t(createError)} />}
+              </ConfirmDialog>
+              <ConfirmDialog
+                visible={creating && discardGroup}
+                title={t('Discard changes?')}
+                message={t('Your unsaved changes will be lost.')}
+                confirmTitle={t('Discard changes')}
+                cancelTitle={t('Keep editing')}
+                onCancel={() => setDiscardGroup(false)}
+                onConfirm={() => {
+                  setCreating(false);
+                  setDiscardGroup(false);
+                }}
               />
-            </Card>
+            </>
           )}
           {data.groups.length === 0 && (
             <Notice

@@ -1,3 +1,4 @@
+const { Buffer } = require('node:buffer');
 const assert = require('node:assert/strict');
 module.exports = async function profileBrowser({
   user,

@@ -1,5 +1,14 @@
 // Handwritten Simplified Chinese copy for MicroHub.
 export const zh: Readonly<Record<string, string>> = {
+  'Club calendar': '学会日历',
+  'Previous month': '上个月',
+  'Next month': '下个月',
+  'Has events': '有活动',
+  'No events on this day.': '当天没有活动。',
+  'Manage events': '管理活动',
+  'Event unavailable.': '无法查看这项活动。',
+  'Discard changes?': '放弃未保存的更改？',
+  'Your unsaved changes will be lost.': '离开后，本次填写的内容将丢失。',
   'Change profile photo': '更换个人头像',
   'Photo preview': '头像预览',
   'Save photo': '保存头像',
@@ -11,6 +20,8 @@ export const zh: Readonly<Record<string, string>> = {
   'Photo changed. Open your profile again.':
     '头像已在其他设备上更改，请重新打开个人资料。',
   'Profile photos are not available yet.': '当前服务器尚未启用头像上传。',
+  'Discard changes': '放弃更改',
+  'Keep editing': '继续编辑',
   teach: '研教',
   'Group teach': '本组研教',
   'Appoint teach': '任命研教',
