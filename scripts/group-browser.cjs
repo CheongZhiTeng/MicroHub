@@ -78,7 +78,7 @@ module.exports = async function groupBrowser({
     return c;
   };
   const [coord, a, b] = await Promise.all([root, teacher, other].map(session));
-  await require('./daily-queue-browser.cjs')({
+  const assignment = await require('./daily-queue-browser.cjs')({
     staff: root,
     students: [student, waiting],
     session,
@@ -215,21 +215,49 @@ module.exports = async function groupBrowser({
   await click(phone, 'Big class');
   await see(phone, 'No events in this view.');
   await click(phone, 'Back to home');
-  await see(phone, 'Weekly agenda');
-  await click(phone, eventTitle);
-  await see(phone, 'Room A201');
-  await click(phone, 'Month');
   await see(phone, 'Club calendar');
+  const eventDay = phone.getByRole('button', {
+    name: new RegExp('^' + nowDay + ' · Has events'),
+  });
+  for (const width of [390, 1280]) {
+    await phone.setViewportSize({ width, height: 850 });
+    assert.equal(
+      await phone.getByRole('radio', { name: /^(Week|Month)$/ }).count(),
+      0,
+    );
+    assert.equal(
+      await phone.getByText('This week', { exact: true }).count(),
+      0,
+    );
+    await eventDay.click();
+    await see(phone, eventTitle);
+    await phone
+      .getByText(/Room A201/)
+      .first()
+      .waitFor();
+    await click(phone, 'Next month');
+    await click(phone, 'Previous month');
+    await eventDay.click();
+  }
+  await phone.setViewportSize({ width: 390, height: 850 });
+  const dueDay = new Date(assignment.due.getTime() + 8 * 3600000)
+    .toISOString()
+    .slice(0, 10);
+  if (dueDay.slice(0, 7) !== nowDay.slice(0, 7))
+    await click(phone, 'Next month');
   await phone
-    .getByRole('button', { name: nowDay + ' · Has events', exact: true })
+    .getByRole('button', { name: new RegExp('^' + dueDay + ' .*Homework due') })
     .click();
-  await see(phone, eventTitle);
-  await click(phone, 'Next month');
-  await click(phone, 'Previous month');
+  await click(phone, assignment.title);
+  await phone.waitForURL(
+    (target) =>
+      target.searchParams.get('id') === assignment.id &&
+      target.searchParams.get('mode') === 'mine',
+  );
   await phone
-    .getByRole('button', { name: nowDay + ' · Has events', exact: true })
-    .click();
-  await see(phone, eventTitle);
+    .getByText(assignment.title, { exact: true })
+    .filter({ visible: true })
+    .waitFor();
   console.log(
     'Home month calendar and event editor passed: group event, location, navigation and unsaved form.',
   );

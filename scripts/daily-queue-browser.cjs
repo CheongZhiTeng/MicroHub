@@ -18,12 +18,13 @@ module.exports = async function exercise({
     assert.ifError(r.error);
     return r.data;
   }
+  const due = new Date(Date.now() + 86400000);
   await rpc(manager, 'hw_save_assignment', {
     p_id: id,
     p_revision: 0,
     p_title: title,
     p_instructions: 'Answer',
-    p_due: new Date(Date.now() + 86400000).toISOString(),
+    p_due: due.toISOString(),
     p_points: 10,
     p_text: true,
     p_link: false,
@@ -66,4 +67,5 @@ module.exports = async function exercise({
   console.log(
     'Two private submissions returned sequentially through the staff queue.',
   );
+  return { id, title, due };
 };

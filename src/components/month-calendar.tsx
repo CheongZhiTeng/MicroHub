@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { client } from '../lib/supabase';
 import { router } from 'expo-router';
 import { eventsInRange } from '../features/class-scope';
 import { useFocusedQuery } from '../features/focused-query';
 import { useLanguage } from '../locales/provider';
 import { useTheme } from '../theme/provider';
-import { Body, Button, Card, Notice, SectionTitle } from './ui';
+import { Body, Button, Card, Notice, SectionTitle, NavigationRow } from './ui';
 
+type Deadline = {
+  id: string;
+  title: string;
+  due_at: string;
+  group_name: string | null;
+};
 const dayMs = 86_400_000;
 const offset = 8 * 3_600_000;
 function malaysianToday() {
@@ -26,15 +33,29 @@ export function MonthCalendar({ scope }: { scope: string }) {
     Date.UTC(day.getUTCFullYear(), day.getUTCMonth() + delta, 1);
   const start = monthStart(0),
     end = monthStart(1);
+  const after = new Date(start - offset).toISOString();
+  const before = new Date(end - offset).toISOString();
+  const deadlines = useFocusedQuery(
+    useCallback(async () => {
+      const { data, error } = await client().rpc('daily_due', {
+        p_scope: scope,
+        p_after: after,
+        p_before: before,
+      });
+      if (error?.code === 'PGRST202') return null;
+      if (error) throw error;
+      return (data ?? []) as Deadline[];
+    }, [scope, after, before]),
+  );
+  const dueOn = (ms: number) =>
+    (deadlines.data ?? []).filter((item) => {
+      const when = Date.parse(item.due_at);
+      return when >= ms - offset && when < ms + dayMs - offset;
+    });
   const result = useFocusedQuery(
     useCallback(
-      () =>
-        eventsInRange(
-          scope,
-          new Date(start - offset).toISOString(),
-          new Date(end - offset).toISOString(),
-        ),
-      [scope, start, end],
+      () => eventsInRange(scope, after, before),
+      [scope, after, before],
     ),
   );
   const locale = language === 'zh' ? 'zh-CN' : 'en-GB';
@@ -48,6 +69,7 @@ export function MonthCalendar({ scope }: { scope: string }) {
   const first = start - ((new Date(start).getUTCDay() + 6) % 7) * dayMs;
   const weeks = Math.ceil((end - first) / (7 * dayMs));
   const entries = onDay(day.getTime());
+  const assignments = dueOn(day.getTime());
   return (
     <Card>
       <SectionTitle icon="calendar">{t('Club calendar')}</SectionTitle>
@@ -97,7 +119,8 @@ export function MonthCalendar({ scope }: { scope: string }) {
             const ms = first + (7 * week + i) * dayMs,
               key = stamp(ms),
               active = key === selected,
-              marked = onDay(ms).some((e) => !e.cancelled);
+              marked = onDay(ms).some((e) => !e.cancelled),
+              due = dueOn(ms).length > 0;
             if (ms < start || ms >= end)
               return <View key={key} style={{ flex: 1 }} />;
             return (
@@ -105,9 +128,13 @@ export function MonthCalendar({ scope }: { scope: string }) {
                 key={key}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
-                accessibilityLabel={
-                  key + (marked ? ' · ' + t('Has events') : '')
-                }
+                accessibilityLabel={[
+                  key,
+                  marked && t('Has events'),
+                  due && t('Homework due'),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
                 onPress={() => setSelected(key)}
                 style={{
                   flex: 1,
@@ -131,16 +158,24 @@ export function MonthCalendar({ scope }: { scope: string }) {
                 >
                   {new Date(ms).getUTCDate()}
                 </Text>
-                <View
-                  style={{
-                    height: 4,
-                    width: 4,
-                    borderRadius: 2,
-                    backgroundColor: marked
-                      ? theme.color.primary
-                      : 'transparent',
-                  }}
-                />
+                <View style={{ flexDirection: 'row', gap: 3, height: 4 }}>
+                  {marked && (
+                    <View
+                      style={[
+                        styles.dot,
+                        { backgroundColor: theme.color.primary },
+                      ]}
+                    />
+                  )}
+                  {due && (
+                    <View
+                      style={[
+                        styles.dot,
+                        { backgroundColor: theme.color.violet },
+                      ]}
+                    />
+                  )}
+                </View>
               </Pressable>
             );
           })}
@@ -161,8 +196,6 @@ export function MonthCalendar({ scope }: { scope: string }) {
         </>
       ) : !result.data ? (
         <Body>{t('Loading events…')}</Body>
-      ) : !entries.length ? (
-        <Body>{t('No events on this day.')}</Body>
       ) : (
         entries.map((e) => (
           <View key={e.id}>
@@ -175,9 +208,45 @@ export function MonthCalendar({ scope }: { scope: string }) {
               {dueLabel(e.ends_at)}
               {e.location ? ' · ' + e.location : ''}
             </Body>
+            {!!e.description && <Body>{e.description}</Body>}
           </View>
         ))
       )}
+      {deadlines.error ? (
+        <>
+          <Notice error text={deadlines.error} />
+          <Button title={t('Retry')} onPress={() => void deadlines.refresh()} />
+        </>
+      ) : deadlines.data === null ? (
+        <Body>{t('Homework dates need a database update.')}</Body>
+      ) : deadlines.data === undefined ? (
+        <Body>{t('Loading homework…')}</Body>
+      ) : (
+        assignments.map((item) => (
+          <NavigationRow
+            key={item.id}
+            icon="homework"
+            title={item.title}
+            subtitle={[
+              t('Homework due'),
+              item.group_name ?? t('Big class'),
+              dueLabel(item.due_at),
+            ].join(' · ')}
+            onPress={() =>
+              router.push({
+                pathname: '/assignment',
+                params: { id: item.id, mode: 'mine' },
+              })
+            }
+          />
+        ))
+      )}
+      {result.data &&
+        deadlines.data &&
+        !entries.length &&
+        !assignments.length && (
+          <Body>{t('Nothing scheduled on this day.')}</Body>
+        )}
       <Button
         title={t('Your club calendar')}
         variant="ghost"
@@ -186,3 +255,7 @@ export function MonthCalendar({ scope }: { scope: string }) {
     </Card>
   );
 }
+
+const styles = StyleSheet.create({
+  dot: { height: 4, width: 4, borderRadius: 2 },
+});
