@@ -2,11 +2,20 @@ import { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { client } from '../lib/supabase';
 import { router } from 'expo-router';
-import { eventsInRange } from '../features/class-scope';
+import { eventsInRange, type ClassEvent } from '../features/class-scope';
 import { useFocusedQuery } from '../features/focused-query';
 import { useLanguage } from '../locales/provider';
 import { useTheme } from '../theme/provider';
-import { Body, Button, Card, Notice, SectionTitle, NavigationRow } from './ui';
+import { Icon } from './icon';
+import {
+  Body,
+  Button,
+  Card,
+  Heading,
+  Notice,
+  SectionTitle,
+  NavigationRow,
+} from './ui';
 
 type Deadline = {
   id: string;
@@ -18,6 +27,92 @@ const dayMs = 86_400_000;
 const offset = 8 * 3_600_000;
 function malaysianToday() {
   return new Date(Date.now() + offset).toISOString().slice(0, 10);
+}
+function CalendarEventBlock({ event }: { event: ClassEvent }) {
+  const { t, dayLabel, timeLabel, dueLabel } = useLanguage();
+  const { theme, dark } = useTheme();
+  const { color } = theme;
+  const background = event.cancelled
+    ? color.errorSurface
+    : dark
+      ? color.selected
+      : color.primaryDark;
+  const ink = event.cancelled || dark ? color.text : color.onPrimary;
+  const accent = event.cancelled
+    ? color.error
+    : dark
+      ? color.primary
+      : color.selected;
+  const timeRange =
+    dayLabel(event.starts_at) === dayLabel(event.ends_at)
+      ? timeLabel(event.starts_at) + ' – ' + timeLabel(event.ends_at) + ' MYT'
+      : dueLabel(event.starts_at) + ' – ' + dueLabel(event.ends_at);
+  return (
+    <View
+      style={[
+        styles.eventBlock,
+        {
+          backgroundColor: background,
+          borderLeftColor: accent,
+          borderRadius: theme.radii.control,
+          padding: theme.space.md,
+        },
+      ]}
+    >
+      <Text
+        style={{
+          color: accent,
+          fontSize: theme.type.label,
+          fontFamily: theme.font,
+          fontWeight: '700',
+        }}
+      >
+        {event.group_name ?? t('Big class')}
+        {event.cancelled ? ' · ' + t('Cancelled') : ''}
+      </Text>
+      <Text
+        accessibilityRole="header"
+        style={{
+          color: ink,
+          fontSize: theme.type.heading,
+          fontFamily: theme.font,
+          fontWeight: '700',
+        }}
+      >
+        {event.title}
+      </Text>
+      <View style={styles.eventDetail}>
+        <Icon name="clock" size={18} color={accent} />
+        <Text
+          style={[styles.detailText, { color: ink, fontFamily: theme.font }]}
+        >
+          {timeRange}
+        </Text>
+      </View>
+      {!!event.location && (
+        <View style={styles.eventDetail}>
+          <Icon name="pin" size={18} color={accent} />
+          <Text
+            style={[styles.detailText, { color: ink, fontFamily: theme.font }]}
+          >
+            {event.location}
+          </Text>
+        </View>
+      )}
+      {!!event.description && (
+        <Text
+          style={{
+            color: ink,
+            fontSize: theme.type.body,
+            fontFamily: theme.font,
+            lineHeight: 23,
+          }}
+        >
+          {event.description}
+        </Text>
+      )}
+    </View>
+  );
 }
 export function MonthCalendar({ scope }: { scope: string }) {
   const { t, language, dueLabel } = useLanguage();
@@ -181,14 +276,14 @@ export function MonthCalendar({ scope }: { scope: string }) {
           })}
         </View>
       ))}
-      <Body>
+      <Heading>
         {day.toLocaleDateString(locale, {
           weekday: 'long',
           month: 'short',
           day: 'numeric',
           timeZone: 'UTC',
         })}
-      </Body>
+      </Heading>
       {result.error ? (
         <>
           <Notice error text={result.error} />
@@ -197,19 +292,8 @@ export function MonthCalendar({ scope }: { scope: string }) {
       ) : !result.data ? (
         <Body>{t('Loading events…')}</Body>
       ) : (
-        entries.map((e) => (
-          <View key={e.id}>
-            <Body>
-              {e.title}
-              {e.cancelled ? ' · ' + t('Cancelled') : ''}
-            </Body>
-            <Body>
-              {e.group_name ?? t('Big class')} · {dueLabel(e.starts_at)} –{' '}
-              {dueLabel(e.ends_at)}
-              {e.location ? ' · ' + e.location : ''}
-            </Body>
-            {!!e.description && <Body>{e.description}</Body>}
-          </View>
+        entries.map((event) => (
+          <CalendarEventBlock key={event.id} event={event} />
         ))
       )}
       {deadlines.error ? (
@@ -257,5 +341,8 @@ export function MonthCalendar({ scope }: { scope: string }) {
 }
 
 const styles = StyleSheet.create({
+  eventBlock: { borderLeftWidth: 4, gap: 7 },
+  eventDetail: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  detailText: { flex: 1, minWidth: 0, fontSize: 15, lineHeight: 21 },
   dot: { height: 4, width: 4, borderRadius: 2 },
 });
