@@ -23,7 +23,15 @@
       ]
     ],
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/brand/favicon-b.png"
+    },
+    "icon": "./assets/brand/icon-b.png",
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/adaptive-b.png",
+        "backgroundColor": "#101a30"
+      }
     }
   }
 }

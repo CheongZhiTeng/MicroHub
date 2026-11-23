@@ -5,9 +5,11 @@ const {
   copyFileSync,
   mkdirSync,
   readdirSync,
+  readFileSync,
   writeFileSync,
 } = require('node:fs');
 const path = require('node:path');
+const { createHash } = require('node:crypto');
 
 const output = path.resolve(process.argv[2] ?? 'dist/pages');
 const { error } = readPublicConfig(
@@ -42,6 +44,19 @@ execFileSync(
 // entry at each Expo route so direct visits work on a static file host.
 const app = path.resolve('app');
 const entry = path.join(output, 'index.html');
+const favicon = readFileSync(path.join(output, 'favicon.ico'));
+const revision = createHash('sha256')
+  .update(favicon)
+  .digest('hex')
+  .slice(0, 12);
+const html = readFileSync(entry, 'utf8');
+const iconHref = 'href="/MicroHub/favicon.ico"';
+if (!html.includes(iconHref))
+  throw new Error('Expo favicon link is missing from the Pages entry.');
+writeFileSync(
+  entry,
+  html.replace(iconHref, `href="/MicroHub/favicon.ico?v=${revision}"`),
+);
 const routes = new Set();
 for (const file of readdirSync(app, { withFileTypes: true, recursive: true })) {
   if (!file.isFile() || !file.name.endsWith('.tsx')) continue;
