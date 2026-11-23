@@ -22,6 +22,7 @@ export const zh: Readonly<Record<string, string>> = {
   'Profile photos are not available yet.': '当前服务器尚未启用头像上传。',
   'Discard changes': '放弃更改',
   'Keep editing': '继续编辑',
+  'Account menu': '账号菜单',
   teach: '研教',
   'Group teach': '本组研教',
   'Appoint teach': '任命研教',

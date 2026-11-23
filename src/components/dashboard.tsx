@@ -1,9 +1,10 @@
+import { AccountLinks } from './account-links';
 import { MonthCalendar } from './month-calendar';
 import {
   announcementsUnavailable,
   useAnnouncements,
 } from '../features/announcements';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ClassScope } from '../features/class-scope';
 import { profileName } from '../lib/profile-name';
 import { useLanguage } from '../locales/provider';
@@ -15,7 +16,15 @@ import {
 import { ContentGrid } from './layout';
 import { MotionPressable } from './motion';
 import { router } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Modal,
+  Pressable,
+  ScrollView,
+  useWindowDimensions,
+} from 'react-native';
 import type { Identity } from '../features/identity';
 import type { Theme } from '../theme/tokens';
 import { useTheme } from '../theme/provider';
@@ -27,6 +36,12 @@ export function ClubHeader({ identity }: { identity: Identity | null }) {
   const { t, language } = useLanguage();
   const { theme } = useTheme();
   const styles = makeStyles(theme);
+  const anchor = useRef<React.ComponentRef<typeof View>>(null);
+  const { width, height } = useWindowDimensions();
+  const [position, setPosition] = useState<{
+    top: number;
+    right: number;
+  } | null>(null);
   return (
     <View style={styles.header}>
       <Brand subtitle={identity?.clubName ?? 'Your school club'} />
@@ -37,19 +52,63 @@ export function ClubHeader({ identity }: { identity: Identity | null }) {
           onPress={() => router.push('/notifications')}
         />
       )}
-      <MotionPressable
-        accessibilityRole="button"
-        accessibilityLabel={t('My profile')}
-        onPress={() => router.push('/profile')}
-        style={styles.profile}
+      <View ref={anchor} collapsable={false}>
+        <MotionPressable
+          accessibilityRole="button"
+          accessibilityLabel={t('Account menu')}
+          accessibilityState={{ expanded: !!position }}
+          onPress={() =>
+            anchor.current?.measureInWindow((x, y, w, h) =>
+              setPosition({
+                top: Math.min(y + h + 4, height / 2),
+                right: Math.max(8, width - x - w),
+              }),
+            )
+          }
+          style={styles.profile}
+        >
+          <Avatar
+            owner={identity?.profile.id}
+            version={identity?.profile.avatar_id}
+            name={identity ? profileName(identity.profile, language) : ''}
+            size={40}
+          />
+        </MotionPressable>
+      </View>
+      <Modal
+        visible={!!position}
+        transparent
+        onRequestClose={() => setPosition(null)}
       >
-        <Avatar
-          owner={identity?.profile.id}
-          version={identity?.profile.avatar_id}
-          name={identity ? profileName(identity.profile, language) : ''}
-          size={40}
-        />
-      </MotionPressable>
+        <View style={{ flex: 1 }}>
+          <Pressable
+            accessible={false}
+            onPress={() => setPosition(null)}
+            style={StyleSheet.absoluteFill}
+          />
+          {position && (
+            <ScrollView
+              accessibilityViewIsModal
+              style={{
+                position: 'absolute',
+                ...position,
+                width: Math.min(width - 24, 310),
+                maxHeight: height - position.top - 16,
+                backgroundColor: theme.color.surface,
+                borderColor: theme.color.border,
+                borderWidth: 1,
+                borderRadius: 16,
+              }}
+              contentContainerStyle={{ padding: 12, gap: 5 }}
+            >
+              <AccountLinks
+                identity={identity}
+                close={() => setPosition(null)}
+              />
+            </ScrollView>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }

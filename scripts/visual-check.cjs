@@ -509,6 +509,7 @@ async function main() {
             .count(),
           0,
         );
+        await click('Account menu');
         await click('My profile');
         await page
           .getByLabel(nameLabel, { exact: true })
