@@ -13,7 +13,6 @@ import {
   parseDate,
   useHomework,
   useHomeworkAction,
-  dueLabel,
   type Assignment,
   type ReportRow,
 } from './api';
@@ -26,7 +25,7 @@ export function Schedule({
   canSchedule: boolean;
   refresh: () => Promise<void>;
 }) {
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   const [when, setWhen] = useState('');
   const act = useHomeworkAction();
   const schedule = useHomework('hw_schedule_info', { p_id: a.id });
@@ -72,7 +71,7 @@ export function Schedule({
   );
 }
 export function Discussion({ a }: { a: Assignment }) {
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   const [page, setPage] = useState(0),
     [message, setMessage] = useState('');
   const token = useRef('');
@@ -446,7 +445,7 @@ export function GradingLibrary({
 }
 
 export function ChangeHistory({ id }: { id: string }) {
-  const { t } = useLanguage(),
+  const { t, dueLabel } = useLanguage(),
     [page, setPage] = useState(0);
   const log = useHomework('hw_changes', { p_id: id, p_page: page });
   return (

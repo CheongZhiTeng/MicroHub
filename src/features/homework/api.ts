@@ -270,16 +270,6 @@ export function useHomeworkAction() {
   return { busy, message, error, run };
 }
 export const pageSize = 20;
-const dates = new Intl.DateTimeFormat('en-MY', {
-  timeZone: 'Asia/Kuala_Lumpur',
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: true,
-});
-export const dueLabel = (date: string) => dates.format(new Date(date)) + ' MYT';
 export const dateInput = (date: string) =>
   new Date(new Date(date).getTime() + 8 * 3600000)
     .toISOString()

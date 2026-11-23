@@ -46,10 +46,7 @@ export default function Home() {
       header={<ClubHeader identity={identity} />}
       title={
         name
-          ? t('Welcome back, {name}!').replace(
-              '{name}',
-              language === 'zh' ? name : name.split(' ')[0]!,
-            )
+          ? t('Welcome back, {name}!').replace('{name}', name)
           : t('Welcome to your club')
       }
       subtitle={t('A place to learn, collaborate, and grow together.')}

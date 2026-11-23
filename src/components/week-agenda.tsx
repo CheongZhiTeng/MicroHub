@@ -3,7 +3,6 @@ import { useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import { useLanguage } from '../locales/provider';
 import { useFocusedQuery } from '../features/focused-query';
-import { dueLabel } from '../features/homework/api';
 import { eventsInRange } from '../features/class-scope';
 import { client } from '../lib/supabase';
 import { Choices, FetchState } from '../features/homework/controls';
@@ -28,7 +27,7 @@ function monday() {
   );
 }
 function Week({ scope }: { scope: string }) {
-  const { t } = useLanguage();
+  const { t, dueLabel, dayLabel } = useLanguage();
   const [offset, setOffset] = useState(0);
   const [base, setBase] = useState(monday);
   useEffect(() => {
@@ -69,8 +68,7 @@ function Week({ scope }: { scope: string }) {
     <Card>
       <Heading>{t('Weekly agenda')}</Heading>
       <Body>
-        {new Date(start + 8 * 3600000).toISOString().slice(0, 10)} –{' '}
-        {new Date(start + 6 * day + 8 * 3600000).toISOString().slice(0, 10)}
+        {dayLabel(start)} – {dayLabel(start + 6 * day)}
       </Body>
       <Choices
         items={[

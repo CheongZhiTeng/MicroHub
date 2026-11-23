@@ -10,7 +10,6 @@ import {
   Screen,
 } from '../src/components/ui';
 import {
-  dueLabel,
   homework,
   useHomework,
   useHomeworkAction,
@@ -22,7 +21,7 @@ import {
 } from '../src/features/homework/controls';
 import { useLanguage } from '../src/locales/provider';
 function Inbox() {
-  const { t } = useLanguage(),
+  const { t, dueLabel } = useLanguage(),
     [page, setPage] = useState(0),
     act = useHomeworkAction(),
     inbox = useHomework('hw_inbox', { p_page: page });

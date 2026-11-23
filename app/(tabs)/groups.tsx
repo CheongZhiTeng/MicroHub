@@ -31,7 +31,7 @@ import {
 
 type Preview = { args: Change; label: string };
 function GroupWorkspace({ root, user }: { root: boolean; user: string }) {
-  const { t, language } = useLanguage();
+  const { t, language, dueLabel } = useLanguage();
   const [data, setData] = useState<Workspace | null>(null);
   const [id, setId] = useState('');
   const wide = useWindowDimensions().width >= 1024;
@@ -556,10 +556,7 @@ function GroupWorkspace({ root, user }: { root: boolean; user: string }) {
                 <Body key={c.id}>
                   {t(actions[c.action] ?? c.action)} · {c.actor}
                   {c.subject ? ' → ' + c.subject : ''} ·{' '}
-                  {new Date(c.happened_at).toLocaleString(
-                    language === 'zh' ? 'zh-CN' : 'en-GB',
-                    { timeZone: 'Asia/Kuala_Lumpur' },
-                  )}
+                  {dueLabel(c.happened_at)}
                 </Body>
               ))}
             </Card>

@@ -1,3 +1,4 @@
+import { clubDates } from '../lib/dates';
 import {
   createContext,
   useContext,
@@ -13,6 +14,7 @@ import { zh } from './zh';
 type Language = 'en' | 'zh';
 const key = 'microhub.language';
 const Context = createContext({
+  ...clubDates.en,
   language: 'en' as Language,
   setLanguage: (_value: Language) => {},
   t: (text: string) => text,
@@ -61,7 +63,9 @@ export function LanguageProvider({ children }: PropsWithChildren) {
       ? text.replace(text.trim(), zh[text.trim()]!)
       : text;
   return (
-    <Context.Provider value={{ language, setLanguage, t }}>
+    <Context.Provider
+      value={{ language, setLanguage, t, ...clubDates[language] }}
+    >
       {children}
     </Context.Provider>
   );

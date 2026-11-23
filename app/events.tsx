@@ -15,11 +15,11 @@ import {
   Notice,
   Badge,
 } from '../src/components/ui';
-import { dueLabel, useHomework } from '../src/features/homework/api';
+import { useHomework } from '../src/features/homework/api';
 import { Paging, FetchState } from '../src/features/homework/controls';
 
 function Calendar({ teach }: { teach: boolean }) {
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   const [scope, setScope] = useState('all'),
     [day, setDay] = useState(''),
     [page, setPage] = useState(0);

@@ -29,7 +29,7 @@ type Application = {
   profiles: ProfileNames & { student_id: string; class_name: string };
 };
 function Applications({ bilingual }: { bilingual: boolean }) {
-  const { t, language } = useLanguage();
+  const { t, language, dayLabel } = useLanguage();
   const { width } = useWindowDimensions();
   const [decline, setDecline] = useState<string | null>(null);
   const generation = useRef(0);
@@ -129,10 +129,7 @@ function Applications({ bilingual }: { bilingual: boolean }) {
                 {row.profiles.student_id} · {row.profiles.class_name}
               </Body>
               <Body>
-                {t('Applied')}{' '}
-                {new Date(row.created_at).toLocaleDateString('en-MY', {
-                  timeZone: 'Asia/Kuala_Lumpur',
-                })}
+                {t('Applied')} {dayLabel(row.created_at)}
               </Body>
               <Button
                 icon="check"

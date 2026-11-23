@@ -17,14 +17,13 @@ import {
   useAnnouncements,
 } from '../src/features/announcements';
 
-import { dueLabel } from '../src/features/homework/api';
 import { FetchState, Paging } from '../src/features/homework/controls';
 
 import { useLanguage } from '../src/locales/provider';
 
 function Feed() {
   const [scope, setScope] = useState('all');
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   const [page, setPage] = useState(0);
   const creationScope = useCreationScope(scope);
   const feed = useAnnouncements(page, false, scope);

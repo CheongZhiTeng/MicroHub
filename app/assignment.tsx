@@ -12,7 +12,6 @@ import {
 import { Access } from '../src/features/access';
 import {
   type Assignment,
-  dueLabel,
   homework,
   useHomework,
   useHomeworkAction,
@@ -42,7 +41,7 @@ function DraftPreview({
   fileBusy: boolean;
   refresh: () => Promise<void>;
 }) {
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   const id = a.id;
   const audience = useHomework('hw_preview_count', { p_id: id });
   return (

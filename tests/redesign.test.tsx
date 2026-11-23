@@ -76,7 +76,7 @@ beforeEach(() => {
 });
 test('home shows actual member identity and routes assignment card without fabricated statistics', async () => {
   await render(<Home />);
-  expect(screen.getByText('Welcome back, Alex!')).toBeTruthy();
+  expect(screen.getByText('Welcome back, Alex Tan!')).toBeTruthy();
   expect(screen.getByText('S2')).toBeTruthy();
   expect(await screen.findByText('Group practice')).toBeTruthy();
   expect(screen.queryByText('56')).toBeNull();

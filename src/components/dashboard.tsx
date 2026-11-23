@@ -8,11 +8,7 @@ import { useRef, useState } from 'react';
 import { ClassScope } from '../features/class-scope';
 import { profileName } from '../lib/profile-name';
 import { useLanguage } from '../locales/provider';
-import {
-  useHomework,
-  dueLabel,
-  homeworkUnavailable,
-} from '../features/homework/api';
+import { useHomework, homeworkUnavailable } from '../features/homework/api';
 import { ContentGrid } from './layout';
 import { MotionPressable } from './motion';
 import { router } from 'expo-router';
@@ -220,7 +216,7 @@ export function ClubOverview({ teach = false }: { teach?: boolean }) {
   const [scope, setScope] = useState('all');
   const groups = useHomework('hw_scopes');
 
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   const work = useHomework(
     scope === 'all' ? 'hw_summary' : 'class_homework_summary',
     scope === 'all' ? {} : { p_scope: scope },

@@ -6,7 +6,6 @@ import { useFocusedQuery } from '../features/focused-query';
 import { useLanguage } from '../locales/provider';
 import { useTheme } from '../theme/provider';
 import { Body, Button, Card, Notice, SectionTitle } from './ui';
-import { dueLabel } from '../features/homework/api';
 
 const dayMs = 86_400_000;
 const offset = 8 * 3_600_000;
@@ -14,7 +13,7 @@ function malaysianToday() {
   return new Date(Date.now() + offset).toISOString().slice(0, 10);
 }
 export function MonthCalendar({ scope }: { scope: string }) {
-  const { t, language } = useLanguage();
+  const { t, language, dueLabel } = useLanguage();
   const { theme } = useTheme();
   const [today, setToday] = useState(malaysianToday);
   useEffect(() => {

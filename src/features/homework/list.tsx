@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Body, Button, Card, Field, NavigationRow } from '../../components/ui';
 import { type Identity } from '../identity';
-import { useHomework, dueLabel, pageSize } from './api';
+import { useHomework, pageSize } from './api';
 import { ClassScope } from '../class-scope';
 import { Choices, FetchState, Paging } from './controls';
 
@@ -15,7 +15,7 @@ export function AssignmentList({
   identity: Identity;
   submissions?: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   const scopes = useHomework('hw_scopes');
   const [staff, setStaff] = useState(
     !submissions && identity.role !== 'member',

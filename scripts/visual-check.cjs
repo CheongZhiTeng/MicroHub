@@ -490,7 +490,9 @@ async function main() {
           .filter({ visible: true })
           .fill('Example123');
         await click('Sign in');
-        await page.getByText('Welcome back, Alex!', { exact: true }).waitFor();
+        await page
+          .getByText('Welcome back, Alex Tan!', { exact: true })
+          .waitFor();
         await page
           .getByRole('button', { name: 'Meet the members', exact: true })
           .waitFor();

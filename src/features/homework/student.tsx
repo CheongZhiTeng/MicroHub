@@ -11,7 +11,7 @@ import {
   Notice,
   SectionTitle,
 } from '../../components/ui';
-import { homework, useHomeworkAction, dueLabel, type Detail } from './api';
+import { homework, useHomeworkAction, type Detail } from './api';
 import { Messages, Receipt } from './controls';
 import { useUnsavedEdit, type Edit } from './unsaved';
 import { FilePanel, FileList } from './files';
@@ -24,7 +24,7 @@ export function StudentWork({
   data: Detail;
   refresh: () => Promise<void>;
 }) {
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   const { assignment: a, draft, versions, status } = data;
   const latest = versions[0];
   const files = (data.files ?? []).filter((f) => !f.reference && !f.version_id);

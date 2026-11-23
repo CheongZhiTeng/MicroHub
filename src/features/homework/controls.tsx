@@ -12,13 +12,7 @@ import {
   Loading,
   Notice,
 } from '../../components/ui';
-import {
-  dueLabel,
-  pageSize,
-  type Assignment,
-  type Recipient,
-  type Version,
-} from './api';
+import { pageSize, type Assignment, type Recipient, type Version } from './api';
 export function Choices({
   items,
   value,
@@ -213,7 +207,7 @@ export function Brief({
   due?: string;
   status?: Recipient | null;
 }) {
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   return (
     <Card>
       {status && (
@@ -275,7 +269,7 @@ function SubmissionLink({ url }: { url: string }) {
   );
 }
 export function Receipt({ version: v }: { version: Version }) {
-  const { t } = useLanguage();
+  const { t, dueLabel } = useLanguage();
   return (
     <Card>
       <Heading>
