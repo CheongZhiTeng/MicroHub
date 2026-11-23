@@ -1,5 +1,5 @@
 import { AccountLinks } from './account-links';
-import { MonthCalendar } from './month-calendar';
+import { HomeCalendar } from './week-agenda';
 import {
   announcementsUnavailable,
   useAnnouncements,
@@ -235,7 +235,7 @@ export function ClubOverview({ teach = false }: { teach?: boolean }) {
         change={setScope}
         groups={teach ? groups.data : []}
       />
-      <MonthCalendar scope={scope} />
+      <HomeCalendar scope={scope} />
       <ContentGrid>
         <OverviewLink
           label={t('Assignment workspace')}
