@@ -12,10 +12,14 @@ module.exports = async function profileBrowser({
   const phone = await device(390, 'dark');
   await login(phone, student);
   await click(phone, 'Account menu');
-  await phone.getByRole('button',{name:'My profile',exact:true}).waitFor();
+  await phone
+    .getByRole('button', { name: 'My profile', exact: true })
+    .waitFor();
   await phone.keyboard.press('Escape');
-  await phone.getByRole('button',{name:'My profile',exact:true}).waitFor({state:'hidden'});
-  await click(phone,'Account menu');
+  await phone
+    .getByRole('button', { name: 'My profile', exact: true })
+    .waitFor({ state: 'hidden' });
+  await click(phone, 'Account menu');
   await click(phone, 'My profile');
   const change = phone.getByRole('button', { name: 'Change profile photo' });
   const image = Buffer.from(

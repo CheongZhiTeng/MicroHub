@@ -1,3 +1,4 @@
+import { useCreationScope } from '../src/features/daily';
 import { router } from 'expo-router';
 
 import { useState } from 'react';
@@ -25,6 +26,7 @@ function Feed() {
   const [scope, setScope] = useState('all');
   const { t } = useLanguage();
   const [page, setPage] = useState(0);
+  const creationScope = useCreationScope(scope);
   const feed = useAnnouncements(page, false, scope);
   if (!feed.data)
     return (
@@ -52,9 +54,15 @@ function Feed() {
       />
       {(can_publish_club || groups.length > 0) && (
         <Button
+          disabled={!creationScope}
           title={t('New announcement')}
           icon="announcement"
-          onPress={() => router.push('/announcement-editor')}
+          onPress={() =>
+            router.push({
+              pathname: '/announcement-editor',
+              params: { scope: creationScope },
+            })
+          }
         />
       )}
       {!items.length && (

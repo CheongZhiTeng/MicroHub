@@ -78,6 +78,16 @@ module.exports = async function groupBrowser({
     return c;
   };
   const [coord, a, b] = await Promise.all([root, teacher, other].map(session));
+  await require('./daily-queue-browser.cjs')({
+    staff: root,
+    students: [student, waiting],
+    session,
+    device,
+    login,
+    click,
+    see,
+    origin,
+  });
   const workspace = await a.rpc('group_workspace');
   assert.ifError(workspace.error);
   const first = workspace.data.groups.find((g) => g.name === title);
@@ -133,7 +143,11 @@ module.exports = async function groupBrowser({
       .fill('Bring your notes to the meeting.');
     await click(tablet, 'Review announcement');
     await see(tablet, 'Publish this announcement to ' + audience + '?');
-    await click(tablet, 'Publish announcement');
+    await tablet
+      .getByRole('button', {
+        name: new RegExp('^Publish to ' + audience + ' · [0-9]+'),
+      })
+      .click();
     await see(tablet, heading);
   };
   await publish(title, groupPost);
@@ -189,7 +203,11 @@ module.exports = async function groupBrowser({
     await tablet.getByLabel('Title', { exact: true }).inputValue(),
     eventTitle,
   );
-  await click(tablet, 'Save event');
+  await tablet
+    .getByRole('button', {
+      name: new RegExp('^Publish to ' + title + ' · [0-9]+'),
+    })
+    .click();
   await see(tablet, eventTitle);
   await login(phone, student, eventsUrl);
   await click(phone, 'My group');
@@ -197,6 +215,10 @@ module.exports = async function groupBrowser({
   await click(phone, 'Big class');
   await see(phone, 'No events in this view.');
   await click(phone, 'Back to home');
+  await see(phone, 'Weekly agenda');
+  await click(phone, eventTitle);
+  await see(phone, 'Room A201');
+  await click(phone, 'Month');
   await see(phone, 'Club calendar');
   await phone
     .getByRole('button', { name: nowDay + ' · Has events', exact: true })

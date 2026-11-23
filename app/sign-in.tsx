@@ -21,11 +21,12 @@ import {
 import { en } from '../src/locales/en';
 export default function SignIn() {
   const { t } = useLanguage();
-  const { next, id, mode, copy } = useLocalSearchParams<{
+  const { next, id, mode, copy, scope } = useLocalSearchParams<{
     next?: string;
     id?: string;
     mode?: string;
     copy?: string;
+    scope?: string;
   }>();
   const { session, recovery } = useSession();
   const passwordRef = useRef<InputHandle>(null);
@@ -39,16 +40,21 @@ export default function SignIn() {
     const validId = (value: unknown): value is string =>
       typeof value === 'string' &&
       /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
+    const context = scope === 'big' || validId(scope) ? { scope } : {};
     if (next === 'notifications') return <Redirect href="/notifications" />;
     if (next === 'announcements') return <Redirect href="/announcements" />;
     if (next === 'announcement-editor')
-      return <Redirect href="/announcement-editor" />;
+      return (
+        <Redirect
+          href={{ pathname: '/announcement-editor', params: context }}
+        />
+      );
     if (next === 'event-editor')
       return (
         <Redirect
           href={{
             pathname: '/event-editor',
-            params: { ...(validId(id) ? { id, mode } : {}) },
+            params: { ...context, ...(validId(id) ? { id, mode } : {}) },
           }}
         />
       );
@@ -62,6 +68,7 @@ export default function SignIn() {
           href={{
             pathname: '/assignment-editor',
             params: {
+              ...context,
               ...(validId(id) ? { id } : {}),
               ...(validId(copy) ? { copy } : {}),
             },
@@ -73,7 +80,13 @@ export default function SignIn() {
         <Redirect
           href={{
             pathname: '/assignment',
-            params: { id, mode: mode === 'manage' ? 'manage' : 'mine' },
+            params: {
+              id,
+              mode:
+                mode === 'queue' || mode === 'receipt' || mode === 'manage'
+                  ? mode
+                  : 'mine',
+            },
           }}
         />
       );

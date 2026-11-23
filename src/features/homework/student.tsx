@@ -16,9 +16,11 @@ import { Messages, Receipt } from './controls';
 import { useUnsavedEdit, type Edit } from './unsaved';
 import { FilePanel, FileList } from './files';
 export function StudentWork({
+  receiptFirst = false,
   data,
   refresh,
 }: {
+  receiptFirst?: boolean;
   data: Detail;
   refresh: () => Promise<void>;
 }) {
@@ -117,8 +119,43 @@ export function StudentWork({
       return t('Submission received.');
     });
   if (!status) return <Notice text={t('You were not assigned this work.')} />;
+  const revisionNote =
+    status.modification === 'Revision requested'
+      ? latest?.events.find((e) => e.kind === 'revision')
+      : undefined;
+  const receipts = (
+    <>
+      {latest && (
+        <Heading>
+          {t(
+            latest.events.length
+              ? 'Feedback and receipt'
+              : 'Submission receipt',
+          )}
+        </Heading>
+      )}
+      {versions.length > 1 && (
+        <Button
+          variant="ghost"
+          title={t(
+            history ? 'Hide previous submissions' : 'Show previous submissions',
+          )}
+          onPress={() => setHistory(!history)}
+        />
+      )}
+      {(history ? versions : versions.slice(0, 1)).map((v) => (
+        <View key={v.id}>
+          <Receipt version={v} />
+          <FileList
+            files={(data.files ?? []).filter((f) => f.version_id === v.id)}
+          />
+        </View>
+      ))}
+    </>
+  );
   return (
     <>
+      {receiptFirst && receipts}
       <Card>
         <SectionTitle icon="homework">{t('Your work')}</SectionTitle>
         {data.joint_open && (
@@ -135,7 +172,19 @@ export function StudentWork({
             {latest.late ? t('Late') : t('On time')}
           </Body>
         )}
-        {blocked && <Notice text={blocked} />}
+        {revisionNote && (
+          <>
+            <Heading>{t('Revision requested')}</Heading>
+            <Body>{revisionNote.feedback}</Body>
+            {revisionNote.revision_due_at && (
+              <Body>
+                {t('Revise by ')}
+                {dueLabel(revisionNote.revision_due_at)}
+              </Body>
+            )}
+          </>
+        )}
+        {blocked && <Notice text={t(blocked)} />}
         {(!blocked || local) && (
           <>
             {a.allow_text && (
@@ -297,32 +346,7 @@ export function StudentWork({
         )}
         <Messages action={action} />
       </Card>
-      {latest && (
-        <Heading>
-          {t(
-            latest.events.length
-              ? 'Feedback and receipt'
-              : 'Submission receipt',
-          )}
-        </Heading>
-      )}
-      {versions.length > 1 && (
-        <Button
-          variant="ghost"
-          title={t(
-            history ? 'Hide previous submissions' : 'Show previous submissions',
-          )}
-          onPress={() => setHistory(!history)}
-        />
-      )}
-      {(history ? versions : versions.slice(0, 1)).map((v) => (
-        <View key={v.id}>
-          <Receipt version={v} />
-          <FileList
-            files={(data.files ?? []).filter((f) => f.version_id === v.id)}
-          />
-        </View>
-      ))}
+      {!receiptFirst && receipts}
     </>
   );
 }

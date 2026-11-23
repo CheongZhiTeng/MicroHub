@@ -43,12 +43,19 @@ export async function publishAnnouncement(
   group: string,
   title: string,
   body: string,
+  expected?: number | null,
 ) {
-  const { error } = await client().rpc('announcement_publish', {
-    p_id: id,
-    p_group: group || null,
-    p_title: title,
-    p_body: body,
-  });
+  const { error } = await client().rpc(
+    typeof expected === 'number'
+      ? 'daily_announcement'
+      : 'announcement_publish',
+    {
+      ...(typeof expected === 'number' ? { p_expected: expected } : {}),
+      p_id: id,
+      p_group: group || null,
+      p_title: title,
+      p_body: body,
+    },
+  );
   if (error) throw error;
 }

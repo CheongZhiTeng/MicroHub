@@ -1,3 +1,4 @@
+import { useCreationScope } from '../src/features/daily';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Access } from '../src/features/access';
@@ -22,6 +23,7 @@ function Calendar({ teach }: { teach: boolean }) {
   const [scope, setScope] = useState('all'),
     [day, setDay] = useState(''),
     [page, setPage] = useState(0);
+  const creationScope = useCreationScope(scope);
   const events = useEvents(scope, day, page),
     groups = useHomework('hw_scopes');
   return (
@@ -35,6 +37,18 @@ function Calendar({ teach }: { teach: boolean }) {
           }}
           groups={teach ? groups.data : []}
         />
+        {teach && (
+          <Button
+            disabled={!creationScope}
+            title={t('New event')}
+            onPress={() =>
+              router.push({
+                pathname: '/event-editor',
+                params: { scope: creationScope },
+              })
+            }
+          />
+        )}
         <Field
           label={t('Event date (MYT)')}
           hint={t('YYYY-MM-DD · Leave blank for upcoming events.')}

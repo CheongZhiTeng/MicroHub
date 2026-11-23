@@ -103,15 +103,24 @@ function DraftPreview({
           title={
             t('Publish to ') +
             (a.group_name || t('Big class')) +
-            (a.audience === 'selected' ? t(' (selected students)') : '')
+            (a.audience === 'selected' ? t(' (selected students)') : '') +
+            (typeof audience.data === 'number'
+              ? ' · ' +
+                audience.data +
+                t(audience.data === 1 ? ' person' : ' people')
+              : '')
           }
           disabled={!audience.data || waitingForFile || fileBusy}
           busy={action.busy}
           onPress={() =>
             action.run(async () => {
-              const count = await homework('hw_publish', {
+              const count = await homework('daily_publish', {
+                p_expected: audience.data,
                 p_id: id,
                 p_revision: a.revision,
+              }).catch(async (e) => {
+                await audience.refresh();
+                throw e;
               });
               await refresh();
               return t('Published to ') + count + t(' members.');
@@ -132,10 +141,12 @@ function DraftPreview({
 }
 function Workspace({
   id,
+  mode,
   requested,
   legacy,
 }: {
   id: string;
+  mode?: string;
   requested: boolean;
   legacy: boolean;
 }) {
@@ -157,6 +168,18 @@ function Workspace({
   const manage = requested && (data.can_manage ?? legacy);
   return (
     <>
+      {manage && mode === 'queue' && (
+        <Button
+          title={t('Recipient roster')}
+          variant="ghost"
+          onPress={() =>
+            router.replace({
+              pathname: '/assignment',
+              params: { id, mode: 'manage' },
+            })
+          }
+        />
+      )}
       <Brief
         assignment={a}
         status={!manage ? data.status : undefined}
@@ -186,9 +209,17 @@ function Workspace({
           refresh={result.refresh}
         />
       ) : manage ? (
-        <Grading data={data} refresh={result.refresh} />
+        <Grading
+          queue={mode === 'queue'}
+          data={data}
+          refresh={result.refresh}
+        />
       ) : (
-        <StudentWork data={data} refresh={result.refresh} />
+        <StudentWork
+          receiptFirst={mode === 'receipt'}
+          data={data}
+          refresh={result.refresh}
+        />
       )}
       {a.file_limit !== undefined && (
         <>
@@ -235,7 +266,8 @@ export default function AssignmentRoute() {
             <Workspace
               key={identity.profile.id + id}
               id={id}
-              requested={mode === 'manage'}
+              mode={mode}
+              requested={mode === 'manage' || mode === 'queue'}
               legacy={identity.role !== 'member'}
             />
           ) : (

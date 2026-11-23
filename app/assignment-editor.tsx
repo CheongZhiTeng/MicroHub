@@ -27,7 +27,11 @@ function Existing({
 }
 export default function Editor() {
   const { t } = useLanguage();
-  const { id, copy } = useLocalSearchParams<{ id?: string; copy?: string }>();
+  const { id, copy, scope } = useLocalSearchParams<{
+    id?: string;
+    copy?: string;
+    scope?: string;
+  }>();
   const source = id || copy;
   const scopes = useHomework('hw_scopes');
   return (
@@ -40,7 +44,10 @@ export default function Editor() {
             : t('Create assignment')
       }
     >
-      <Access member signInParams={{ next: 'assignment-editor', id, copy }}>
+      <Access
+        member
+        signInParams={{ next: 'assignment-editor', id, copy, scope }}
+      >
         {(user) =>
           !scopes.data && !scopes.error ? (
             <FetchState retry={scopes.refresh} />
@@ -56,6 +63,7 @@ export default function Editor() {
             />
           ) : (
             <AssignmentEditor
+              requestedScope={scope}
               club={user.role !== 'member'}
               scopes={scopes.data ?? []}
               key={user.profile.id}

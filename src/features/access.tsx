@@ -13,7 +13,13 @@ export function Access({
     identity: Identity,
     refresh: () => Promise<void>,
   ) => React.ReactNode;
-  signInParams?: { next: string; id?: string; mode?: string; copy?: string };
+  signInParams?: {
+    next: string;
+    id?: string;
+    mode?: string;
+    copy?: string;
+    scope?: string;
+  };
   admin?: boolean;
   member?: boolean;
 }) {

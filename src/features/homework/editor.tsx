@@ -85,11 +85,13 @@ export function Audience({
   );
 }
 export function AssignmentEditor({
+  requestedScope,
   initial,
   copy = false,
   club,
   scopes,
 }: {
+  requestedScope?: string;
   initial?: Detail;
   copy?: boolean;
   club: boolean;
@@ -98,7 +100,13 @@ export function AssignmentEditor({
   const { t } = useLanguage();
   const a = initial?.assignment;
   const [groupId, setGroupId] = useState(
-    a?.group_id ?? (club ? '' : (scopes[0]?.id ?? '')),
+    a
+      ? (a.group_id ?? '')
+      : requestedScope === 'big' && club
+        ? ''
+        : scopes.some((g) => g.id === requestedScope)
+          ? requestedScope!
+          : 'unselected',
   );
   const [id] = useState(() => (!copy && a?.id) || uuid.v4());
   const [revision, setRevision] = useState(copy ? 0 : (a?.revision ?? 0));
@@ -157,6 +165,7 @@ export function AssignmentEditor({
   });
   const action = useHomeworkAction();
   async function persist() {
+    if (groupId === 'unselected') throw Error('Choose a class');
     const bytes = Math.round(Number(mb) * 1048576);
     if (
       !/^\d+$/.test(limit) ||
@@ -235,7 +244,9 @@ export function AssignmentEditor({
       });
     });
   const scopeName =
-    scopes.find((scope) => scope.id === groupId)?.name || t('Big class');
+    groupId === 'unselected'
+      ? t('Choose a class')
+      : scopes.find((scope) => scope.id === groupId)?.name || t('Big class');
   return (
     <View
       style={{
@@ -248,7 +259,7 @@ export function AssignmentEditor({
       <View style={{ flex: desktop ? 2 : undefined, minWidth: 0, gap: 16 }}>
         <Card>
           <SectionTitle icon="members">{t('Recipients')}</SectionTitle>
-          {scopes.length > 0 && (
+          {
             <Choices
               items={[
                 ...(club ? [['', t('Big class')] as const] : []),
@@ -261,7 +272,7 @@ export function AssignmentEditor({
                 setTargets([]);
               }}
             />
-          )}
+          }
           <Choices
             items={[
               ['all', t(groupId ? 'All group students' : 'All club students')],
@@ -400,7 +411,7 @@ export function AssignmentEditor({
           <Button
             title={t('Save draft and preview')}
             busy={action.busy}
-            disabled={uploading}
+            disabled={uploading || groupId === 'unselected'}
             onPress={save}
           />
           {Boolean(action.error) && (

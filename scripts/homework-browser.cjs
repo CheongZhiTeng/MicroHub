@@ -173,6 +173,11 @@ async function run() {
     await login(staff, teacher);
     await click(staff, 'Assignment workspace');
     await click(staff, 'Create assignment');
+    await staff.getByLabel('Instructions', { exact: true }).waitFor();
+    await staff
+      .getByRole('radio', { name: 'Big class', exact: true })
+      .filter({ visible: true })
+      .click();
     await staff.getByLabel('Title', { exact: true }).fill(title);
     await staff
       .getByLabel('Instructions', { exact: true })
@@ -225,7 +230,7 @@ async function run() {
     await login(phone, alice, link);
     await see(phone, 'This assignment is unavailable to your account.');
     const publish = staff.getByRole('button', {
-      name: 'Publish to Big class (selected students)',
+      name: 'Publish to Big class (selected students) · 1 person',
       exact: true,
     });
     await publish.focus();
@@ -407,6 +412,9 @@ async function run() {
       );
     throw e;
   } finally {
+    await Promise.all(
+      pages.map((page) => page.context().unrouteAll({ behavior: 'wait' })),
+    );
     await browser.close();
     await new Promise((resolve) => server.close(resolve));
   }

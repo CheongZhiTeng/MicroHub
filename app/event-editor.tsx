@@ -1,3 +1,4 @@
+import { useReach, initialScope, publishLabel } from '../src/features/daily';
 import { useCallback, useState } from 'react';
 import { uuid } from 'expo';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -44,6 +45,7 @@ function EventForm({
     [start, setStart] = useState(dateInput(initial.starts_at)),
     [end, setEnd] = useState(dateInput(initial.ends_at));
   const [audience, setAudience] = useState(initialAudience);
+  const reach = useReach(audience);
   const [cancel, setCancel] = useState(false);
   const exit = useFormExit(
     cancel ||
@@ -59,18 +61,29 @@ function EventForm({
       const from = parseDate(start),
         until = parseDate(end);
       if (until <= from) throw Error('End must follow start.');
-      const { error } = await client().rpc('class_event_save', {
-        p_id: event.id,
-        p_group: audience === 'big' ? null : audience,
-        p_revision: event.revision,
-        p_title: event.title,
-        p_location: event.location,
-        p_description: event.description,
-        p_start: from,
-        p_end: until,
-        p_cancel: cancel,
-      });
-      if (error) throw error;
+      const { error } = await client().rpc(
+        !event.revision && typeof reach.data === 'number'
+          ? 'daily_event'
+          : 'class_event_save',
+        {
+          ...(!event.revision && typeof reach.data === 'number'
+            ? { p_expected: reach.data }
+            : {}),
+          p_id: event.id,
+          p_group: audience === 'big' ? null : audience,
+          p_revision: event.revision,
+          p_title: event.title,
+          p_location: event.location,
+          p_description: event.description,
+          p_start: from,
+          p_end: until,
+          p_cancel: cancel,
+        },
+      );
+      if (error) {
+        void reach.refresh();
+        throw error;
+      }
       exit.finish();
       done(true);
     });
@@ -121,10 +134,28 @@ function EventForm({
         <Notice text={t('Members will see this event as cancelled.')} />
       )}
       {exit.dialog}
+      {reach.error && (
+        <>
+          <Notice text={t(reach.error)} error />
+          <Button title={t('Retry')} onPress={reach.refresh} />
+        </>
+      )}
       <Messages action={action} />
       <Button
-        title={t(cancel ? 'Confirm cancellation' : 'Save event')}
-        disabled={!event.title.trim() || !audience}
+        title={
+          !event.revision && typeof reach.data === 'number'
+            ? publishLabel(
+                t,
+                groups.find((g) => g.id === audience)?.name ?? t('Big class'),
+                reach.data,
+              )
+            : t(cancel ? 'Confirm cancellation' : 'Save event')
+        }
+        disabled={
+          !event.title.trim() ||
+          !audience ||
+          (!event.revision && reach.data === undefined)
+        }
         busy={action.busy}
         onPress={save}
       />
@@ -146,6 +177,7 @@ function EventForm({
 }
 
 function Editor({ id, day }: { id?: string; day?: string }) {
+  const { scope } = useLocalSearchParams();
   const groups = useHomework('hw_scopes');
   const [empty] = useState<ClassEvent>(() => ({
     id: uuid.v4(),
@@ -180,7 +212,10 @@ function Editor({ id, day }: { id?: string; day?: string }) {
   return (
     <EventForm
       initial={load.data}
-      initialAudience={load.data.group_id ?? (id ? 'big' : '')}
+      initialAudience={
+        load.data.group_id ??
+        (id ? 'big' : initialScope(scope, true, groups.data))
+      }
       groups={groups.data}
       done={(saved) => {
         if (saved) router.replace('/events');
@@ -192,10 +227,14 @@ function Editor({ id, day }: { id?: string; day?: string }) {
 }
 export default function EventEditor() {
   const { t } = useLanguage();
-  const { id, mode } = useLocalSearchParams<{ id?: string; mode?: string }>();
+  const { id, mode, scope } = useLocalSearchParams<{
+    id?: string;
+    mode?: string;
+    scope?: string;
+  }>();
   return (
     <Screen title={t(id ? 'Edit event' : 'New event')}>
-      <Access member signInParams={{ next: 'event-editor', id, mode }}>
+      <Access member signInParams={{ next: 'event-editor', id, mode, scope }}>
         {(user) =>
           user.role === 'super_admin' ? (
             <Editor key={user.profile.id + (id ?? '')} id={id} day={mode} />

@@ -463,11 +463,13 @@ export function Button({
 export function NavigationRow({
   title,
   subtitle,
+  action,
   icon,
   onPress,
 }: {
   title: string;
   subtitle?: string;
+  action?: string;
   icon: IconName;
   onPress: () => void;
 }) {
@@ -476,7 +478,7 @@ export function NavigationRow({
   return (
     <MotionPressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={action ? title + ' · ' + action : title}
       onPress={onPress}
       style={({ pressed }) => [styles.navRow, pressed && styles.pressed]}
     >
@@ -486,6 +488,11 @@ export function NavigationRow({
       <View style={styles.flex}>
         <Text style={styles.navTitle}>{title}</Text>
         {Boolean(subtitle) && <Text style={styles.caption}>{subtitle}</Text>}
+        {action && (
+          <Text style={[styles.navTitle, { color: theme.color.primary }]}>
+            {action}
+          </Text>
+        )}
       </View>
       <Icon name="chevron" size={18} color={theme.color.muted} />
     </MotionPressable>

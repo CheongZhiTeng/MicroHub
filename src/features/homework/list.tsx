@@ -1,3 +1,4 @@
+import { useCreationScope } from '../daily';
 import { useLanguage } from '../../locales/provider';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -25,20 +26,40 @@ export function AssignmentList({
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [scope, setScope] = useState('all');
-  const rows = useHomework(
-    scope === 'all' ? 'hw_list' : 'class_homework_list',
-    {
-      ...(scope === 'all' ? {} : { p_scope: scope }),
-      p_staff: staff,
-      p_filter: filter,
-      p_search: search.trim(),
-      p_page: page,
-    },
-  );
+  const creationScope = useCreationScope(scope);
+  const rows = useHomework('daily_list', {
+    p_scope: scope,
+    p_staff: staff,
+    p_filter: filter,
+    p_search: search.trim(),
+    p_page: page,
+  });
   const change = (filter: string) => {
     setFilter(filter);
     setPage(0);
   };
+  function next(row: NonNullable<typeof rows.data>[number]) {
+    if (staff)
+      return row.pending
+        ? t('Awaiting review') + ' · ' + row.pending
+        : t('Manage assignment');
+    if (row.modification === 'Revision requested' && !row.blocked)
+      return t('Revise and resubmit');
+    if (row.grading === 'Returned') return t('View feedback');
+    if (row.latest || row.submission === 'Submitted') return t('View receipt');
+    if (
+      row.blocked ||
+      row.detached ||
+      row.submission === 'Excused' ||
+      row.lifecycle !== 'published'
+    )
+      return t('View details');
+    return t(
+      row.draft_revision || row.submission === 'Draft'
+        ? 'Continue draft'
+        : 'Submit homework',
+    );
+  }
   return (
     <>
       <Card>
@@ -58,9 +79,15 @@ export function AssignmentList({
           )}
         {staff && (
           <Button
+            disabled={!creationScope}
             title={t('Create assignment')}
             icon="homework"
-            onPress={() => router.push('/assignment-editor')}
+            onPress={() =>
+              router.push({
+                pathname: '/assignment-editor',
+                params: { scope: creationScope },
+              })
+            }
           />
         )}
         <ClassScope
@@ -134,6 +161,7 @@ export function AssignmentList({
               <NavigationRow
                 icon="homework"
                 title={row.title}
+                action={next(row)}
                 subtitle={
                   (row.group_name ?? t('Big class')) +
                   ' · ' +
@@ -149,12 +177,32 @@ export function AssignmentList({
                         row.modification,
                       ]
                         .flatMap((value) => (value ? [t(value)] : []))
-                        .join(' · '))
+                        .join(' · ')) +
+                  (row.blocked &&
+                  (!row.latest ||
+                    row.modification === 'Revision requested' ||
+                    row.detached ||
+                    row.submission === 'Excused')
+                    ? ' · ' + t(row.blocked)
+                    : '')
                 }
                 onPress={() =>
                   router.push({
                     pathname: '/assignment',
-                    params: { id: row.id, mode: staff ? 'manage' : 'mine' },
+                    params: {
+                      id: row.id,
+                      mode: staff
+                        ? row.pending
+                          ? 'queue'
+                          : 'manage'
+                        : row.latest &&
+                            !(
+                              row.modification === 'Revision requested' &&
+                              !row.blocked
+                            )
+                          ? 'receipt'
+                          : 'mine',
+                    },
                   })
                 }
               />

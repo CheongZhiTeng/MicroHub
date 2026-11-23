@@ -28,10 +28,12 @@ import { useSession } from '../session';
 import { GradingLibrary } from './operations';
 import { FileList } from './files';
 function GradeForm({
+  next,
   v,
   data,
   refresh,
 }: {
+  next?: () => Promise<void>;
   v: Version;
   data: Detail;
   refresh: () => Promise<void>;
@@ -72,7 +74,8 @@ function GradeForm({
       });
       setRevision(newRevision);
       setConfirm(null);
-      await refresh();
+      if (mode === 'release' && next) await next();
+      else await refresh();
       return mode === 'save'
         ? t('Grading draft saved privately.')
         : mode === 'release'
@@ -170,7 +173,9 @@ function GradeForm({
             }
           />
           <Button
-            title={t('Return grade and feedback')}
+            title={t(
+              next ? 'Return and continue' : 'Return grade and feedback',
+            )}
             disabled={stale || !current || action.busy}
             onPress={() => ask('release')}
           />
@@ -229,10 +234,14 @@ function GradeForm({
   );
 }
 function MemberWork({
+  next,
+  expectedVersion,
   id,
   member,
   changed,
 }: {
+  expectedVersion?: string;
+  next?: () => Promise<void>;
   id: string;
   member: string;
   changed: () => Promise<void>;
@@ -247,6 +256,21 @@ function MemberWork({
   const reload = async () => {
     await Promise.all([query.refresh(), changed()]);
   };
+  if (
+    expectedVersion &&
+    (data.versions[0]?.id !== expectedVersion ||
+      data.status.grading === 'Returned' ||
+      data.status.modification === 'Revision requested' ||
+      data.status.detached)
+  )
+    return (
+      <Card>
+        <Notice
+          text={t('This queue has changed. Reload the next submission.')}
+        />
+        <Button title={t('Refresh roster')} onPress={reload} />
+      </Card>
+    );
   return (
     <>
       <Heading>{data.status.member_name || data.status.student_id}</Heading>
@@ -267,7 +291,7 @@ function MemberWork({
       {data.assignment.group_id && member === session?.user.id ? (
         <Notice text={t('Another grader must review your submission.')} />
       ) : data.versions.length ? (
-        <VersionPanel data={data} refresh={reload} />
+        <VersionPanel next={next} data={data} refresh={reload} />
       ) : (
         <Notice text={t('No formal submission yet.')} />
       )}
@@ -275,9 +299,11 @@ function MemberWork({
   );
 }
 function VersionPanel({
+  next,
   data,
   refresh,
 }: {
+  next?: () => Promise<void>;
   data: Detail;
   refresh: () => Promise<void>;
 }) {
@@ -299,12 +325,49 @@ function VersionPanel({
       {v.can_grade === false ? (
         <Notice text={t('Another grader must review your submission.')} />
       ) : (
-        <GradeForm key={v.id} v={v} data={data} refresh={refresh} />
+        <GradeForm next={next} key={v.id} v={v} data={data} refresh={refresh} />
       )}
     </>
   );
 }
-export function Grading({
+function ReviewQueue({ id }: { id: string }) {
+  const { t } = useLanguage();
+  const list = useHomework('daily_queue', { p_id: id });
+  const [done, setDone] = useState(0);
+  if (!list.data) return <FetchState error={list.error} retry={list.refresh} />;
+  const first = list.data[0];
+  if (!first) return <Notice text={t('No more work to grade.')} />;
+  return (
+    <>
+      <Heading>
+        {t('Review')} {done + 1} / {done + list.data.length}
+      </Heading>
+      <MemberWork
+        expectedVersion={first.version_id}
+        key={first.version_id}
+        id={id}
+        member={first.member_id}
+        changed={list.refresh}
+        next={async () => {
+          setDone((n) => n + 1);
+          await list.refresh();
+        }}
+      />
+    </>
+  );
+}
+export function Grading(props: {
+  data: Detail;
+  refresh: () => Promise<void>;
+  queue: boolean;
+}) {
+  return props.queue ? (
+    <ReviewQueue id={props.data.assignment.id} />
+  ) : (
+    <RosterGrading {...props} />
+  );
+}
+function RosterGrading({
   data,
   refresh,
 }: {

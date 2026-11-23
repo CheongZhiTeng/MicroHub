@@ -48,7 +48,8 @@ module.exports = async function homeworkFull({
   const leader = await device(390),
     phone = await device(390, 'dark'),
     staff = await device(1280);
-  await login(leader, student, origin + '/assignment-editor/');
+  await login(leader, student, origin + '/groups/');
+  await click(leader, 'Create assignment');
   const title = 'Team lab ' + Date.now();
   await leader.getByLabel('Title', { exact: true }).fill(title);
   await leader.getByLabel('Deadline (Malaysia time)').fill('2030-10-04 12:00');

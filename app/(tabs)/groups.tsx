@@ -30,7 +30,7 @@ import {
 } from '../../src/features/groups/api';
 
 type Preview = { args: Change; label: string };
-function GroupWorkspace({ root }: { root: boolean }) {
+function GroupWorkspace({ root, user }: { root: boolean; user: string }) {
   const { t, language } = useLanguage();
   const [data, setData] = useState<Workspace | null>(null);
   const [id, setId] = useState('');
@@ -288,6 +288,41 @@ function GroupWorkspace({ root }: { root: boolean }) {
               {group && (
                 <Card>
                   <Heading>{group.name}</Heading>
+                  {group.state === 'active' &&
+                    (root ||
+                      group.roster.some((p) => p.id === user && p.leader)) && (
+                      <Button
+                        title={t('Create assignment')}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/assignment-editor',
+                            params: { scope: group.id },
+                          })
+                        }
+                      />
+                    )}
+                  {root && group.state === 'active' && (
+                    <>
+                      <Button
+                        title={t('New announcement')}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/announcement-editor',
+                            params: { scope: group.id },
+                          })
+                        }
+                      />
+                      <Button
+                        title={t('New event')}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/event-editor',
+                            params: { scope: group.id },
+                          })
+                        }
+                      />
+                    </>
+                  )}
                   <Body>
                     {t(
                       {
@@ -542,6 +577,7 @@ export default function Groups() {
         {(identity) => (
           <GroupWorkspace
             key={identity.profile.id}
+            user={identity.profile.id}
             root={identity.role === 'super_admin'}
           />
         )}

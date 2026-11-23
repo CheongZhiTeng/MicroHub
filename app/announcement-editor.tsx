@@ -1,4 +1,5 @@
-import { router } from 'expo-router';
+import { useReach, initialScope, publishLabel } from '../src/features/daily';
+import { useLocalSearchParams, router } from 'expo-router';
 import { uuid } from 'expo';
 import { useRef, useState } from 'react';
 import {
@@ -31,14 +32,21 @@ function Compose({
   onCancel: () => void;
 }) {
   const { t } = useLanguage();
-  const [audience, setAudience] = useState(audiences[0]![0]);
+  const { scope } = useLocalSearchParams();
+  const initial = initialScope(
+    scope,
+    audiences.some(([id]) => id === 'big'),
+    audiences.map(([id]) => ({ id })),
+  );
+  const [audience, setAudience] = useState(initial);
+  const reach = useReach(audience);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [confirm, setConfirm] = useState(false);
   const [error, setError] = useState('');
   const { busy, start, finish } = useBusy();
   const request = useRef<{ content: string; id: string } | null>(null);
-  const exit = useFormExit(!!title || !!body || audience !== audiences[0]?.[0]);
+  const exit = useFormExit(!!title || !!body || audience !== initial);
   const selected = audiences.find(([id]) => id === audience);
   async function publish() {
     if (!selected || !title.trim() || !body.trim() || !start()) return;
@@ -49,14 +57,16 @@ function Compose({
     try {
       await publishAnnouncement(
         request.current.id,
-        audience,
+        audience === 'big' ? '' : audience,
         title.trim(),
         body.trim(),
+        reach.data,
       );
       exit.finish();
       onPublished();
     } catch (error) {
       setError(errorMessage(error));
+      void reach.refresh();
     } finally {
       finish();
     }
@@ -64,6 +74,12 @@ function Compose({
   return (
     <Card>
       {exit.dialog}
+      {reach.error && (
+        <>
+          <Notice error text={t(reach.error)} />
+          <Button title={t('Retry')} onPress={reach.refresh} />
+        </>
+      )}
 
       <Body>{t('Recipients')}</Body>
       <Choices
@@ -72,6 +88,12 @@ function Compose({
         onChange={setAudience}
         disabled={confirm}
       />
+      {selected && typeof reach.data === 'number' && (
+        <Body>
+          {selected[1]} · {reach.data}
+          {t(reach.data === 1 ? ' person' : ' people')}
+        </Body>
+      )}
       <Field
         label={t('Title')}
         value={title}
@@ -87,7 +109,7 @@ function Compose({
         maxLength={10000}
         editable={!confirm}
       />
-      {!!error && <Notice error text={error} />}
+      {!!error && <Notice error text={t(error)} />}
       {confirm ? (
         <>
           <Notice
@@ -97,9 +119,13 @@ function Compose({
             )}
           />
           <Button
-            title={t('Publish announcement')}
+            title={
+              typeof reach.data === 'number'
+                ? publishLabel(t, selected?.[1] ?? '', reach.data)
+                : t('Publish announcement')
+            }
             busy={busy}
-            disabled={!selected}
+            disabled={!selected || reach.data === undefined}
             onPress={() => void publish()}
           />
           <Button
@@ -134,7 +160,7 @@ function Editor() {
     g.id,
     g.name,
   ]);
-  if (feed.data.can_publish_club) audiences.unshift(['', t('Big class')]);
+  if (feed.data.can_publish_club) audiences.unshift(['big', t('Big class')]);
   if (!audiences.length)
     return <Notice error text={t('Active teach access required')} />;
   return (
@@ -148,10 +174,11 @@ function Editor() {
   );
 }
 export default function AnnouncementEditor() {
+  const { scope } = useLocalSearchParams<{ scope?: string }>();
   const { t } = useLanguage();
   return (
     <Screen title={t('New announcement')}>
-      <Access member signInParams={{ next: 'announcement-editor' }}>
+      <Access member signInParams={{ next: 'announcement-editor', scope }}>
         {(user) => <Editor key={user.profile.id} />}
       </Access>
     </Screen>

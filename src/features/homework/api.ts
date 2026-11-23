@@ -101,7 +101,10 @@ export type Item = Pick<
   Assignment,
   'id' | 'title' | 'due_at' | 'lifecycle' | 'group_name'
 > &
-  Pick<Recipient, 'submission' | 'grading' | 'late' | 'modification'>;
+  Pick<Recipient, 'submission' | 'grading' | 'late' | 'modification'> &
+  Partial<
+    Pick<Recipient, 'blocked' | 'draft_revision' | 'latest' | 'detached'>
+  > & { pending?: number };
 export type Summary = {
   todo: number;
   next: Item | null;
@@ -125,6 +128,9 @@ export type ReportRow = {
   submitted_at: string | null;
 };
 type Responses = {
+  daily_publish: number;
+  daily_list: Item[];
+  daily_queue: { member_id: string; version_id: string }[];
   hw_preview_count: number | null;
   hw_report_snapshot: ReportRow[];
   hw_changes: {
@@ -194,12 +200,36 @@ export async function homework<K extends keyof Responses>(
   params: Params = {},
 ) {
   const { data, error } = await client().rpc(name, params);
+  if (error?.code === 'PGRST202' && name === 'daily_publish') {
+    const preview = await client().rpc('hw_preview_count', {
+      p_id: params.p_id,
+    });
+    if (preview.error) throw preview.error;
+    if (preview.data !== params.p_expected)
+      throw Error('Audience changed. Check the count again.');
+    const { data: old, error: failure } = await client().rpc('hw_publish', {
+      p_id: params.p_id,
+      p_revision: params.p_revision,
+    });
+    if (failure) throw failure;
+    return old as Responses[K];
+  }
+  if (error?.code === 'PGRST202' && name === 'daily_list') {
+    const { data: old, error: failure } = await client().rpc(
+      'class_homework_list',
+      params,
+    );
+    if (failure) throw failure;
+    return old as Responses[K];
+  }
   if (error?.code === 'PGRST202' || error?.code === '42883')
     throw new Error(homeworkUnavailable);
   if (error) throw error;
   return data as Responses[K];
 }
 type ReadName =
+  | 'daily_list'
+  | 'daily_queue'
   | 'hw_preview_count'
   | 'hw_changes'
   | 'hw_report'
