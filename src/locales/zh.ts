@@ -1,5 +1,10 @@
 // Handwritten Simplified Chinese copy for MicroHub.
 export const zh: Readonly<Record<string, string>> = {
+  'Open discussion': '进入讨论',
+  'Close discussion': '关闭讨论',
+  'Earlier messages': '查看更早的消息',
+  'New messages': '跳到新消息',
+  'This discussion is read-only.': '作业已归档，讨论仅供查看。',
   'Club calendar': '学会日历',
   'Previous month': '上个月',
   'Next month': '下个月',

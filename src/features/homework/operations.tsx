@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Platform } from 'react-native';
 import { uuid } from 'expo';
 import { File, Paths } from 'expo-file-system';
@@ -66,67 +66,6 @@ export function Schedule({
             }
           />
         ))}
-      <Messages action={act} />
-    </Card>
-  );
-}
-export function Discussion({ a }: { a: Assignment }) {
-  const { t, dueLabel } = useLanguage();
-  const [page, setPage] = useState(0),
-    [message, setMessage] = useState('');
-  const token = useRef('');
-  const act = useHomeworkAction(),
-    rows = useHomework('hw_comments', { p_id: a.id, p_page: page });
-  return (
-    <Card>
-      <Heading>{t('Class discussion')}</Heading>
-      <Body>{t('Messages here are visible to assignment participants.')}</Body>
-      {rows.data ? (
-        rows.data.slice(0, 20).map((x) => (
-          <Body key={x.id}>
-            {x.author_name} · {dueLabel(x.created_at)}
-            {'\n'}
-            {x.body}
-          </Body>
-        ))
-      ) : (
-        <FetchState error={rows.error} retry={rows.refresh} />
-      )}
-      {rows.data?.length === 0 && <Body>{t('No discussion yet.')}</Body>}
-      <Paging page={page} count={rows.data?.length ?? 0} onChange={setPage} />
-      {a.lifecycle !== 'archived' && (
-        <>
-          <Field
-            label={t('Message to class')}
-            multiline
-            value={message}
-            maxLength={3000}
-            onChangeText={(v) => {
-              token.current = '';
-              setMessage(v);
-            }}
-          />
-          <Button
-            title={t('Post message')}
-            disabled={!message.trim()}
-            busy={act.busy}
-            onPress={() =>
-              act.run(async () => {
-                token.current ||= uuid.v4();
-                await homework('hw_comment', {
-                  p_id: a.id,
-                  p_request: token.current,
-                  p_text: message,
-                });
-                token.current = '';
-                setMessage('');
-                setPage(0);
-                await rows.refresh();
-              })
-            }
-          />
-        </>
-      )}
       <Messages action={act} />
     </Card>
   );

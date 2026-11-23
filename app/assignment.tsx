@@ -1,3 +1,4 @@
+import { Discussion } from '../src/features/homework/discussion';
 import { useState } from 'react';
 import { useLanguage } from '../src/locales/provider';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -25,7 +26,6 @@ import { FilePanel } from '../src/features/homework/files';
 import {
   Schedule,
   Reports,
-  Discussion,
   ChangeHistory,
 } from '../src/features/homework/operations';
 function DraftPreview({

@@ -120,7 +120,41 @@ module.exports = async function homeworkFull({
   await click(phone, 'Review submission');
   await click(phone, 'Confirm submission');
   await phone.getByText(/Last receipt · Version 1/).waitFor();
+  const chatClient = await session(learner);
+  for (let i = 1; i <= 43; i++) {
+    const posted = await chatClient.rpc('hw_comment', {
+      p_id: id,
+      p_text: 'History ' + i,
+      p_request: randomUUID(),
+    });
+    assert.ifError(posted.error);
+  }
+  await click(phone, 'Open discussion');
+  await see(phone, 'History 43');
+  assert.equal(await phone.getByText('History 1', { exact: true }).count(), 0);
+  await click(phone, 'Earlier messages');
+  await see(phone, 'History 4');
+  await click(phone, 'Earlier messages');
+  await see(phone, 'History 1');
+  // Lose the response after the server commits, then retry from the retained composer.
+  await phone.route(
+    '**/rest/v1/rpc/hw_comment',
+    async (route) => {
+      const response = await route.fetch({
+        url: new URL('/rest/v1/rpc/hw_comment', process.env.API_URL).href,
+      });
+      assert.ok(response.ok());
+      await route.abort('failed');
+    },
+    { times: 1 },
+  );
   await phone.getByLabel('Message to class').fill('Our team has finished.');
+  await click(phone, 'Post message');
+  await phone.getByRole('alert').last().waitFor();
+  assert.equal(
+    await phone.getByLabel('Message to class').inputValue(),
+    'Our team has finished.',
+  );
   await click(phone, 'Post message');
   await phone
     .getByText(/Our team has finished\./)
@@ -131,6 +165,22 @@ module.exports = async function homeworkFull({
     teacher,
     origin + '/assignment/?id=' + id + '&mode=manage',
   );
+  await click(staff, 'Open discussion');
+  await see(staff, 'Our team has finished.');
+  assert.equal(
+    await staff.getByText('Our team has finished.', { exact: true }).count(),
+    1,
+  );
+  await phone.getByText('History 1', { exact: true }).scrollIntoViewIfNeeded();
+  await staff.getByLabel('Message to class').fill('Reviewed together.');
+  await click(staff, 'Post message');
+  await phone
+    .getByRole('button', { name: 'New messages', exact: true })
+    .waitFor({ timeout: 20000 });
+  await click(phone, 'New messages');
+  await see(phone, 'Reviewed together.');
+  await click(staff, 'Close discussion');
+  await click(phone, 'Close discussion');
   await click(staff, 'Team partner · ' + learner.studentId);
   await staff.getByLabel('Score (out of 10)').fill('9');
   await staff.getByLabel('Private feedback').fill('Clear evidence');
