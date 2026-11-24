@@ -8,7 +8,19 @@ export const [admin, alice, bob, secondAdmin] = [1, 2, 3, 4].map(
 // Test-only Supabase-owned roles and JWT subject. Every homework query uses the
 // shipped migrations and authenticated role, including in the browser rehearsal.
 export async function homeworkBackend({ beforeMigration } = {}) {
-  const db = new PGlite();
+  const db = new PGlite({
+    extensions: {
+      pgcrypto: {
+        name: 'pgcrypto',
+        setup: async () => ({
+          bundlePath: new URL(
+            './pgcrypto.tar.gz',
+            import.meta.resolve('@electric-sql/pglite'),
+          ),
+        }),
+      },
+    },
+  });
   await db.exec(`create role anon; create role service_role; create role authenticated; create schema auth;
     create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz);
     create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
