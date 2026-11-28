@@ -1,3 +1,4 @@
+import { EventAttendanceButton } from '../features/attendance/event-button';
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { client } from '../lib/supabase';
@@ -111,6 +112,7 @@ function CalendarEventBlock({ event }: { event: ClassEvent }) {
           {event.description}
         </Text>
       )}
+      <EventAttendanceButton event={event} />
     </View>
   );
 }

@@ -1,5 +1,8 @@
 // Handwritten Simplified Chinese copy for MicroHub.
 export const zh: Readonly<Record<string, string>> = {
+  'Event check-in': '活动签到',
+  'Event check-in unavailable.': '此活动签到不可用。',
+  'No check-in available for this event.': '此活动目前没有可查看的签到。',
   'Attendance is awaiting a database update.': '考勤数据库待更新。',
   'Checked in': '出席',
   'Late arrival': '迟到',

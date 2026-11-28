@@ -38,7 +38,15 @@ export type SessionDetail = SessionRow & {
   roster: Roll[] | null;
   checked_at: string | null;
 };
+export type EventAttendanceSetup = {
+  title: string;
+  class_name: string | null;
+  revision: number;
+  students: number;
+};
 type Responses = {
+  attendance_event: { session_id?: string; setup?: EventAttendanceSetup };
+  attendance_open_event: { session_id: string; code?: string };
   attendance_scopes: { id: string | null; name: string; students: number }[];
   attendance_summary: { total: number; attended: number; late: number };
   attendance_list: SessionRow[];

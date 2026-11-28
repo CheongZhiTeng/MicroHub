@@ -262,6 +262,30 @@ module.exports = async function groupBrowser({
     await eventDay.click();
   }
   await phone.setViewportSize({ width: 390, height: 850 });
+  const eventCheckIn = 'Event check-in · ' + eventTitle;
+  await click(phone, eventCheckIn);
+  await see(phone, 'No check-in available for this event.');
+  await click(tablet, eventCheckIn);
+  await tablet.getByText(/Expected students · [1-9]/).waitFor();
+  await click(tablet, 'Start check-in');
+  await see(tablet, 'Attendance code');
+  const eventCode = await tablet
+    .getByRole('heading', { name: /^\d{6}$/ })
+    .textContent();
+  await click(phone, 'Refresh');
+  await phone.getByLabel('Six-digit code').fill(eventCode);
+  await click(phone, 'Check in now');
+  await phone.getByText(/Check-in receipt ·/).waitFor();
+  const eventLink = phone.url();
+  await login(phone, student, eventLink);
+  await phone.getByText(/Check-in receipt ·/).waitFor();
+  await click(tablet, 'End check-in');
+  await click(tablet, 'Confirm');
+  await login(phone, student, origin + '/');
+  await eventDay.click();
+  console.log(
+    'Calendar-linked check-in passed: prefill, start, phone receipt, sign-in return and close.',
+  );
   const dueDay = new Date(assignment.due.getTime() + 8 * 3600000)
     .toISOString()
     .slice(0, 10);

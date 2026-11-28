@@ -93,6 +93,41 @@ test('attendance scope, cutoff, receipts, throttling, audit and immutable roster
     late: 1,
     total: 1,
   });
+  const eventId = randomUUID(),
+    linkedId = randomUUID();
+  await db.query(
+    "insert into public.class_events(id,group_id,title,location,description,starts_at,ends_at) values($1,$2,'Workshop','','',now(),now()+interval '1 hour')",
+    [eventId, gid],
+  );
+  const event = (u) => val(u, 'attendance_event($1)', [eventId]);
+  const startEvent = (u, sid, revision) =>
+    val(u, 'attendance_open_event($1,$2,$3,10,1)', [eventId, sid, revision]);
+  assert.deepEqual(await event(alice), {});
+  await assert.rejects(event(bob), /unavailable/);
+  await assert.rejects(startEvent(other, linkedId, 1), /unavailable/);
+  await assert.rejects(startEvent(alice, linkedId, 1), /unavailable/);
+  assert.deepEqual((await event(root)).setup, {
+    title: 'Workshop',
+    class_name: 'Group A',
+    revision: 1,
+    students: 1,
+  });
+  await assert.rejects(startEvent(root, linkedId, 0), /Event changed/);
+  await db.query('update public.class_events set cancelled=true where id=$1', [
+    eventId,
+  ]);
+  await assert.rejects(startEvent(root, linkedId, 1), /Event changed/);
+  await db.query('update public.class_events set cancelled=false where id=$1', [
+    eventId,
+  ]);
+  const linked = await startEvent(root, linkedId, 1);
+  assert.match(linked.code, /^\d{6}$/);
+  assert.equal(linked.session_id, linkedId);
+  assert.deepEqual(await startEvent(root, randomUUID(), 1), {
+    session_id: linkedId,
+  });
+  assert.deepEqual(await event(alice), { session_id: linkedId });
+  await assert.rejects(event(bob), /unavailable/);
   const big = randomUUID();
   await val(root, open, [big, null, 2]);
   assert.equal(

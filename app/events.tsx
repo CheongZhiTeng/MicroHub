@@ -1,3 +1,4 @@
+import { EventAttendanceButton } from '../src/features/attendance/event-button';
 import { useCreationScope } from '../src/features/daily';
 import { useState } from 'react';
 import { router } from 'expo-router';
@@ -74,6 +75,7 @@ function Calendar({ teach }: { teach: boolean }) {
               </Body>
               {!!e.location && <Body>{e.location}</Body>}
               {!!e.description && <Body>{e.description}</Body>}
+              <EventAttendanceButton event={e} />
               {teach && !e.cancelled && (
                 <Button
                   title={t('Edit event')}
