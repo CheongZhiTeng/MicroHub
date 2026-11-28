@@ -20,3 +20,7 @@ Use [docs/DEVELOPMENT_PROGRESS.md](docs/DEVELOPMENT_PROGRESS.md) as the canonica
 
 - Keep the base branch `main` and the GitHub Pages deployment branch `codex/github-pages` current after finishing a change. Run the project checks and fast-forward both branches to the verified release commit.
 - Wait for the Pages workflow and confirm that the served commit matches the release. When a database change is pending, keep the existing site usable during the transition and report which features still depend on the migration.
+
+## UI/UX design reference
+
+[docs/design/README.md](docs/design/README.md) indexes the UI/UX knowledge base. The current design proposals and [implementation handoff](docs/implementation/ui-ux-overhaul/README.md) are available on the research branch. Follow the requirements and security rules above and use the current implementation as the baseline while proposals are under review.

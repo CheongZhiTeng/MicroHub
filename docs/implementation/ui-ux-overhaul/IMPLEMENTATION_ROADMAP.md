@@ -1,0 +1,19 @@
+# 分阶段实施
+
+创建与最近更新 2026-11-28 · MicroHub 审计基线 `32150ab4bdd46327f52e42e2431dfaa0b5198b95`
+
+各阶段 Proposed。任何卡在权限或托管资源的工作按 [进度](UI_UX_PROGRESS.md) 标 Blocked，同时独立继续可验证任务。每阶段以可回退的小提交结束。接口兼容测试先于跨角色启用，详见 [测试](TEST_PLAN.md)。
+
+| 阶段                 | 工作与前置条件                                                                                   | 路径与 ID                                                                                                                                        | 风险、验证及交付                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| 0 对齐 Git 与权限    | 定位最新 refs、已批准后台接口、托管迁移实际状态及当前未提交工作。合并路线清晰后开独立分支        | AGENTS、docs/DEVELOPMENT_PROGRESS、202611280001、SEC-001…003                                                                                     | 输出差异记录、留存旧客户端；不触发未授权迁移或部署                   |
+| 1 复现实测           | 枚举路由，对照 SCR 及 GUI 审计；取得测试账号／独立数据后运行现状验证                             | app、scripts、tests、TEST-001、PERF-001                                                                                                          | 输出现有异常、截图及性能基线；文档记录缺少条件                       |
+| 2 Token              | 在保留当前视觉兼容的情况下引入语义颜色、单位与断点                                               | src/theme、layout、locales、DS-001、A11Y-001                                                                                                     | 计算并实测对比，两主题及语言通过；既有主题持久化通过                 |
+| 3 通用组件           | 照现有组件使用点迁移行、表单、确认、分页、状态；样册扩展                                         | src/components、homework/controls、app/design-system、CMP-001、STATE-001                                                                         | 键盘、焦点、重试、正向和错误；现有 callers 继续可用                  |
+| 4 Shell 与权限导航   | 创建共享目的地配置，重构共同导航、合法 next 及回退顺序                                           | app/_layout、app/(tabs)/_layout、app-shell、account-links、sign-in、NAV-001/002                                                                  | 角色矩阵、冷开、变宽度、直接 URL 可用；部署路由产物检查              |
+| 5 学生成员           | 逐页重构登录入会、首页、作业列表、提交回执、签到、月历                                           | app 注册、作业、签到、home；homework/student、attendance/overview；AUTH-001、HOME-001、HW-001…002、ATT-001                                       | 保护真实状态及历史、空/错误/迟交，手机键盘测试；发布可执行的学生流程 |
+| 6 授权研教与会长后台 | 平行推进既有作业编辑、批改、组与活动；管理、邀请及角色 UI 使用已合入的权限接口，托管数据库需核验 | app/club-admin、app/administration、src/features/club/manage、groups、assignment-editor、submissions、event-editor；ADM-001、SEC-001…003、HW-003 | 独立测试库，旧客户端、跨组、两端、并发、历史、待审核与范围完整       |
+| 7 次级和特殊路径     | 公告、通知、资源边界、成员、资料、设置、More、样册、失效和回退；新合并路由补规范                 | app/announcements、notifications、members、profile、settings、resources 等；COM-001/002、ACC-001、CMP-001                                        | 避免占位误导，保留授权功能；核对所有 SCR 和 ADM 交叉平台             |
+| 8 平台及无障碍       | 视口、设备、键盘、读屏、文件、UI 大名单，实际执行视觉及性能回归                                  | Console/Profiler、scripts/visual-check.cjs、设计 docs；RESP-001、A11Y-001、PERF-001                                                              | 记录可复核基准、分屏和触控问题；文档证据链接正确                     |
+| 9 回归与发布准备     | 完整 CI、隔离 Supabase、Pages 构建，恶劣网络、角色变化、迁移和退路核实                           | tests、scripts、ci.yml、pages.yml；TEST-001、REL-001                                                                                             | 保持门槛，适用设备覆盖；生产发布授权与迁移证明作为独立门槛           |
+| 10 设计治理生效      | 记录经批准 ADR、长期规则、检查、需求完成证据与待办                                               | AGENTS、DEVELOPMENT_PROGRESS、UI_UX_PROGRESS、REQUIREMENTS_TRACEABILITY；GOV-001                                                                 | 首次无聊天交接演练、没有重复文档／状态歧义，发布仅经授权             |
