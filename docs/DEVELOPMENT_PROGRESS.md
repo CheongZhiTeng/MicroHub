@@ -364,3 +364,7 @@ Implemented on `codex/modern-campus-v2` from `536cb51`, pending user visual acce
 The user has reported successful hosted verification-email delivery, login and first Super Admin bootstrap. Those are user-reported checks; this environment's browser tests still use fixtures. Ordinary-member real-device acceptance and full hosted end-to-end testing remain pending.
 
 Validation for this branch: TypeScript/ESLint/formatting, 77 application tests, 14 PostgreSQL authorization scenarios, all three platform exports, and 150 browser screen checks across five widths and light/dark appearance passed. Browser flows use isolated fixtures. Live theme switching, unsaved form retention across breakpoints, and keyboard confirmation behavior are included. Rendered screenshots and reproduction steps are linked in the v2 design document.
+
+## UI/UX 研究与设计交接
+
+2026-11-28 · 研究以 `32150ab`（已合入会长后台）为基线。研究分支仅提供文档，目标设计为 Proposed。详见 [设计索引](design/README.md)、[研究与实施最新状态](implementation/ui-ux-overhaul/UI_UX_PROGRESS.md) 和 [Codex 实施入口](implementation/ui-ux-overhaul/ULTIMATE_CODEX_PROMPT.md)。
