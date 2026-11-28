@@ -1,3 +1,4 @@
+import { officeLabel } from '../src/features/identity';
 import { ProfilePhoto } from '../src/features/profile-photo';
 import { hasBilingualNames } from '../src/lib/profile-name';
 import { useLanguage } from '../src/locales/provider';
@@ -78,6 +79,9 @@ function ProfileForm({
           identity.profile.display_name
         }
       />
+      {identity.role === 'super_admin' && (
+        <Body>{t(officeLabel(identity.office))}</Body>
+      )}
       <SectionTitle icon="user">{t('Personal details')}</SectionTitle>
       <Body>
         {t('Student ID: ')}

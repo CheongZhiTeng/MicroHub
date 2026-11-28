@@ -18,6 +18,9 @@ export type Identity = {
   profile: Profile;
   role: 'member' | 'admin' | 'super_admin';
   member: boolean;
+  office?: string | null;
+  clubLogo?: string | null;
+  logoOwner?: string | null;
   clubName: string;
   application: 'pending' | 'approved' | 'rejected' | null;
 };
@@ -41,13 +44,13 @@ export function useIdentity() {
       const db = client();
       const results = await Promise.all([
         db.from('profiles').select('*').eq('id', userId).single(),
-        db.from('platform_roles').select('role').eq('user_id', userId).single(),
+        db.from('platform_roles').select('*').eq('user_id', userId).single(),
         db
           .from('memberships')
           .select('status')
           .eq('user_id', userId)
           .maybeSingle(),
-        db.from('club_settings').select('name').maybeSingle(),
+        db.from('club_settings').select('*').maybeSingle(),
         db
           .from('membership_applications')
           .select('status')
@@ -62,6 +65,9 @@ export function useIdentity() {
         setIdentity({
           profile: profile!.data as Profile,
           role: role!.data!.role,
+          office: role!.data!.office,
+          clubLogo: club!.data?.logo_id,
+          logoOwner: club!.data?.logo_owner,
           member: membership!.data?.status === 'active',
           clubName: club!.data?.name ?? 'MicroHub',
           application: application!.data?.status ?? null,
@@ -92,4 +98,12 @@ export function useIdentity() {
   }, [reload]);
   const visibleIdentity = identity?.profile.id === userId ? identity : null;
   return { identity: visibleIdentity, loading, error, reload };
+}
+
+export function officeLabel(office?: string | null) {
+  return office === 'president'
+    ? 'President'
+    : office === 'vice_president'
+      ? 'Vice President'
+      : 'teach';
 }

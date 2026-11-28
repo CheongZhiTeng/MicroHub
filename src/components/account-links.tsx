@@ -55,8 +55,18 @@ export function AccountLinks({
           <NavigationRow
             icon="shield"
             title={t('Administration')}
-            subtitle={t('Review membership applications')}
-            onPress={() => go('/administration')}
+            subtitle={t(
+              identity.role === 'super_admin' && identity.office !== undefined
+                ? 'Club administration'
+                : 'Review membership applications',
+            )}
+            onPress={() =>
+              go(
+                identity.role === 'super_admin' && identity.office !== undefined
+                  ? '/club-admin'
+                  : '/administration',
+              )
+            }
           />
         )}
       {identity?.member && identity.profile.status === 'active' && (

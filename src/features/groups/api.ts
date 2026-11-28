@@ -33,6 +33,7 @@ export type Change = {
   p_revision: number | null;
   p_person?: string;
   p_name?: string;
+  p_reason?: string;
   p_source?: string;
   p_source_revision?: number;
   p_replace?: string;

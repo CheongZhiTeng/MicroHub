@@ -167,7 +167,15 @@ export default function Administration() {
     <Screen title={t('Administration')} subtitle={t('Membership applications')}>
       <Access admin>
         {(identity) => (
-          <Applications bilingual={hasBilingualNames(identity.profile)} />
+          <>
+            {identity.role === 'super_admin' && (
+              <Button
+                title={t('Club administration')}
+                onPress={() => router.push('/club-admin')}
+              />
+            )}
+            <Applications bilingual={hasBilingualNames(identity.profile)} />
+          </>
         )}
       </Access>
       <Button

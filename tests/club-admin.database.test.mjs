@@ -42,6 +42,11 @@ test('club offices, handover, invitations and management boundaries', async (t) 
     bob,
     group,
   ]);
+  const filtered = await call(admin, "club_admin_panel('members','','',$1)", [
+    group,
+  ]);
+  assert.deepEqual(new Set(filtered.map((p) => p.id)), new Set([admin, bob]));
+  assert.equal((await call(admin, "club_admin_panel('groups')"))[0].id, group);
   await call(admin, "attendance_open($1,null,'Test',10,3)", [event]);
   const task = randomUUID();
   await call(
@@ -50,6 +55,33 @@ test('club offices, handover, invitations and management boundaries', async (t) 
     [task, []],
   );
   await call(admin, 'hw_publish($1,1)', [task]);
+  const historical = randomUUID(),
+    checkedSession = randomUUID();
+  await call(
+    admin,
+    "hw_save_assignment($1,0,'Archived work','Notes',now()+interval '1 day',10,true,true,true,'all',$2)",
+    [historical, []],
+  );
+  await call(admin, 'hw_publish($1,1)', [historical]);
+  await call(alice, "hw_save_draft($1,0,0,'My answer','')", [historical]);
+  const [submitted] = await as(alice, 'select * from hw_submit($1,0,1,$2)', [
+    historical,
+    randomUUID(),
+  ]);
+  await call(admin, "hw_review($1,0,'release',9,'Good work',true,null,$2)", [
+    submitted.id,
+    randomUUID(),
+  ]);
+  const checkedCode = await call(
+    admin,
+    "attendance_open($1,null,'Past session',10,3)",
+    [checkedSession],
+  );
+  const receipt = await call(alice, 'attendance_check($1,$2)', [
+    checkedSession,
+    checkedCode,
+  ]);
+  await call(admin, "attendance_control($1,'close')", [checkedSession]);
   const stale = (await call(admin, "club_admin_panel('members')")).find(
     (p) => p.id === alice,
   ).version;
@@ -59,12 +91,70 @@ test('club offices, handover, invitations and management boundaries', async (t) 
       (await call(alice, 'attendance_detail($1)', [event])).personal,
       null,
     );
+    assert.equal(
+      (await call(alice, 'attendance_detail($1)', [checkedSession])).checked_at,
+      receipt.checked_at,
+    );
+    assert.equal(
+      (await call(alice, 'hw_detail($1,$2)', [historical, alice])).versions[0]
+        .events[0].score,
+      9,
+    );
     const code = await call(alice, "attendance_open($1,$2,'B',10,1)", [
       randomUUID(),
       group,
     ]);
     assert.match(code, /^\d{6}$/);
     assert.equal(await call(alice, 'hw_scope_staff($1)', [group]), true);
+    const groupEvent = randomUUID(),
+      groupTask = randomUUID(),
+      file = randomUUID();
+    await call(
+      alice,
+      "class_event_save($1,$2,0,'Session','Hall','',now()+interval '1 day',now()+interval '2 days',false)",
+      [groupEvent, group],
+    );
+    assert.equal(
+      (await call(alice, 'attendance_event($1)', [groupEvent])).setup.students,
+      1,
+    );
+    await call(
+      alice,
+      "hw_save_scoped($1,0,'Practice','Notes',now()+interval '1 day',10,true,true,true,'all','{}',$2)",
+      [groupTask, group],
+    );
+    await call(alice, "hw_file_settings($1,1,1,200,'any')", [groupTask]);
+    await call(alice, 'hw_publish($1,2)', [groupTask]);
+    await call(bob, "hw_save_draft($1,0,0,'My work','')", [groupTask]);
+    const hash = 'b'.repeat(64);
+    await call(
+      bob,
+      "hw_file_reserve($1,$2,false,'work.txt','text/plain',4,$3,0)",
+      [groupTask, file, hash],
+    );
+    await db.query('select hw_file_finish($1,$2)', [file, hash]);
+    const [version] = await as(bob, 'select * from hw_submit($1,0,2,$2)', [
+      groupTask,
+      randomUUID(),
+    ]);
+    assert.equal(
+      (
+        await as(alice, 'select id from assignment_attachments where id=$1', [
+          file,
+        ])
+      )[0].id,
+      file,
+    );
+    await call(
+      alice,
+      "hw_review($1,0,'release',8,'Private feedback',true,null,$2)",
+      [version.id, randomUUID()],
+    );
+    assert.equal(
+      (await call(bob, 'hw_detail($1)', [groupTask])).versions[0].events[0]
+        .score,
+      8,
+    );
     const announcement = randomUUID();
     assert.equal(
       await call(alice, "announcement_publish($1,$2,'Notice','Club news')", [

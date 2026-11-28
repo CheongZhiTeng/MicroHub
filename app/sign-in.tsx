@@ -55,6 +55,7 @@ export default function SignIn() {
       return (
         <Redirect href={{ pathname: '/attendance-session', params: { id } }} />
       );
+    if (next === 'club-admin') return <Redirect href="/club-admin" />;
     if (next === 'notifications') return <Redirect href="/notifications" />;
     if (next === 'announcements') return <Redirect href="/announcements" />;
     if (next === 'announcement-editor')

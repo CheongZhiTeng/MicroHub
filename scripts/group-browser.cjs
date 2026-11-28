@@ -35,6 +35,7 @@ module.exports = async function groupBrowser({
   await search(desk, teacher.studentId);
   await click(desk, 'Group tutor · ' + teacher.studentId);
   await click(desk, 'Appoint teach');
+  await desk.getByLabel('Reason for change').fill('New teaching appointment');
   await click(desk, 'Confirm change');
   await see(desk, 'Group tutor · ' + teacher.studentId + ' · Group teach');
   await login(tablet, teacher, url);
@@ -124,6 +125,7 @@ module.exports = async function groupBrowser({
     (
       await coord.rpc('group_change', {
         p_action: 'appoint_teach',
+        p_reason: 'Group appointment',
         p_group: second.data,
         p_revision: 1,
         p_person: other.id,

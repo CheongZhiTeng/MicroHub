@@ -1,3 +1,4 @@
+import { officeLabel } from '../features/identity';
 import { AttendanceHome } from '../features/attendance/overview';
 import { AccountLinks } from './account-links';
 import { MonthCalendar } from './month-calendar';
@@ -41,6 +42,14 @@ export function ClubHeader({ identity }: { identity: Identity | null }) {
   } | null>(null);
   return (
     <View style={styles.header}>
+      {identity?.clubLogo && identity.logoOwner && (
+        <Avatar
+          name={identity.clubName}
+          owner={identity.logoOwner}
+          version={identity.clubLogo}
+          size={42}
+        />
+      )}
       <Brand subtitle={identity?.clubName ?? 'Your school club'} />
       {identity?.member && identity.profile.status === 'active' && (
         <IconButton
@@ -135,7 +144,7 @@ export function IdentityStats({ identity }: { identity: Identity }) {
       icon: 'members' as const,
       value:
         identity.role === 'super_admin'
-          ? t('teach')
+          ? t(officeLabel(identity.office))
           : identity.role === 'admin'
             ? t('Admin')
             : t('Member'),

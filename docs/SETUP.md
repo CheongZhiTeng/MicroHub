@@ -56,3 +56,26 @@ Agree school authorization, privacy contact, minimal profile fields, retention s
 ### Profile photos
 
 The profile editor uses migration `202611220001_profile_avatars.sql` and the `profile-avatar` Edge Function. In an authenticated release checkout, check the intended project and pending migration list before applying migrations. Deploy the function to the same project with `supabase functions deploy profile-avatar --project-ref <project-ref> --use-api`. The verified user's token is checked by the handler. Students' photos are private and existing accounts start with initials.
+
+### 学会后台上线
+
+在已登录 Supabase 的 MicroHub Codespace 终端执行下面这段。它从最新发布分支创建独立的工作目录，预览正式项目待执行的迁移。若 CLI 提示尚未登录，在自己的 Codespace 运行 `npx --yes supabase login` 完成浏览器授权。
+
+```bash
+cd /workspaces/MicroHub &&
+git fetch origin main &&
+release_dir=$(mktemp -d /tmp/microhub-club.XXXXXX) &&
+git worktree add --detach "$release_dir" origin/main &&
+cd "$release_dir" &&
+npx --yes supabase db push --remote=crigazdkmlwsynsjfvwf --skip-vault --dry-run
+```
+
+本次新增 `202611280002_club_administration.sql` 和 `202611280003_club_roster_groups.sql`。若上次活动签到迁移仍待应用，清单还会有 `202611280001_event_attendance.sql`。确认目标显示 MicroHub、清单与预期相符后，在同一个终端执行以下命令。
+
+```bash
+npx --yes supabase db push --remote=crigazdkmlwsynsjfvwf --skip-vault &&
+npx --yes supabase functions deploy profile-avatar --remote=crigazdkmlwsynsjfvwf --use-api &&
+npx --yes supabase migration list --remote=crigazdkmlwsynsjfvwf
+```
+
+检查新迁移的 Local 和 Remote 版本一致。用现有研教账号刷新网页，从头像菜单打开「学会后台」，核对概览和自己的身份。首次发布不会自动任命任何会长或副会长。

@@ -64,7 +64,11 @@ Deno.serve(async (req) => {
     return reply(403, { message: 'Active account required' });
   const params = new URL(req.url).searchParams,
     previous = params.get('previous') || null,
-    mode = params.get('mode');
+    requestedMode = params.get('mode'),
+    club = requestedMode === 'logo-upload' || requestedMode === 'logo-remove',
+    mode = club ? requestedMode!.slice(5) : requestedMode;
+  if (club && !(await caller.rpc('is_super_admin')).data)
+    return reply(403, { message: 'Full administrator required.' });
   if (
     !['upload', 'remove', 'read'].includes(mode ?? '') ||
     (previous && !/^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i.test(previous))
@@ -108,7 +112,7 @@ Deno.serve(async (req) => {
     if (stored.error)
       return reply(503, { message: 'Photo could not be saved.' });
   }
-  const result = await worker.rpc('avatar_commit', {
+  const result = await worker.rpc(club ? 'club_logo_commit' : 'avatar_commit', {
     p_actor: user.id,
     p_previous: previous,
     p_next: next,

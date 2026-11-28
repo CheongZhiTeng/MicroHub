@@ -14,6 +14,7 @@ import {
   Card,
   Heading,
   NavigationRow,
+  Field,
   Loading,
   Notice,
   Screen,
@@ -27,11 +28,14 @@ export default function Home() {
   const name = identity ? profileName(identity.profile, language) : '';
   const { busy, start, finish } = useBusy();
   const [message, setMessage] = useState('');
-  const apply = async () => {
+  const [invite, setInvite] = useState('');
+  const apply = async (redeem = false) => {
     if (!start()) return;
     setMessage('');
     try {
-      const { error } = await client().rpc('apply_for_membership');
+      const { error } = redeem
+        ? await client().rpc('club_invite_redeem', { p_code: invite.trim() })
+        : await client().rpc('apply_for_membership');
       if (error) throw error;
       await reload();
     } catch (error) {
@@ -88,6 +92,22 @@ export default function Home() {
                   variant="secondary"
                   onPress={() => router.push('/profile')}
                 />
+                {identity.office !== undefined && (
+                  <>
+                    <Field
+                      label={t('Invitation code')}
+                      value={invite}
+                      onChangeText={setInvite}
+                      maxLength={64}
+                    />
+                    <Button
+                      title={t('Join with invitation')}
+                      disabled={!invite.trim()}
+                      busy={busy}
+                      onPress={() => void apply(true)}
+                    />
+                  </>
+                )}
                 {identity.application === 'pending' ? (
                   <>
                     <Notice

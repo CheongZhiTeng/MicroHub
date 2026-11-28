@@ -35,6 +35,7 @@ function GroupWorkspace({ root, user }: { root: boolean; user: string }) {
   const [data, setData] = useState<Workspace | null>(null);
   const [id, setId] = useState('');
   const wide = useWindowDimensions().width >= 1024;
+  const [appointmentReason, setAppointmentReason] = useState('');
   const [password, setPassword] = useState('');
   const [archived, setArchived] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -124,6 +125,7 @@ function GroupWorkspace({ root, user }: { root: boolean; user: string }) {
       text += ' · ' + t('Replace leader') + ' ' + label(replace);
     }
     setPassword('');
+    setAppointmentReason('');
     setPreview({ args, label: text });
     setError('');
   }
@@ -137,7 +139,11 @@ function GroupWorkspace({ root, user }: { root: boolean; user: string }) {
               preview.args.p_revision!,
               password,
             )
-          : await changeGroup(preview.args);
+          : await changeGroup(
+              preview.args.p_action === 'appoint_teach'
+                ? { ...preview.args, p_reason: appointmentReason.trim() }
+                : preview.args,
+            );
       setId(gid);
       if (preview.args.p_action === 'create') setArchived(false);
       setGroupName('');
@@ -499,9 +505,19 @@ function GroupWorkspace({ root, user }: { root: boolean; user: string }) {
               <Heading>{t('Confirm group change')}</Heading>
               <Body>{preview.label}</Body>
               {preview.args.p_action === 'appoint_teach' && (
-                <Notice
-                  text={t('This member will gain full club management access.')}
-                />
+                <>
+                  <Notice
+                    text={t(
+                      'This member will gain full club management access.',
+                    )}
+                  />
+                  <Field
+                    label={t('Reason for change')}
+                    value={appointmentReason}
+                    maxLength={500}
+                    onChangeText={setAppointmentReason}
+                  />
+                </>
               )}
               {preview.args.p_action === 'archive' && group && (
                 <>
@@ -529,7 +545,11 @@ function GroupWorkspace({ root, user }: { root: boolean; user: string }) {
                 </>
               )}
               <Button
-                disabled={preview.args.p_action === 'archive' && !password}
+                disabled={
+                  (preview.args.p_action === 'archive' && !password) ||
+                  (preview.args.p_action === 'appoint_teach' &&
+                    !appointmentReason.trim())
+                }
                 title={t(
                   preview.args.p_action === 'archive'
                     ? 'Confirm deletion'

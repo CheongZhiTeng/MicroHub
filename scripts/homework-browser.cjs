@@ -166,6 +166,16 @@ async function run() {
         see,
         origin,
       });
+    await require('./club-admin-browser.cjs')({
+      user,
+      device,
+      login,
+      click,
+      see,
+      origin,
+      service,
+      password,
+    });
     const staff = await device(1280),
       phone = await device(390, 'dark'),
       desk = await device(1024),

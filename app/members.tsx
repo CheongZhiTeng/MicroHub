@@ -1,3 +1,4 @@
+import { officeLabel } from '../src/features/identity';
 import {
   hasBilingualNames,
   profileName,
@@ -29,7 +30,7 @@ type Member = ProfileNames & {
   student_id: string;
   class_name: string;
   avatar_id?: string | null;
-  platform_roles: { role: string } | null;
+  platform_roles: { role: string; office?: string } | null;
 };
 function Directory({
   bilingual,
@@ -55,7 +56,7 @@ function Directory({
       let request = client()
         .from('profiles')
         .select(
-          'id,display_name,student_id,class_name,platform_roles(role),memberships!inner(status)' +
+          'id,display_name,student_id,class_name,platform_roles(*),memberships!inner(status)' +
             (bilingual ? ',name_zh,name_en' : '') +
             (photos ? ',avatar_id' : ''),
         )
@@ -150,7 +151,7 @@ function Directory({
               <Badge
                 label={t(
                   member.platform_roles?.role === 'super_admin'
-                    ? 'teach'
+                    ? officeLabel(member.platform_roles.office)
                     : member.platform_roles?.role === 'admin'
                       ? 'Admin'
                       : 'Member',

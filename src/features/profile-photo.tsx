@@ -59,8 +59,10 @@ export function ProfilePhoto({
   profile,
   name,
   refresh,
+  club = false,
 }: {
-  profile: Profile;
+  profile: Pick<Profile, 'id' | 'avatar_id'>;
+  club?: boolean;
   name: string;
   refresh: () => Promise<void>;
 }) {
@@ -100,6 +102,7 @@ export function ProfilePhoto({
       const mode = remove ? 'remove' : 'upload';
       const { error } = await client().functions.invoke(
         'profile-avatar?mode=' +
+          (club ? 'logo-' : '') +
           mode +
           '&previous=' +
           (profile.avatar_id ?? ''),
@@ -126,7 +129,9 @@ export function ProfilePhoto({
     <View style={{ gap: 10, alignItems: 'flex-start' }}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={t('Change profile photo')}
+        accessibilityLabel={t(
+          club ? 'Change club logo' : 'Change profile photo',
+        )}
         disabled={busy}
         onPress={() => void choose()}
         style={{ padding: 4 }}
@@ -171,7 +176,11 @@ export function ProfilePhoto({
         </>
       ) : profile.avatar_id ? (
         <>
-          {confirmRemove && <Body>{t('Remove your profile photo?')}</Body>}
+          {confirmRemove && (
+            <Body>
+              {t(club ? 'Remove club logo?' : 'Remove your profile photo?')}
+            </Body>
+          )}
           <Button
             variant="ghost"
             title={t(confirmRemove ? 'Confirm removal' : 'Remove photo')}
