@@ -587,7 +587,7 @@ async function main() {
           .waitFor();
         await click('Back to home');
         for (const [button, heading] of [
-          ['Attendance', 'See you at the next meeting'],
+          ['Attendance', 'Open now'],
           ['Club announcements', 'No announcements on this page.'],
           ['Your club calendar', 'Club events'],
           [
@@ -603,7 +603,12 @@ async function main() {
               .getByRole('alert')
               .filter({ hasText: heading })
               .waitFor();
-          else await page.getByText(heading, { exact: true }).waitFor();
+          else
+            await page
+              .getByText(heading, { exact: true })
+              .filter({ visible: true })
+              .first()
+              .waitFor();
           await snapshot(button.toLowerCase().replaceAll(' ', '-'));
           await click('Back to home');
         }

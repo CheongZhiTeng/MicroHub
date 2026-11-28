@@ -56,7 +56,12 @@ test('attendance scope, cutoff, receipts, throttling, audit and immutable roster
     /permission/,
   );
   const old = code;
-  code = await control('rotate');
+  const panel = (u) => val(u, 'attendance_panel($1)', [id]);
+  assert.equal((await panel(root)).generation, 0);
+  assert.equal((await panel(alice)).generation, undefined);
+  code = await val(root, 'attendance_rotate($1,0)', [id]);
+  await assert.rejects(val(root, 'attendance_rotate($1,0)', [id]), /changed/);
+  assert.equal((await panel(root)).generation, 1);
   assert.notEqual(old, code);
   for (let i = 0; i < 5; i++)
     assert.equal((await check(alice, old)).error, 'Invalid check-in code.');
@@ -81,6 +86,8 @@ test('attendance scope, cutoff, receipts, throttling, audit and immutable roster
     /changed/,
   );
   assert.equal((await detail(alice)).personal, 'Late');
+  assert.equal((await panel(alice)).corrections, undefined);
+  assert.equal((await panel(root)).corrections[0].reason, 'Arrival');
   assert.deepEqual(await val(alice, 'attendance_summary()'), {
     attended: 1,
     late: 1,

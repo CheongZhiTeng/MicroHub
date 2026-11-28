@@ -88,6 +88,28 @@ module.exports = async function groupBrowser({
     see,
     origin,
   });
+  const leaderAccount = await session(student);
+  const leaderWork = await leaderAccount.rpc('hw_detail', {
+    p_id: assignment.id,
+  });
+  assert.ifError(leaderWork.error);
+  assert.equal(leaderWork.data.can_manage, false);
+  assert.equal(leaderWork.data.versions[0].version, 1);
+  assert.ok(
+    leaderWork.data.versions[0].events.some((event) => event.score >= 7),
+  );
+  await require('./attendance-browser.cjs')({
+    teacher,
+    student,
+    root,
+    session,
+    device,
+    login,
+    click,
+    see,
+    origin,
+    groupName: title,
+  });
   const workspace = await a.rpc('group_workspace');
   assert.ifError(workspace.error);
   const first = workspace.data.groups.find((g) => g.name === title);

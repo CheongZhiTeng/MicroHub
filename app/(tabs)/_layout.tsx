@@ -24,7 +24,10 @@ export default function TabsLayout() {
     return (
       <Redirect
         href={
-          tab === 'homework' || tab === 'groups' || tab === 'more'
+          tab === 'attendance' ||
+          tab === 'homework' ||
+          tab === 'groups' ||
+          tab === 'more'
             ? { pathname: '/sign-in', params: { next: tab } }
             : '/sign-in'
         }

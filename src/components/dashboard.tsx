@@ -1,3 +1,4 @@
+import { AttendanceHome } from '../features/attendance/overview';
 import { AccountLinks } from './account-links';
 import { MonthCalendar } from './month-calendar';
 import {
@@ -279,11 +280,7 @@ export function ClubOverview({ teach = false }: { teach?: boolean }) {
           icon="attendance"
           onPress={() => router.push('/(tabs)/attendance')}
         >
-          <Body>
-            {t(
-              'Secure check-in is coming in MVP. Attendance is not collected yet.        ',
-            )}
-          </Body>
+          <AttendanceHome />
         </OverviewLink>
         <OverviewLink
           label={t('Club announcements')}

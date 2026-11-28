@@ -8,15 +8,6 @@ import { Icon, type IconName } from './icon';
 import { Badge, Body, Button, Card, Heading, Screen } from './ui';
 
 export const modules = {
-  attendance: {
-    title: 'Attendance',
-    subtitle: 'Every meeting brings us closer.',
-    icon: 'attendance',
-    phase: 'MVP',
-    heading: 'See you at the next meeting',
-    description:
-      'Secure six-digit check-in and your personal attendance history are being prepared. Attendance is not being collected yet.',
-  },
   events: {
     title: 'Club events',
     subtitle: 'Make room for something inspiring.',

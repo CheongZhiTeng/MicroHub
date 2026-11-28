@@ -41,7 +41,7 @@ npx supabase functions deploy review-membership
 
 The Edge handler verifies the bearer token using Auth and forwards it to the checked RPC. `verify_jwt = false` in config disables only the legacy gateway JWT check; it does not allow unauthenticated requests. No service role is required. Native clients can invoke it; this initial optional endpoint does not enable browser CORS. The shipped membership UI calls the same database RPC directly, so Edge deployment is not required for that UI. Typecheck the Edge handler with `deno check --no-config --node-modules-dir=none supabase/functions/review-membership/index.ts` (Deno 2).
 
-Storage bucket creation is in migration 002: private, 10 MiB limit and allowed MIME types. No object policies are opened yet. Upload UI, file associations, content validation and signed URL authorization ship together in the assignment increment. Realtime is available through the configured Supabase client but no foundation table is published; enable and test it during attendance, not globally for private tables.
+Storage bucket creation is in migration 002: private, 10 MiB limit and allowed MIME types. No object policies are opened yet. Upload UI, file associations, content validation and signed URL authorization ship together in the assignment increment. Attendance migrations 202611240001 and 202611240002 use the existing Supabase connection and require no new Edge Function or API key. Run the linked database migration dry run from the verified release checkout before applying pending migrations. Attendance publishes only the scoped revision signal where Realtime is enabled. Foreground polling also refreshes the roster.
 
 ## Local Supabase and schema changes
 

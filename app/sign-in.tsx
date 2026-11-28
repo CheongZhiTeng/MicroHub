@@ -41,6 +41,12 @@ export default function SignIn() {
       typeof value === 'string' &&
       /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
     const context = scope === 'big' || validId(scope) ? { scope } : {};
+    if (next === 'attendance') return <Redirect href="/(tabs)/attendance" />;
+    if (next === 'attendance-new') return <Redirect href="/attendance-new" />;
+    if (next === 'attendance-session' && validId(id))
+      return (
+        <Redirect href={{ pathname: '/attendance-session', params: { id } }} />
+      );
     if (next === 'notifications') return <Redirect href="/notifications" />;
     if (next === 'announcements') return <Redirect href="/announcements" />;
     if (next === 'announcement-editor')
