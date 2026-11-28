@@ -41,7 +41,7 @@ test('group roster, scoped management, transfer and revocation', async (t) => {
     replace = null,
   ) =>
     (
-      await as(who, 'select group_change($1,$2,$3,$4,$5,$6,$7,$8) as id', [
+      await as(who, 'select group_change($1,$2,$3,$4,$5,$6,$7,$8,$9) as id', [
         action,
         group,
         rev,
@@ -50,6 +50,7 @@ test('group roster, scoped management, transfer and revocation', async (t) => {
         srcRev,
         name,
         replace,
+        action === 'appoint_teach' ? 'Group handover' : null,
       ])
     )[0].id;
   const g = await change(
